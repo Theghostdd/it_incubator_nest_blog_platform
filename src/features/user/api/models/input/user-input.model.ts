@@ -2,6 +2,7 @@ import {
   BaseSorting,
   BaseSortingType,
 } from '../../../../../base/sorting/base-sorting';
+import { Injectable } from '@nestjs/common';
 
 export class UserInputModel {
   constructor(

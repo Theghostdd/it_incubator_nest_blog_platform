@@ -19,6 +19,13 @@ import { BlogController } from './features/blog/api/blog-controller';
 import { BlogMapperOutputModel } from './features/blog/api/models/output/blog-output.model';
 import { Blog, BlogSchema } from './features/blog/domain/blog.entity';
 import { BlogSortingQuery } from './features/blog/api/models/input/blog-input.model';
+import { PostRepository } from './features/post/infrastructure/post-repositories';
+import { PostQueryRepository } from './features/post/infrastructure/post-query-repositories';
+import { PostService } from './features/post/application/post-service';
+import { PostMapperOutputModel } from './features/post/api/models/output/post-output.model';
+import { BaseSorting } from './base/sorting/base-sorting';
+import { PostController } from './features/post/api/post-controller';
+import { Post, PostSchema } from './features/post/domain/post.entity';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -27,6 +34,13 @@ const userProviders = [
   UserService,
   UserMapperOutputModel,
   UserSortingQuery,
+];
+const postProviders = [
+  PostService,
+  PostRepository,
+  PostQueryRepository,
+  PostMapperOutputModel,
+  BaseSorting,
 ];
 const blogProviders = [
   BlogRepository,
@@ -40,19 +54,27 @@ const appSettingsProviders = {
   provide: AppSettings,
   useValue: appSettings,
 };
+
 @Module({
   imports: [
     MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
     MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]),
+    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
   ],
-  controllers: [UserController, TestingController, BlogController],
+  controllers: [
+    UserController,
+    TestingController,
+    BlogController,
+    PostController,
+  ],
   providers: [
     ...userProviders,
     ...authProviders,
     appSettingsProviders,
     ...testingProviders,
     ...blogProviders,
+    ...postProviders,
   ],
 })
 export class AppModule {}

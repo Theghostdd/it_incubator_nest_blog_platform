@@ -1,3 +1,5 @@
+import { Injectable } from '@nestjs/common';
+
 export type BaseSortingType = {
   sortBy: string;
   sortDirection: string;

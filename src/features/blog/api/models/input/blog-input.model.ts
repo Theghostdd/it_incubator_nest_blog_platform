@@ -3,6 +3,7 @@ import {
   BaseSortingType,
 } from '../../../../../base/sorting/base-sorting';
 import { UserSortQueryType } from '../../../../user/api/models/input/user-input.model';
+import { Injectable } from '@nestjs/common';
 
 export class BlogInputModel {
   constructor(
