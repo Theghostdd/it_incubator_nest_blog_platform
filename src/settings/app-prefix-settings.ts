@@ -1,0 +1,14 @@
+export const apiPrefixSettings = {
+  API_PREFIX: '/api',
+  USER_PREFIX: {
+    user: 'users',
+  },
+  TESTING: {
+    testing: 'testing',
+    all_data: 'all-data',
+  },
+  BLOG: {
+    blogs: 'blogs',
+    posts: 'posts',
+  },
+};
