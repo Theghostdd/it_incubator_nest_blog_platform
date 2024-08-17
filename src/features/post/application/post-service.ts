@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Post, PostDocumentType, PostModelType } from '../domain/post.entity';
-import { PostRepository } from '../infrastructure/post-repositories';
 import {
   PostInputModel,
   PostUpdateModel,
@@ -10,6 +9,7 @@ import { AppResultType } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { BlogDocumentType } from '../../blog/domain/blog.entity';
 import { BlogRepository } from '../../blog/infrastructure/blog-repositories';
+import { PostRepository } from '../infrastructure/post-repositories';
 
 @Injectable()
 export class PostService {

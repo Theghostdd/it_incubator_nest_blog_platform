@@ -1,14 +1,14 @@
-import { Injectable, NotFoundException, Post } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   PostMapperOutputModel,
   PostOutputModel,
 } from '../api/models/output/post-output.model';
 import { BaseSorting } from '../../../base/sorting/base-sorting';
-import { InjectModel } from '@nestjs/mongoose';
-import { PostDocumentType, PostModelType } from '../domain/post.entity';
+import { Post, PostDocumentType, PostModelType } from '../domain/post.entity';
 import { BasePagination } from '../../../base/pagination/base-pagination';
 import { SortOrder } from 'mongoose';
 import { LikeStatusEnum } from '../../../base/enum/enum';
+import { InjectModel } from '@nestjs/mongoose';
 
 @Injectable()
 export class PostQueryRepository {
@@ -87,7 +87,7 @@ export class PostQueryRepository {
       .limit(pageSize);
 
     const likes = [];
-    const postIds: string[] = posts.map((id) => id._id.toString());
+    //const postIds: string[] = posts.map((id) => id._id.toString());
     if (userId) {
       //likes = await this.likeModel.find({userId: userId, parentId: {$in: postIds}})
     }

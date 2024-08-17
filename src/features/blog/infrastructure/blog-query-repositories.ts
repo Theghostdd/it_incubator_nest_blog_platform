@@ -24,7 +24,7 @@ export class BlogQueryRepository {
     if (blog) {
       return this.blogMapperOutputModel.blogModel(blog);
     }
-    throw new NotFoundException('User not found');
+    throw new NotFoundException('Blog not found');
   }
 
   async getBlogs(

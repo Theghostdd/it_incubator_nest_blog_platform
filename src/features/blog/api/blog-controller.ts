@@ -20,16 +20,28 @@ import {
   BlogInputModel,
   BlogSortingQuery,
   BlogUpdateModel,
+  PostBlogInputModel,
 } from './models/input/blog-input.model';
 import { BlogOutputModel } from './models/output/blog-output.model';
 import { BasePagination } from '../../../base/pagination/base-pagination';
+import { PostInputModel } from '../../post/api/models/input/post-input.model';
+import { PostOutputModel } from '../../post/api/models/output/post-output.model';
+import { PostService } from '../../post/application/post-service';
+import { PostQueryRepository } from '../../post/infrastructure/post-query-repositories';
 
 @Controller(apiPrefixSettings.BLOG.blogs)
 export class BlogController {
   constructor(
     private readonly blogService: BlogService,
+    private readonly postService: PostService,
     private readonly blogQueryRepository: BlogQueryRepository,
+    private readonly postQueryRepository: PostQueryRepository,
   ) {}
+
+  @Get(`:id/${apiPrefixSettings.BLOG.posts}`)
+  async getPostByBlogId(@Param('id') id: string): Promise<PostOutputModel> {
+    return await this.postQueryRepository.getPostById(id);
+  }
 
   @Get(':id')
   async getBlogById(@Param('id') id: string): Promise<BlogOutputModel> {
@@ -41,6 +53,22 @@ export class BlogController {
     @Query() query: BlogSortingQuery,
   ): Promise<BasePagination<BlogOutputModel[] | []>> {
     return await this.blogQueryRepository.getBlogs(query);
+  }
+
+  @Post(`:id/${apiPrefixSettings.BLOG.posts}`)
+  async createPostByBlogId(
+    @Param('id') id: string,
+    @Body() inputModel: PostBlogInputModel,
+  ): Promise<PostOutputModel> {
+    const postInputModel: PostInputModel = { ...inputModel, blogId: id };
+    const result: AppResultType<string> =
+      await this.postService.createPostByBlogId(postInputModel);
+    switch (result.appResult) {
+      case AppResult.Success:
+        return await this.postQueryRepository.getPostById(result.data);
+      default:
+        throw new InternalServerErrorException();
+    }
   }
 
   @Post()

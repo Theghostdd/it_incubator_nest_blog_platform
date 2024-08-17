@@ -3,7 +3,7 @@ import {
   PostInputModel,
   PostUpdateModel,
 } from '../api/models/input/post-input.model';
-import { HydratedDocument, Model } from 'mongoose';
+import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
 
 @Schema()
 export class Post {
@@ -56,7 +56,8 @@ export class Post {
   }
 }
 
-export const PostSchema = SchemaFactory.createForClass(Post);
+export const PostSchema: MongooseSchema<Post> =
+  SchemaFactory.createForClass(Post);
 PostSchema.loadClass(Post);
 export type PostDocumentType = HydratedDocument<Post>;
 

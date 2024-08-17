@@ -58,9 +58,11 @@ const appSettingsProviders = {
 @Module({
   imports: [
     MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-    MongooseModule.forFeature([{ name: Blog.name, schema: BlogSchema }]),
-    MongooseModule.forFeature([{ name: Post.name, schema: PostSchema }]),
+    MongooseModule.forFeature([
+      { name: User.name, schema: UserSchema },
+      { name: Post.name, schema: PostSchema },
+      { name: Blog.name, schema: BlogSchema },
+    ]),
   ],
   controllers: [
     UserController,
@@ -71,10 +73,10 @@ const appSettingsProviders = {
   providers: [
     ...userProviders,
     ...authProviders,
+    ...postProviders,
     appSettingsProviders,
     ...testingProviders,
     ...blogProviders,
-    ...postProviders,
   ],
 })
 export class AppModule {}

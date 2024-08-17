@@ -2,8 +2,14 @@ import {
   BaseSorting,
   BaseSortingType,
 } from '../../../../../base/sorting/base-sorting';
-import { UserSortQueryType } from '../../../../user/api/models/input/user-input.model';
-import { Injectable } from '@nestjs/common';
+
+export class PostBlogInputModel {
+  constructor(
+    public title: string,
+    public shortDescription: string,
+    public content: string,
+  ) {}
+}
 
 export class BlogInputModel {
   constructor(
