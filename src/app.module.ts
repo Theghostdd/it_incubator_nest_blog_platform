@@ -26,6 +26,13 @@ import { PostMapperOutputModel } from './features/post/api/models/output/post-ou
 import { BaseSorting } from './base/sorting/base-sorting';
 import { PostController } from './features/post/api/post-controller';
 import { Post, PostSchema } from './features/post/domain/post.entity';
+import { CommentController } from './features/comment/api/comment-controller';
+import { CommentQueryRepositories } from './features/comment/infrastructure/comment-query-repositories';
+import {
+  Comment,
+  CommentSchema,
+} from './features/comment/domain/comment.entity';
+import { CommentMapperOutputModel } from './features/comment/api/model/output/comment-output.model';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -35,6 +42,8 @@ const userProviders = [
   UserMapperOutputModel,
   UserSortingQuery,
 ];
+
+const commentProviders = [CommentQueryRepositories, CommentMapperOutputModel];
 const postProviders = [
   PostService,
   PostRepository,
@@ -62,6 +71,7 @@ const appSettingsProviders = {
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },
       { name: Blog.name, schema: BlogSchema },
+      { name: Comment.name, schema: CommentSchema },
     ]),
   ],
   controllers: [
@@ -69,6 +79,7 @@ const appSettingsProviders = {
     TestingController,
     BlogController,
     PostController,
+    CommentController,
   ],
   providers: [
     ...userProviders,
@@ -77,6 +88,7 @@ const appSettingsProviders = {
     appSettingsProviders,
     ...testingProviders,
     ...blogProviders,
+    ...commentProviders,
   ],
 })
 export class AppModule {}

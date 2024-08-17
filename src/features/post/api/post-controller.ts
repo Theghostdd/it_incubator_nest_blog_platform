@@ -23,13 +23,24 @@ import {
 } from './models/input/post-input.model';
 import { AppResultType } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
+import { CommentOutputModel } from '../../comment/api/model/output/comment-output.model';
+import { CommentQueryRepositories } from '../../comment/infrastructure/comment-query-repositories';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
   constructor(
     private readonly postService: PostService,
     private readonly postQueryRepository: PostQueryRepository,
+    private readonly commentQueryRepository: CommentQueryRepositories,
   ) {}
+
+  @Get(`:id/${apiPrefixSettings.POST.comments}`)
+  async getCommentsByPostId(
+    @Param('id') id: string,
+    @Query() query: BaseSorting,
+  ): Promise<BasePagination<CommentOutputModel[] | []>> {
+    return await this.commentQueryRepository.getCommentsByPostId(query, id);
+  }
 
   @Get(':id')
   async getPostById(@Param('id') id: string): Promise<PostOutputModel> {

@@ -15,4 +15,7 @@ export const apiPrefixSettings = {
     posts: 'posts',
     comments: 'comments',
   },
+  COMMENT: {
+    comments: 'comments',
+  },
 };
