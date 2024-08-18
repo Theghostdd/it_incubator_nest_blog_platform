@@ -28,6 +28,7 @@ import { PostInputModel } from '../../post/api/models/input/post-input.model';
 import { PostOutputModel } from '../../post/api/models/output/post-output.model';
 import { PostService } from '../../post/application/post-service';
 import { PostQueryRepository } from '../../post/infrastructure/post-query-repositories';
+import { BaseSorting } from '../../../base/sorting/base-sorting';
 
 @Controller(apiPrefixSettings.BLOG.blogs)
 export class BlogController {
@@ -39,8 +40,11 @@ export class BlogController {
   ) {}
 
   @Get(`:id/${apiPrefixSettings.BLOG.posts}`)
-  async getPostByBlogId(@Param('id') id: string): Promise<PostOutputModel> {
-    return await this.postQueryRepository.getPostById(id);
+  async getPostByBlogId(
+    @Query() query: BaseSorting,
+    @Param('id') id: string,
+  ): Promise<BasePagination<PostOutputModel[] | []>> {
+    return await this.postQueryRepository.getPosts(query, id);
   }
 
   @Get(':id')
@@ -66,6 +70,8 @@ export class BlogController {
     switch (result.appResult) {
       case AppResult.Success:
         return await this.postQueryRepository.getPostById(result.data);
+      case AppResult.NotFound:
+        throw new NotFoundException('Blog not found');
       default:
         throw new InternalServerErrorException();
     }

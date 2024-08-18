@@ -63,6 +63,8 @@ export class PostController {
     switch (result.appResult) {
       case AppResult.Success:
         return await this.postQueryRepository.getPostById(result.data);
+      case AppResult.NotFound:
+        throw new NotFoundException('Blog not found');
       default:
         throw new InternalServerErrorException();
     }

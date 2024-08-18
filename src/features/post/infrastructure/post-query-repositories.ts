@@ -9,12 +9,14 @@ import { BasePagination } from '../../../base/pagination/base-pagination';
 import { SortOrder } from 'mongoose';
 import { LikeStatusEnum } from '../../../base/enum/enum';
 import { InjectModel } from '@nestjs/mongoose';
+import { Blog } from '../../blog/domain/blog.entity';
 
 @Injectable()
 export class PostQueryRepository {
   constructor(
     private readonly postMapperOutputModel: PostMapperOutputModel,
     private readonly baseSorting: BaseSorting,
+    @InjectModel(Blog.name) private readonly blogModel: PostModelType,
     @InjectModel(Post.name) private readonly postModel: PostModelType,
   ) {}
 
@@ -63,6 +65,10 @@ export class PostQueryRepository {
     blogId?: string,
     userId?: string,
   ): Promise<BasePagination<PostOutputModel[] | []>> {
+    if (blogId) {
+      const blog = await this.blogModel.findOne({ _id: blogId });
+      if (!blog) throw new NotFoundException('Blog not found');
+    }
     const { sortBy, sortDirection, pageSize, pageNumber } =
       this.baseSorting.createBaseQuery(query);
 

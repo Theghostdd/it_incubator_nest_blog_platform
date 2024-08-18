@@ -33,7 +33,7 @@ export class UserService {
   async deleteUser(id: string): Promise<AppResultType> {
     const user: UserDocumentType | null =
       await this.userRepositories.getUserById(id);
-    if (!user) return { appResult: AppResult.Success, data: null };
+    if (!user) return { appResult: AppResult.NotFound, data: null };
 
     await this.userRepositories.delete(user);
     return { appResult: AppResult.Success, data: null };

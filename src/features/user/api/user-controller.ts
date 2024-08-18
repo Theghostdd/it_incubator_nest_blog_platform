@@ -9,6 +9,7 @@ import {
   Param,
   Post,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { UserService } from '../application/user-service';
 import {
@@ -21,7 +22,8 @@ import { UserOutputModel } from './models/output/user-output.model';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { BasePagination } from '../../../base/pagination/base-pagination';
 import { AppResultType } from '../../../base/types/types';
-
+import { BasicGuard } from '../../../infrastructure/guards/basic/basic.guard';
+@UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
 export class UserController {
   constructor(

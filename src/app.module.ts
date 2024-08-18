@@ -33,6 +33,8 @@ import {
   CommentSchema,
 } from './features/comment/domain/comment.entity';
 import { CommentMapperOutputModel } from './features/comment/api/model/output/comment-output.model';
+import { BasicStrategy } from './infrastructure/guards/basic/basic-strategy';
+import { BasicGuard } from './infrastructure/guards/basic/basic.guard';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -89,6 +91,8 @@ const appSettingsProviders = {
     ...testingProviders,
     ...blogProviders,
     ...commentProviders,
+    BasicStrategy,
+    BasicGuard,
   ],
 })
 export class AppModule {}

@@ -14,6 +14,3 @@ async function bootstrap() {
 }
 
 bootstrap();
-
-// "start": "nest start",
-// "build": "nest build",

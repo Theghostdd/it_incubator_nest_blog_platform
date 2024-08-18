@@ -1,4 +1,5 @@
 import { config } from 'dotenv';
+import { SuperAdminAuth, ValidationOption } from './app-static-settings';
 config();
 
 export type EnvironmentVariable = { [key: string]: string | undefined };
@@ -37,6 +38,8 @@ export class AppSettings {
   constructor(
     public env: EnvironmentSettings,
     public api: APISettings,
+    public staticSettings: ValidationOption,
+    public superAdminAuth: SuperAdminAuth,
   ) {}
 }
 
@@ -72,4 +75,11 @@ const env = new EnvironmentSettings(
 );
 
 const api = new APISettings(process.env);
-export const appSettings = new AppSettings(env, api);
+const staticSettings = new ValidationOption();
+const superAdminAuth = new SuperAdminAuth();
+export const appSettings = new AppSettings(
+  env,
+  api,
+  staticSettings,
+  superAdminAuth,
+);

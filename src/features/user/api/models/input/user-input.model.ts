@@ -2,14 +2,12 @@ import {
   BaseSorting,
   BaseSortingType,
 } from '../../../../../base/sorting/base-sorting';
-import { Injectable } from '@nestjs/common';
+import { UserInputModelValidationRules } from '../../../../../infrastructure/utils/validation-rules/validation-rules';
 
-export class UserInputModel {
-  constructor(
-    public login: string,
-    public password: string,
-    public email: string,
-  ) {}
+export class UserInputModel extends UserInputModelValidationRules {
+  public login: string;
+  public password: string;
+  public email: string;
 }
 
 export type UserSortQueryType = BaseSortingType & {

@@ -5,3 +5,12 @@ export type AppResultType<T = null> = {
   errorField?: null;
   appResult: AppResult;
 };
+
+export type APIErrorsMessageType = {
+  errorsMessages: APIErrorMessageType[];
+};
+
+export type APIErrorMessageType = {
+  message: string;
+  field: string;
+};
