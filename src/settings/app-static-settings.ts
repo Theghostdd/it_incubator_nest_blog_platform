@@ -1,19 +1,26 @@
-interface ValidationConfig {
+interface IValidationConfig {
   MIN_LENGTH: number | null;
   MAX_LENGTH: number | null;
   PATTERN: string | null;
 }
 
+type UuidOptionsType = {
+  [key: string]: {
+    prefix: string;
+    key: string;
+  };
+};
+
 export class ValidationOption {
-  public readonly login: ValidationConfig;
-  public readonly title: ValidationConfig;
-  public readonly name: ValidationConfig;
-  public readonly email: ValidationConfig;
-  public readonly password: ValidationConfig;
-  public readonly shortDescription: ValidationConfig;
-  public readonly content: ValidationConfig;
-  public readonly description: ValidationConfig;
-  public readonly websiteUrl: ValidationConfig;
+  public readonly login: IValidationConfig;
+  public readonly title: IValidationConfig;
+  public readonly name: IValidationConfig;
+  public readonly email: IValidationConfig;
+  public readonly password: IValidationConfig;
+  public readonly shortDescription: IValidationConfig;
+  public readonly content: IValidationConfig;
+  public readonly description: IValidationConfig;
+  public readonly websiteUrl: IValidationConfig;
 
   constructor() {
     this.login = { MIN_LENGTH: 3, MAX_LENGTH: 10, PATTERN: '^[a-zA-Z0-9_-]*$' };
@@ -39,7 +46,17 @@ export class ValidationOption {
     };
   }
 }
-
+export class StaticOptions {
+  public readonly uuidOptions: any;
+  constructor() {
+    this.uuidOptions = {
+      confirmationEmail: {
+        prefix: 'confirmation_email',
+        key: new Date().toISOString(),
+      },
+    };
+  }
+}
 export class SuperAdminAuth {
   public readonly login: string;
   public readonly password: string;
@@ -48,3 +65,24 @@ export class SuperAdminAuth {
     this.password = 'qwerty';
   }
 }
+
+export class StaticOption {
+  constructor(
+    public readonly validationOption: ValidationOption,
+    public readonly superAdminAuth: SuperAdminAuth,
+    public readonly staticOptions: StaticOptions,
+  ) {
+    this.validationOption = validationOption;
+    this.superAdminAuth = superAdminAuth;
+    this.staticOptions = staticOptions;
+  }
+}
+
+const validationOption = new ValidationOption();
+const superAdminAuth = new SuperAdminAuth();
+const staticOptions = new StaticOptions();
+export const staticOption = new StaticOption(
+  validationOption,
+  superAdminAuth,
+  staticOptions,
+);

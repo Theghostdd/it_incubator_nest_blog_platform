@@ -19,4 +19,17 @@ export class UserRepositories {
   async getUserById(id: string): Promise<UserDocumentType | null> {
     return this.userModel.findOne({ _id: id });
   }
+
+  async getUserByEmailOrLogin(
+    email: string,
+    login: string,
+    emailOrLogin?: string,
+  ): Promise<UserDocumentType | null> {
+    return this.userModel.findOne({
+      $or: [
+        { email: emailOrLogin ? emailOrLogin : email },
+        { login: emailOrLogin ? emailOrLogin : login },
+      ],
+    });
+  }
 }

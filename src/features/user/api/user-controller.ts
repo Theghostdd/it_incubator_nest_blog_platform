@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -43,10 +44,12 @@ export class UserController {
   ): Promise<UserOutputModel> {
     const result: AppResultType<string> =
       await this.userService.createUser(userInputModel);
-
+    console.log(result);
     switch (result.appResult) {
       case AppResult.Success:
         return await this.userQueryRepositories.getUserById(result.data);
+      case AppResult.BadRequest:
+        throw new BadRequestException(result.errorField.errorsMessages);
       default:
         throw new InternalServerErrorException();
     }

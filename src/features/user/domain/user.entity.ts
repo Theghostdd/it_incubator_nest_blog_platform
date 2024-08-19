@@ -1,6 +1,7 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
 import { UserInputModel } from '../api/models/input/user-input.model';
+import { RegistrationInputModel } from '../../auth/api/models/input/auth-input.models';
 
 @Schema()
 export class User {
@@ -12,6 +13,18 @@ export class User {
   password: string;
   @Prop({ type: String, required: true, default: new Date().toISOString() })
   createdAt: string;
+  @Prop({
+    type: {
+      isConfirm: { type: Boolean, required: true, default: false },
+      confirmationCode: { type: String, required: true },
+      dataExpire: { type: String, required: true },
+    },
+  })
+  userConfirm: {
+    isConfirm: boolean;
+    confirmationCode: string;
+    dataExpire: string;
+  };
 
   static createUserInstance(inputModel: UserInputModel, hashPass: string) {
     const { login, email } = inputModel;
@@ -20,6 +33,31 @@ export class User {
     user.email = email;
     user.password = hashPass;
     user.createdAt = new Date().toISOString();
+    user.userConfirm = {
+      isConfirm: true,
+      confirmationCode: 'none',
+      dataExpire: '0',
+    };
+    return user;
+  }
+
+  static registrationUserInstance(
+    inputModel: RegistrationInputModel,
+    hashPass: string,
+    confirmCode: string,
+    dateExpireConfirmCode: string,
+  ) {
+    const { login, email } = inputModel;
+    const user = new this();
+    user.login = login;
+    user.email = email;
+    user.password = hashPass;
+    user.createdAt = new Date().toISOString();
+    user.userConfirm = {
+      isConfirm: false,
+      confirmationCode: confirmCode,
+      dataExpire: dateExpireConfirmCode,
+    };
     return user;
   }
 }
@@ -34,6 +72,13 @@ type UserModelStaticType = {
   createUserInstance: (
     inputModel: UserInputModel,
     hashPass: string,
+  ) => UserDocumentType;
+
+  registrationUserInstance: (
+    inputModel: UserInputModel,
+    hashPass: string,
+    confirmCode: string,
+    dateExpireConfirmCode: string,
   ) => UserDocumentType;
 };
 

@@ -5,10 +5,7 @@ import { appSettings } from '../../../settings/app-setting';
 
 @Injectable()
 export class BasicStrategy extends PassportStrategy(Strategy) {
-  public validate = async (
-    login: string,
-    password: string,
-  ): Promise<boolean> => {
+  async validate(login: string, password: string): Promise<boolean> {
     if (
       appSettings.superAdminAuth.login === login &&
       appSettings.superAdminAuth.password === password
@@ -16,5 +13,5 @@ export class BasicStrategy extends PassportStrategy(Strategy) {
       return true;
     }
     throw new UnauthorizedException();
-  };
+  }
 }

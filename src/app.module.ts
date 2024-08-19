@@ -35,6 +35,9 @@ import {
 import { CommentMapperOutputModel } from './features/comment/api/model/output/comment-output.model';
 import { BasicStrategy } from './infrastructure/guards/basic/basic-strategy';
 import { BasicGuard } from './infrastructure/guards/basic/basic.guard';
+import { AuthController } from './features/auth/api/auth.controller';
+import { JwtModule } from '@nestjs/jwt';
+import { v4 as uuidv4 } from 'uuid';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -66,6 +69,11 @@ const appSettingsProviders = {
   useValue: appSettings,
 };
 
+export const UUIDProvider = {
+  provide: 'UUID',
+  useValue: uuidv4,
+};
+
 @Module({
   imports: [
     MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
@@ -75,6 +83,13 @@ const appSettingsProviders = {
       { name: Blog.name, schema: BlogSchema },
       { name: Comment.name, schema: CommentSchema },
     ]),
+    JwtModule.register({
+      global: true,
+      secret: appSettings.api.JWT_TOKENS.ACCESS_TOKEN.SECRET,
+      signOptions: {
+        expiresIn: appSettings.api.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
+      },
+    }),
   ],
   controllers: [
     UserController,
@@ -82,12 +97,14 @@ const appSettingsProviders = {
     BlogController,
     PostController,
     CommentController,
+    AuthController,
   ],
   providers: [
-    ...userProviders,
     ...authProviders,
+    ...userProviders,
     ...postProviders,
     appSettingsProviders,
+    UUIDProvider,
     ...testingProviders,
     ...blogProviders,
     ...commentProviders,

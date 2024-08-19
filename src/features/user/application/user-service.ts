@@ -5,7 +5,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocumentType, UserModelType } from '../domain/user.entity';
 import { AuthService } from '../../auth/application/auth-application';
 import { AppResult } from '../../../base/enum/app-result.enum';
-import { AppResultType } from '../../../base/types/types';
+import { APIErrorsMessageType, AppResultType } from '../../../base/types/types';
 
 @Injectable()
 export class UserService {
@@ -18,16 +18,29 @@ export class UserService {
   async createUser(
     userInputModel: UserInputModel,
   ): Promise<AppResultType<string>> {
+    const user: AppResultType<UserDocumentType> =
+      await this.checkUniqLoginAndEmail(
+        userInputModel.email,
+        userInputModel.login,
+      );
+
+    if (user.appResult !== AppResult.Success)
+      return {
+        appResult: AppResult.BadRequest,
+        data: null,
+        errorField: user.errorField,
+      };
+
     const hash: string = await this.authService.generatePasswordHashAndSalt(
       userInputModel.password,
     );
-    const user: UserDocumentType = this.userModel.createUserInstance(
+    const newUser: UserDocumentType = this.userModel.createUserInstance(
       userInputModel,
       hash,
     );
 
-    await this.userRepositories.save(user);
-    return { appResult: AppResult.Success, data: user._id.toString() };
+    await this.userRepositories.save(newUser);
+    return { appResult: AppResult.Success, data: newUser._id.toString() };
   }
 
   async deleteUser(id: string): Promise<AppResultType> {
@@ -36,6 +49,35 @@ export class UserService {
     if (!user) return { appResult: AppResult.NotFound, data: null };
 
     await this.userRepositories.delete(user);
+    return { appResult: AppResult.Success, data: null };
+  }
+
+  async checkUniqLoginAndEmail(
+    email: string,
+    login: string,
+  ): Promise<AppResultType<UserDocumentType>> {
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserByEmailOrLogin(email, login);
+    if (user) {
+      const errors: APIErrorsMessageType = { errorsMessages: [] };
+      login === user.login
+        ? errors.errorsMessages.push({
+            message: 'Not unique login',
+            field: 'login',
+          })
+        : false;
+      email === user.email
+        ? errors.errorsMessages.push({
+            message: 'Not unique email',
+            field: 'email',
+          })
+        : false;
+      return {
+        appResult: AppResult.BadRequest,
+        data: user,
+        errorField: errors,
+      };
+    }
     return { appResult: AppResult.Success, data: null };
   }
 }

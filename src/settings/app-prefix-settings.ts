@@ -18,4 +18,9 @@ export const apiPrefixSettings = {
   COMMENT: {
     comments: 'comments',
   },
+  AUTH: {
+    auth: 'auth',
+    login: 'login',
+    registration: 'registration',
+  },
 };
