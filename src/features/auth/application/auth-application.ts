@@ -8,19 +8,26 @@ import {
 } from '../../user/domain/user.entity';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import {
+  APIErrorMessageType,
+  APIErrorsMessageType,
   AppResultType,
   AuthorizationUserResponseType,
   JWTAccessTokenPayloadType,
+  MailTemplateType,
 } from '../../../base/types/types';
 import {
+  ConfirmUserByEmailInputModel,
   LoginInputModel,
   RegistrationInputModel,
+  ResendConfirmationCodeInputModel,
 } from '../api/models/input/auth-input.models';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../../user/application/user-service';
-import { addDays } from 'date-fns';
+import { addDays, compareAsc } from 'date-fns';
 import { AppSettings } from '../../../settings/app-setting';
+import { NodeMailerService } from '../../nodemailer/application/nodemailer-application';
+import { MailTemplateService } from '../../mail-template/application/template-application';
 
 @Injectable()
 export class AuthService {
@@ -30,13 +37,18 @@ export class AuthService {
     private readonly userRepositories: UserRepositories,
     private readonly appSettings: AppSettings,
     private readonly jwtService: JwtService,
+    private readonly nodeMailerService: NodeMailerService,
+    private readonly mailTemplateService: MailTemplateService,
     @Inject('UUID') private readonly uuidv4: () => string,
     @InjectModel(User.name) private readonly userModel: UserModelType,
   ) {}
   async login(
     inputLoginModel: LoginInputModel,
   ): Promise<
-    AppResultType<Omit<AuthorizationUserResponseType, 'refreshToken'>>
+    AppResultType<
+      Omit<AuthorizationUserResponseType, 'refreshToken'>,
+      APIErrorMessageType
+    >
   > {
     const user: UserDocumentType | null =
       await this.userRepositories.getUserByEmailOrLogin(
@@ -56,11 +68,7 @@ export class AuthService {
       return {
         appResult: AppResult.BadRequest,
         data: null,
-        errorField: {
-          errorsMessages: [
-            { message: 'Email has been confirmed', field: 'code' },
-          ],
-        },
+        errorField: { message: 'Email has been confirmed', field: 'code' },
       };
 
     const payloadAccessToken: JWTAccessTokenPayloadType = {
@@ -77,8 +85,8 @@ export class AuthService {
 
   async registration(
     registrationInputModel: RegistrationInputModel,
-  ): Promise<AppResultType<string>> {
-    const user: AppResultType<UserDocumentType> =
+  ): Promise<AppResultType<null, APIErrorsMessageType>> {
+    const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
       await this.userService.checkUniqLoginAndEmail(
         registrationInputModel.email,
         registrationInputModel.login,
@@ -101,7 +109,6 @@ export class AuthService {
       this.appSettings.staticSettings.staticOptions.uuidOptions
         .confirmationEmail.key,
     );
-
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
     const newUser: UserDocumentType = this.userModel.registrationUserInstance(
@@ -113,7 +120,85 @@ export class AuthService {
 
     await this.userRepositories.save(newUser);
 
-    return { appResult: AppResult.Success, data: newUser._id.toString() };
+    const template: MailTemplateType =
+      await this.mailTemplateService.getConfirmationTemplate(confirmationCode);
+    this.nodeMailerService.sendMail([newUser.email], template);
+    return { appResult: AppResult.Success, data: null };
+  }
+
+  async confirmUserByEmail(
+    inputConfirmUserByEmailModel: ConfirmUserByEmailInputModel,
+  ): Promise<AppResultType<null, APIErrorMessageType>> {
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserByConfirmCode(
+        inputConfirmUserByEmailModel.code,
+      );
+    if (!user)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Code not found', field: 'code' },
+        data: null,
+      };
+    if (user.userConfirm.isConfirm)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Email has been confirmed', field: 'code' },
+        data: null,
+      };
+    if (compareAsc(new Date(), user.userConfirm.dataExpire) === 1)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: {
+          message: 'The confirmation code has expired',
+          field: 'code',
+        },
+        data: null,
+      };
+
+    user.confirmEmail();
+
+    await this.userRepositories.save(user);
+    return { appResult: AppResult.Success, data: null };
+  }
+
+  async resendConfirmCode(
+    inputResendConfirmCodeModel: ResendConfirmationCodeInputModel,
+  ): Promise<AppResultType<null, APIErrorMessageType>> {
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserByEmail(
+        inputResendConfirmCodeModel.email,
+      );
+    if (!user)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Email is not found', field: 'email' },
+        data: null,
+      };
+    if (user.userConfirm.isConfirm)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Email has been confirmed', field: 'email' },
+        data: null,
+      };
+
+    const confirmationCode: string = this.generateUuidCode(
+      this.appSettings.staticSettings.staticOptions.uuidOptions
+        .newConfirmationCode.prefix,
+      this.appSettings.staticSettings.staticOptions.uuidOptions
+        .newConfirmationCode.key,
+    );
+    const dateExpired: string = addDays(new Date(), 1).toISOString();
+
+    user.updateConfirmationCode(confirmationCode, dateExpired);
+    await this.userRepositories.save(user);
+
+    const template: MailTemplateType =
+      await this.mailTemplateService.getRecoveryPasswordTemplate(
+        confirmationCode,
+      );
+    this.nodeMailerService.sendMail([user.email], template);
+
+    return { appResult: AppResult.Success, data: null };
   }
 
   async generatePasswordHashAndSalt(password: string): Promise<string> {

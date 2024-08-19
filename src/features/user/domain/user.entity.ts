@@ -19,6 +19,8 @@ export class User {
       confirmationCode: { type: String, required: true },
       dataExpire: { type: String, required: true },
     },
+    required: true,
+    _id: false,
   })
   userConfirm: {
     isConfirm: boolean;
@@ -59,6 +61,15 @@ export class User {
       dataExpire: dateExpireConfirmCode,
     };
     return user;
+  }
+
+  confirmEmail(): void {
+    this.userConfirm.isConfirm = true;
+  }
+
+  updateConfirmationCode(newCode: string, dateExpireConfirmCode: string): void {
+    this.userConfirm.confirmationCode = newCode;
+    this.userConfirm.dataExpire = dateExpireConfirmCode;
   }
 }
 

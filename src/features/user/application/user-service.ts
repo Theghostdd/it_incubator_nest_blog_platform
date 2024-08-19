@@ -17,8 +17,8 @@ export class UserService {
 
   async createUser(
     userInputModel: UserInputModel,
-  ): Promise<AppResultType<string>> {
-    const user: AppResultType<UserDocumentType> =
+  ): Promise<AppResultType<string, APIErrorsMessageType>> {
+    const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
       await this.checkUniqLoginAndEmail(
         userInputModel.email,
         userInputModel.login,
@@ -55,7 +55,7 @@ export class UserService {
   async checkUniqLoginAndEmail(
     email: string,
     login: string,
-  ): Promise<AppResultType<UserDocumentType>> {
+  ): Promise<AppResultType<UserDocumentType, APIErrorsMessageType>> {
     const user: UserDocumentType | null =
       await this.userRepositories.getUserByEmailOrLogin(email, login);
     if (user) {

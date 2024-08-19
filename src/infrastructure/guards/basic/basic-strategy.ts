@@ -7,8 +7,8 @@ import { appSettings } from '../../../settings/app-setting';
 export class BasicStrategy extends PassportStrategy(Strategy) {
   async validate(login: string, password: string): Promise<boolean> {
     if (
-      appSettings.superAdminAuth.login === login &&
-      appSettings.superAdminAuth.password === password
+      appSettings.staticSettings.superAdminAuth.login === login &&
+      appSettings.staticSettings.superAdminAuth.password === password
     ) {
       return true;
     }

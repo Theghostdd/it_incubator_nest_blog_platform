@@ -1,4 +1,5 @@
 import {
+  IsEmail,
   IsMongoId,
   IsNotEmpty,
   IsString,
@@ -8,6 +9,7 @@ import {
 import { Trim } from '../../decorators/transform/trim';
 import { appSettings } from '../../../settings/app-setting';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
+import { ConfirmUserByEmailInputModel } from '../../../features/auth/api/models/input/auth-input.models';
 
 export class UserInputModelValidationRules {
   @Trim()
@@ -212,6 +214,21 @@ export class RegistrationInputModelValidationRules {
     appSettings.staticSettings.validationOption.password.MAX_LENGTH,
   )
   public password: string;
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  @Matches(appSettings.staticSettings.validationOption.email.PATTERN)
+  public email: string;
+}
+
+export class ConfirmUserByEmailInputModelValidationRules {
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  public code: string;
+}
+
+export class ResendConfirmationCodeInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()

@@ -22,7 +22,7 @@ import { UserQueryRepositories } from '../infrastructure/user-query-repositories
 import { UserOutputModel } from './models/output/user-output.model';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { BasePagination } from '../../../base/pagination/base-pagination';
-import { AppResultType } from '../../../base/types/types';
+import { APIErrorsMessageType, AppResultType } from '../../../base/types/types';
 import { BasicGuard } from '../../../infrastructure/guards/basic/basic.guard';
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
@@ -42,7 +42,7 @@ export class UserController {
   async createUser(
     @Body() userInputModel: UserInputModel,
   ): Promise<UserOutputModel> {
-    const result: AppResultType<string> =
+    const result: AppResultType<string, APIErrorsMessageType> =
       await this.userService.createUser(userInputModel);
     console.log(result);
     switch (result.appResult) {

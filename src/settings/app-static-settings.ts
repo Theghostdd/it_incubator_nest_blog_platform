@@ -10,7 +10,6 @@ type UuidOptionsType = {
     key: string;
   };
 };
-
 export class ValidationOption {
   public readonly login: IValidationConfig;
   public readonly title: IValidationConfig;
@@ -47,12 +46,16 @@ export class ValidationOption {
   }
 }
 export class StaticOptions {
-  public readonly uuidOptions: any;
+  public readonly uuidOptions: UuidOptionsType;
   constructor() {
     this.uuidOptions = {
       confirmationEmail: {
-        prefix: 'confirmation_email',
-        key: new Date().toISOString(),
+        prefix: 'c-c',
+        key: new Date().getTime().toString(),
+      },
+      newConfirmationCode: {
+        prefix: 'n-c-c',
+        key: new Date().getTime().toString(),
       },
     };
   }

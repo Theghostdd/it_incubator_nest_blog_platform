@@ -20,6 +20,14 @@ export class UserRepositories {
     return this.userModel.findOne({ _id: id });
   }
 
+  async getUserByConfirmCode(code: string): Promise<UserDocumentType | null> {
+    return this.userModel.findOne({ 'userConfirm.confirmationCode': code });
+  }
+
+  async getUserByEmail(email: string): Promise<UserDocumentType | null> {
+    return this.userModel.findOne({ email: email });
+  }
+
   async getUserByEmailOrLogin(
     email: string,
     login: string,

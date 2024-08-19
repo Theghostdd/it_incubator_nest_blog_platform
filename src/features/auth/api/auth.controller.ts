@@ -10,10 +10,14 @@ import {
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
 import { AuthService } from '../application/auth-application';
 import {
+  ConfirmUserByEmailInputModel,
   LoginInputModel,
   RegistrationInputModel,
+  ResendConfirmationCodeInputModel,
 } from './models/input/auth-input.models';
 import {
+  APIErrorMessageType,
+  APIErrorsMessageType,
   AppResultType,
   AuthorizationUserResponseType,
 } from '../../../base/types/types';
@@ -31,7 +35,8 @@ export class AuthController {
   @HttpCode(200)
   async login(@Body() inputLoginModel: LoginInputModel) {
     const result: AppResultType<
-      Omit<AuthorizationUserResponseType, 'refreshToken'>
+      Omit<AuthorizationUserResponseType, 'refreshToken'>,
+      APIErrorMessageType
     > = await this.authService.login(inputLoginModel);
     switch (result.appResult) {
       case AppResult.Success:
@@ -39,23 +44,58 @@ export class AuthController {
       case AppResult.Unauthorized:
         throw new UnauthorizedException();
       case AppResult.BadRequest:
-        throw new BadRequestException(result.errorField.errorsMessages);
+        throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();
     }
   }
 
   @Post(`/${apiPrefixSettings.AUTH.registration}`)
-  @HttpCode(200)
-  async registration(@Body() inputRegistrationModel: RegistrationInputModel) {
-    const result: AppResultType<string> = await this.authService.registration(
-      inputRegistrationModel,
-    );
+  @HttpCode(204)
+  async registration(
+    @Body() inputRegistrationModel: RegistrationInputModel,
+  ): Promise<void> {
+    const result: AppResultType<string, APIErrorsMessageType> =
+      await this.authService.registration(inputRegistrationModel);
     switch (result.appResult) {
       case AppResult.Success:
-        return this.userQueryRepositories.getUserById(result.data);
+        return;
       case AppResult.BadRequest:
         throw new BadRequestException(result.errorField.errorsMessages);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`/${apiPrefixSettings.AUTH.registration_confirmation}`)
+  @HttpCode(204)
+  async registrationConfirmation(
+    @Body() inputConfirmRegistrationModel: ConfirmUserByEmailInputModel,
+  ) {
+    const result: AppResultType<null, APIErrorMessageType> =
+      await this.authService.confirmUserByEmail(inputConfirmRegistrationModel);
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.BadRequest:
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`/${apiPrefixSettings.AUTH.registration_email_resending}`)
+  @HttpCode(204)
+  async resendConfirmationCode(
+    @Body() inputResendConfirmCodeModel: ResendConfirmationCodeInputModel,
+  ) {
+    const result: AppResultType<null, APIErrorMessageType> =
+      await this.authService.resendConfirmCode(inputResendConfirmCodeModel);
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.BadRequest:
+        throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();
     }

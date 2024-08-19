@@ -38,6 +38,10 @@ import { BasicGuard } from './infrastructure/guards/basic/basic.guard';
 import { AuthController } from './features/auth/api/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
+import { NodeMailerService } from './features/nodemailer/application/nodemailer-application';
+import { MailTemplateService } from './features/mail-template/application/template-application';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -90,6 +94,22 @@ export const UUIDProvider = {
         expiresIn: appSettings.api.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
       },
     }),
+    MailerModule.forRoot({
+      transport: {
+        service: appSettings.api.NODEMAILER.MAIL_SERVICE,
+        host: appSettings.api.NODEMAILER.MAIL_HOST,
+        port: appSettings.api.NODEMAILER.MAIL_PORT,
+        ignoreTLS: appSettings.api.NODEMAILER.MAIL_IGNORE_TLS,
+        secure: appSettings.api.NODEMAILER.MAIL_SECURE,
+        auth: {
+          user: appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.address,
+          pass: appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.password,
+        },
+      },
+      defaults: {
+        from: `"${appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.name}" <${appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.address}>`,
+      },
+    }),
   ],
   controllers: [
     UserController,
@@ -110,6 +130,8 @@ export const UUIDProvider = {
     ...commentProviders,
     BasicStrategy,
     BasicGuard,
+    NodeMailerService,
+    MailTemplateService,
   ],
 })
 export class AppModule {}

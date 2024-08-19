@@ -25,6 +25,7 @@ export class Post {
       dislikesCount: { type: Number, required: true, default: 0 },
     },
     required: true,
+    _id: false,
   })
   extendedLikesInfo: {
     likesCount: number;

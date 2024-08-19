@@ -8,6 +8,19 @@ import {
 config();
 
 type JWTSType = {};
+type NodeMailerAgentSettingsType = {
+  address: string;
+  name: string;
+  password: string;
+};
+type NodeMailerSettingsType = {
+  MAIL_SERVICE: string;
+  MAIL_HOST: string;
+  MAIL_PORT: number;
+  MAIL_SECURE: boolean;
+  MAIL_IGNORE_TLS: boolean;
+  MAIL_AGENT_SETTINGS: NodeMailerAgentSettingsType;
+};
 export type EnvironmentVariable = { [key: string]: string | undefined };
 export type EnvironmentsTypes =
   | 'DEVELOPMENT'
@@ -45,7 +58,6 @@ export class AppSettings {
     public env: EnvironmentSettings,
     public api: APISettings,
     public staticSettings: StaticOption,
-    public superAdminAuth: SuperAdminAuth,
   ) {}
 }
 
@@ -54,6 +66,7 @@ class APISettings {
   public readonly PASSWORD_HASH_ROUNDS: number;
   public readonly MONGO_CONNECTION_URI: string;
   public readonly JWT_TOKENS: any;
+  public readonly NODEMAILER: NodeMailerSettingsType;
 
   constructor(private readonly envVariables: EnvironmentVariable) {
     this.APP_PORT = this.getNumberOrDefault(envVariables.APP_PORT, 3000);
@@ -72,6 +85,19 @@ class APISettings {
       REFRESH_TOKEN: {
         SECRET: envVariables.JWT_REFRESH_TOKEN_SECRET || 'JWT_R_SECRET',
         EXPIRES: '1h',
+      },
+    };
+
+    this.NODEMAILER = {
+      MAIL_SERVICE: 'gmail',
+      MAIL_HOST: 'smtp.gmail.com',
+      MAIL_PORT: 465,
+      MAIL_SECURE: true,
+      MAIL_IGNORE_TLS: true,
+      MAIL_AGENT_SETTINGS: {
+        address: 'mixailmar4uk78@gmail.com',
+        name: 'Mikhail',
+        password: envVariables.PASSWORD_MAIL_AGENT || 'somepassformail',
       },
     };
   }
@@ -95,9 +121,4 @@ const env = new EnvironmentSettings(
 
 const api = new APISettings(process.env);
 const superAdminAuth = new SuperAdminAuth();
-export const appSettings = new AppSettings(
-  env,
-  api,
-  staticOption,
-  superAdminAuth,
-);
+export const appSettings = new AppSettings(env, api, staticOption);

@@ -1,8 +1,8 @@
 import { AppResult } from '../enum/app-result.enum';
 
-export type AppResultType<T = null> = {
+export type AppResultType<T = null, D = null> = {
   data: T;
-  errorField?: APIErrorsMessageType;
+  errorField?: D;
   appResult: AppResult;
 };
 
@@ -22,4 +22,9 @@ export type AuthorizationUserResponseType = {
 
 export type JWTAccessTokenPayloadType = {
   userId: string;
+};
+
+export type MailTemplateType = {
+  subject: string;
+  html: string;
 };

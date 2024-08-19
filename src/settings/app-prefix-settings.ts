@@ -22,5 +22,7 @@ export const apiPrefixSettings = {
     auth: 'auth',
     login: 'login',
     registration: 'registration',
+    registration_confirmation: 'registration-confirmation',
+    registration_email_resending: 'registration-email-resending',
   },
 };
