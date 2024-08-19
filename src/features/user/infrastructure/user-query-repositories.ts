@@ -1,6 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
   UserMapperOutputModel,
+  UserMeOutputModel,
   UserOutputModel,
 } from '../api/models/output/user-output.model';
 import { InjectModel } from '@nestjs/mongoose';
@@ -68,5 +69,15 @@ export class UserQueryRepositories {
       items:
         users.length > 0 ? this.userMapperOutputModel.usersModel(users) : [],
     };
+  }
+
+  async getUserByIdAuthMe(id: string): Promise<UserMeOutputModel> {
+    console.log('id', id);
+    const user: UserDocumentType | null = await this.userModel.findOne({
+      _id: id,
+    });
+    if (!user) throw new NotFoundException();
+
+    return this.userMapperOutputModel.currentUserModel(user);
   }
 }

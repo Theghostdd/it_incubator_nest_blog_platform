@@ -54,6 +54,8 @@ import {
   RequestLimiterSchema,
 } from './infrastructure/guards/request-limiter/domain/request-limiter.entity';
 import { RequestLimiterStrategy } from './infrastructure/guards/request-limiter/request-limiter';
+import { AuthJWTAccessGuard } from './infrastructure/guards/jwt/jwt.guard';
+import { JwtStrategy } from './infrastructure/guards/jwt/jwt-strategy';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -158,6 +160,8 @@ const requestLimiterProvider = [
     MailTemplateService,
     RecoveryPasswordSessionRepositories,
     ...requestLimiterProvider,
+    AuthJWTAccessGuard,
+    JwtStrategy,
   ],
 })
 export class AppModule {}

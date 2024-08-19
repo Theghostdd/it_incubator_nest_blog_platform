@@ -31,7 +31,6 @@ export class RequestLimiter {
   }
 
   dumping(date: string) {
-    console.log('date', date);
     this.quantity = 1;
     this.date = date;
   }

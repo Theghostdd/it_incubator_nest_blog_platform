@@ -43,7 +43,6 @@ export class RequestLimiterStrategy implements OnModuleInit {
   }
 
   onModuleInit() {
-    // Запуск clearRequestCollection каждые 5 секунд
     setInterval(() => {
       this.clearRequestCollection().catch((error) => {
         console.error('Error clearing request collection:', error);

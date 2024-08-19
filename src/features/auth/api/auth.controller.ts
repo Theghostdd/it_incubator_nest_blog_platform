@@ -2,6 +2,7 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   HttpCode,
   InternalServerErrorException,
   Post,
@@ -23,10 +24,14 @@ import {
   APIErrorsMessageType,
   AppResultType,
   AuthorizationUserResponseType,
+  JWTAccessTokenPayloadType,
 } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { UserQueryRepositories } from '../../user/infrastructure/user-query-repositories';
 import { LimitRequestGuard } from '../../../infrastructure/guards/request-limiter/request-limiter.guard';
+import { UserMeOutputModel } from '../../user/api/models/output/user-output.model';
+import { AuthJWTAccessGuard } from '../../../infrastructure/guards/jwt/jwt.guard';
+import { CurrentUser } from '../../../infrastructure/decorators/current-user';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
@@ -35,6 +40,13 @@ export class AuthController {
     private readonly userQueryRepositories: UserQueryRepositories,
   ) {}
 
+  @Get(apiPrefixSettings.AUTH.me)
+  @UseGuards(AuthJWTAccessGuard)
+  async getCurrentUser(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<UserMeOutputModel> {
+    return await this.userQueryRepositories.getUserByIdAuthMe(user.userId);
+  }
   @Post(`/${apiPrefixSettings.AUTH.login}`)
   @HttpCode(200)
   async login(@Body() inputLoginModel: LoginInputModel) {

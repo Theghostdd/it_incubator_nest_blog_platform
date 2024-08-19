@@ -20,6 +20,7 @@ export const apiPrefixSettings = {
   },
   AUTH: {
     auth: 'auth',
+    me: 'me',
     login: 'login',
     registration: 'registration',
     registration_confirmation: 'registration-confirmation',
