@@ -3,7 +3,6 @@ import { apiPrefixSettings } from './app-prefix-settings';
 import { ValidationPipeOption } from '../infrastructure/pipe/validation/validation-pipe-option';
 import { HttpExceptionFilter } from '../infrastructure/exceprion-filters/http-exception/http-exception-filters';
 
-// Используем данную функцию в main.ts и в e2e тестах
 export const applyAppSettings = (app: INestApplication) => {
   setApiPrefix(app);
 

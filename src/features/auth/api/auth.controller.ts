@@ -6,6 +6,7 @@ import {
   InternalServerErrorException,
   Post,
   UnauthorizedException,
+  UseGuards,
 } from '@nestjs/common';
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
 import { AuthService } from '../application/auth-application';
@@ -25,6 +26,7 @@ import {
 } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { UserQueryRepositories } from '../../user/infrastructure/user-query-repositories';
+import { LimitRequestGuard } from '../../../infrastructure/guards/request-limiter/request-limiter.guard';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
@@ -53,6 +55,7 @@ export class AuthController {
   }
 
   @Post(`/${apiPrefixSettings.AUTH.registration}`)
+  @UseGuards(LimitRequestGuard)
   @HttpCode(204)
   async registration(
     @Body() inputRegistrationModel: RegistrationInputModel,
@@ -70,6 +73,7 @@ export class AuthController {
   }
 
   @Post(`/${apiPrefixSettings.AUTH.registration_confirmation}`)
+  @UseGuards(LimitRequestGuard)
   @HttpCode(204)
   async registrationConfirmation(
     @Body() inputConfirmRegistrationModel: ConfirmUserByEmailInputModel,
@@ -87,6 +91,7 @@ export class AuthController {
   }
 
   @Post(`/${apiPrefixSettings.AUTH.registration_email_resending}`)
+  @UseGuards(LimitRequestGuard)
   @HttpCode(204)
   async resendConfirmationCode(
     @Body() inputResendConfirmCodeModel: ResendConfirmationCodeInputModel,
@@ -102,8 +107,8 @@ export class AuthController {
         throw new InternalServerErrorException();
     }
   }
-
   @Post(`/${apiPrefixSettings.AUTH.password_recovery}`)
+  @UseGuards(LimitRequestGuard)
   @HttpCode(204)
   async recoveryPassword(
     @Body() inputPasswordRecoveryModel: PasswordRecoveryInputModel,
@@ -119,6 +124,7 @@ export class AuthController {
   }
 
   @Post(`/${apiPrefixSettings.AUTH.new_password}`)
+  @UseGuards(LimitRequestGuard)
   @HttpCode(204)
   async changePassword(
     @Body() inputChangePasswordModel: ChangePasswordInputModel,

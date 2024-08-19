@@ -46,6 +46,14 @@ import {
   RecoveryPasswordSession,
   RecoveryPasswordSessionSchema,
 } from './features/auth/domain/recovery-session.entity';
+import { RequestLimiterRepositories } from './infrastructure/guards/request-limiter/infrastructure/request-limiter-repositories';
+import { RequestLimiterService } from './infrastructure/guards/request-limiter/application/request-limiter-application';
+import { LimitRequestGuard } from './infrastructure/guards/request-limiter/request-limiter.guard';
+import {
+  RequestLimiter,
+  RequestLimiterSchema,
+} from './infrastructure/guards/request-limiter/domain/request-limiter.entity';
+import { RequestLimiterStrategy } from './infrastructure/guards/request-limiter/request-limiter';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -82,6 +90,13 @@ export const UUIDProvider = {
   useValue: uuidv4,
 };
 
+const requestLimiterProvider = [
+  RequestLimiterRepositories,
+  RequestLimiterService,
+  RequestLimiterStrategy,
+  LimitRequestGuard,
+];
+
 @Module({
   imports: [
     MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
@@ -94,6 +109,7 @@ export const UUIDProvider = {
         name: RecoveryPasswordSession.name,
         schema: RecoveryPasswordSessionSchema,
       },
+      { name: RequestLimiter.name, schema: RequestLimiterSchema },
     ]),
     JwtModule.register({
       global: true,
@@ -141,6 +157,7 @@ export const UUIDProvider = {
     NodeMailerService,
     MailTemplateService,
     RecoveryPasswordSessionRepositories,
+    ...requestLimiterProvider,
   ],
 })
 export class AppModule {}
