@@ -1,6 +1,8 @@
 import {
+  ChangePasswordInputModelValidationRules,
   ConfirmUserByEmailInputModelValidationRules,
   LoginInputModelValidationRules,
+  PasswordRecoveryInputModelValidationRules,
   RegistrationInputModelValidationRules,
   ResendConfirmationCodeInputModelValidationRules,
 } from '../../../../../infrastructure/utils/validation-rules/validation-rules';
@@ -22,4 +24,13 @@ export class ConfirmUserByEmailInputModel extends ConfirmUserByEmailInputModelVa
 
 export class ResendConfirmationCodeInputModel extends ResendConfirmationCodeInputModelValidationRules {
   public email: string;
+}
+
+export class PasswordRecoveryInputModel extends PasswordRecoveryInputModelValidationRules {
+  public email: string;
+}
+
+export class ChangePasswordInputModel extends ChangePasswordInputModelValidationRules {
+  public newPassword: string;
+  public recoveryCode: string;
 }

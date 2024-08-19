@@ -10,8 +10,10 @@ import {
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
 import { AuthService } from '../application/auth-application';
 import {
+  ChangePasswordInputModel,
   ConfirmUserByEmailInputModel,
   LoginInputModel,
+  PasswordRecoveryInputModel,
   RegistrationInputModel,
   ResendConfirmationCodeInputModel,
 } from './models/input/auth-input.models';
@@ -71,7 +73,7 @@ export class AuthController {
   @HttpCode(204)
   async registrationConfirmation(
     @Body() inputConfirmRegistrationModel: ConfirmUserByEmailInputModel,
-  ) {
+  ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
       await this.authService.confirmUserByEmail(inputConfirmRegistrationModel);
     switch (result.appResult) {
@@ -88,9 +90,41 @@ export class AuthController {
   @HttpCode(204)
   async resendConfirmationCode(
     @Body() inputResendConfirmCodeModel: ResendConfirmationCodeInputModel,
-  ) {
+  ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
       await this.authService.resendConfirmCode(inputResendConfirmCodeModel);
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.BadRequest:
+        throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`/${apiPrefixSettings.AUTH.password_recovery}`)
+  @HttpCode(204)
+  async recoveryPassword(
+    @Body() inputPasswordRecoveryModel: PasswordRecoveryInputModel,
+  ): Promise<void> {
+    const result: AppResultType<null, APIErrorMessageType> =
+      await this.authService.passwordRecovery(inputPasswordRecoveryModel);
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`/${apiPrefixSettings.AUTH.new_password}`)
+  @HttpCode(204)
+  async changePassword(
+    @Body() inputChangePasswordModel: ChangePasswordInputModel,
+  ): Promise<void> {
+    const result: AppResultType<null, APIErrorMessageType> =
+      await this.authService.changeUserPassword(inputChangePasswordModel);
     switch (result.appResult) {
       case AppResult.Success:
         return;

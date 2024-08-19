@@ -39,9 +39,13 @@ import { AuthController } from './features/auth/api/auth.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { MailerModule } from '@nestjs-modules/mailer';
-import { PugAdapter } from '@nestjs-modules/mailer/dist/adapters/pug.adapter';
 import { NodeMailerService } from './features/nodemailer/application/nodemailer-application';
 import { MailTemplateService } from './features/mail-template/application/template-application';
+import { RecoveryPasswordSessionRepositories } from './features/auth/infrastructure/recovery-password-session-repositories';
+import {
+  RecoveryPasswordSession,
+  RecoveryPasswordSessionSchema,
+} from './features/auth/domain/recovery-session.entity';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -86,6 +90,10 @@ export const UUIDProvider = {
       { name: Post.name, schema: PostSchema },
       { name: Blog.name, schema: BlogSchema },
       { name: Comment.name, schema: CommentSchema },
+      {
+        name: RecoveryPasswordSession.name,
+        schema: RecoveryPasswordSessionSchema,
+      },
     ]),
     JwtModule.register({
       global: true,
@@ -132,6 +140,7 @@ export const UUIDProvider = {
     BasicGuard,
     NodeMailerService,
     MailTemplateService,
+    RecoveryPasswordSessionRepositories,
   ],
 })
 export class AppModule {}

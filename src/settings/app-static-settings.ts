@@ -50,11 +50,15 @@ export class StaticOptions {
   constructor() {
     this.uuidOptions = {
       confirmationEmail: {
-        prefix: 'c-c',
+        prefix: 'c-c_',
         key: new Date().getTime().toString(),
       },
       newConfirmationCode: {
-        prefix: 'n-c-c',
+        prefix: 'n-c-c_',
+        key: new Date().getTime().toString(),
+      },
+      recoveryPasswordSessionCode: {
+        prefix: 'r-p-s-c_',
         key: new Date().getTime().toString(),
       },
     };

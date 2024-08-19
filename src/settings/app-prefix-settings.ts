@@ -24,5 +24,7 @@ export const apiPrefixSettings = {
     registration: 'registration',
     registration_confirmation: 'registration-confirmation',
     registration_email_resending: 'registration-email-resending',
+    password_recovery: 'password-recovery',
+    new_password: 'new-password',
   },
 };

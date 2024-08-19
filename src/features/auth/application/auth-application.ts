@@ -16,18 +16,27 @@ import {
   MailTemplateType,
 } from '../../../base/types/types';
 import {
+  ChangePasswordInputModel,
   ConfirmUserByEmailInputModel,
   LoginInputModel,
+  PasswordRecoveryInputModel,
   RegistrationInputModel,
   ResendConfirmationCodeInputModel,
 } from '../api/models/input/auth-input.models';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../../user/application/user-service';
-import { addDays, compareAsc } from 'date-fns';
+import { addDays, addMinutes, compareAsc } from 'date-fns';
 import { AppSettings } from '../../../settings/app-setting';
 import { NodeMailerService } from '../../nodemailer/application/nodemailer-application';
 import { MailTemplateService } from '../../mail-template/application/template-application';
+
+import {
+  RecoveryPasswordSession,
+  RecoveryPasswordSessionDocumentType,
+  RecoveryPasswordSessionModelType,
+} from '../domain/recovery-session.entity';
+import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
 
 @Injectable()
 export class AuthService {
@@ -39,7 +48,10 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly nodeMailerService: NodeMailerService,
     private readonly mailTemplateService: MailTemplateService,
+    private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
     @Inject('UUID') private readonly uuidv4: () => string,
+    @InjectModel(RecoveryPasswordSession.name)
+    private readonly recoveryPasswordSession: RecoveryPasswordSessionModelType,
     @InjectModel(User.name) private readonly userModel: UserModelType,
   ) {}
   async login(
@@ -193,11 +205,85 @@ export class AuthService {
     await this.userRepositories.save(user);
 
     const template: MailTemplateType =
+      await this.mailTemplateService.getConfirmationTemplate(confirmationCode);
+    this.nodeMailerService.sendMail([user.email], template);
+
+    return { appResult: AppResult.Success, data: null };
+  }
+
+  async passwordRecovery(
+    inputPasswordRecoveryModel: PasswordRecoveryInputModel,
+  ): Promise<AppResultType> {
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserByEmail(
+        inputPasswordRecoveryModel.email,
+      );
+
+    const confirmationCode: string = this.generateUuidCode(
+      this.appSettings.staticSettings.staticOptions.uuidOptions
+        .recoveryPasswordSessionCode.prefix,
+      this.appSettings.staticSettings.staticOptions.uuidOptions
+        .recoveryPasswordSessionCode.key,
+    );
+
+    if (user) {
+      const dateExpired: string = addMinutes(new Date(), 20).toISOString();
+
+      const recoverySession: RecoveryPasswordSessionDocumentType =
+        this.recoveryPasswordSession.createSessionInstance(
+          inputPasswordRecoveryModel,
+          confirmationCode,
+          dateExpired,
+        );
+      await this.recoveryPasswordSessionRepositories.save(recoverySession);
+    }
+
+    const template: MailTemplateType =
       await this.mailTemplateService.getRecoveryPasswordTemplate(
         confirmationCode,
       );
-    this.nodeMailerService.sendMail([user.email], template);
+    this.nodeMailerService.sendMail(
+      [inputPasswordRecoveryModel.email],
+      template,
+    );
 
+    return { appResult: AppResult.Success, data: null };
+  }
+
+  async changeUserPassword(
+    inputChangePasswordModel: ChangePasswordInputModel,
+  ): Promise<AppResultType<null, APIErrorMessageType>> {
+    const recoverySession: RecoveryPasswordSessionDocumentType | null =
+      await this.recoveryPasswordSessionRepositories.getSessionByCode(
+        inputChangePasswordModel.recoveryCode,
+      );
+    if (!recoverySession)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Bad code', field: 'recoveryCode' },
+        data: null,
+      };
+    const { expAt, email } = recoverySession;
+
+    if (compareAsc(new Date(), expAt) === 1)
+      return {
+        appResult: AppResult.BadRequest,
+        errorField: { message: 'Code is expired', field: 'recoveryCode' },
+        data: null,
+      };
+
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserByEmail(email);
+    if (!user)
+      return { appResult: AppResult.BadRequest, data: null, errorField: null };
+
+    const hash = await this.generatePasswordHashAndSalt(
+      inputChangePasswordModel.newPassword,
+    );
+
+    user.changePassword(hash);
+    await this.userRepositories.save(user);
+    await this.recoveryPasswordSessionRepositories.delete(recoverySession);
     return { appResult: AppResult.Success, data: null };
   }
 

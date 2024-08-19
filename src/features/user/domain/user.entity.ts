@@ -71,6 +71,10 @@ export class User {
     this.userConfirm.confirmationCode = newCode;
     this.userConfirm.dataExpire = dateExpireConfirmCode;
   }
+
+  changePassword(newPassword: string): void {
+    this.password = newPassword;
+  }
 }
 
 export const UserSchema: MongooseSchema<User> =
