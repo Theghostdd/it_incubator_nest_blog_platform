@@ -11,6 +11,8 @@ import { DataBase } from '../utils/clear-database/clear-data-base';
 import { NodeMailerService } from '../../src/features/nodemailer/application/nodemailer-application';
 import { NodeMailerMockService } from '../mock/nodemailer-mock';
 import { AuthTestModel } from '../models/auth/auth.model';
+import { BlogTestModel } from '../models/blog/blog.model';
+import { PostTestModel } from '../models/post/post.model';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -47,10 +49,14 @@ const getTestModel = (): ITestModels => {
     userTestModel.getUserCreateModel().email,
     userTestModel.getUserChangePasswordModel().recoveryCode,
   );
+  const blogTestModel: BlogTestModel = new BlogTestModel();
+  const postTestModel: PostTestModel = new PostTestModel();
 
   return {
     userTestModel: userTestModel,
     authTestModel: authTestModel,
+    blogTestModel: blogTestModel,
+    postTestModel: postTestModel,
   };
 };
 

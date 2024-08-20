@@ -2,15 +2,24 @@ export class PostTestModel {
   private readonly title: string;
   private readonly shortDescription: string;
   private readonly content: string;
-  private blogId: string;
+  private readonly blogId: string;
+  private readonly blogName: string;
+  private readonly updatePostTitle: string;
+  private readonly updatePostShortDescription: string;
+  private readonly updatePostContent: string;
+
   constructor() {
     this.title = 'user1';
     this.shortDescription = 'user1@example.com';
     this.content = 'myPassword';
     this.blogId = '';
+    this.blogName = '';
+    this.updatePostTitle = 'user2';
+    this.updatePostShortDescription = 'new description';
+    this.updatePostContent = 'new content';
   }
 
-  getUserCreateModel() {
+  getPostCreateModel() {
     return {
       title: this.title,
       shortDescription: this.shortDescription,
@@ -19,7 +28,28 @@ export class PostTestModel {
     };
   }
 
-  setBlogId(id: string) {
-    this.blogId = id;
+  getPostUpdateModel() {
+    return {
+      title: this.updatePostTitle,
+      shortDescription: this.updatePostShortDescription,
+      content: this.updatePostContent,
+      blogId: this.blogId,
+    };
+  }
+
+  getPostInsertModel() {
+    return {
+      title: this.title,
+      shortDescription: this.shortDescription,
+      content: this.content,
+      blogId: '66c4e15b0520745731561266',
+      createdAt: new Date().toISOString(),
+      blogName: 'Some blog',
+      extendedLikesInfo: {
+        likesCount: 0,
+        dislikesCount: 0,
+      },
+      __v: 0,
+    };
   }
 }
