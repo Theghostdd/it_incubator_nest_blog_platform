@@ -120,5 +120,4 @@ const env = new EnvironmentSettings(
 );
 
 const api = new APISettings(process.env);
-const superAdminAuth = new SuperAdminAuth();
 export const appSettings = new AppSettings(env, api, staticOption);

@@ -44,11 +44,11 @@ export class PostQueryRepository {
     //   const users = await this.userModel.find({_id: {$in: userIds}})
     //
     //   newestLikesArray = lastLikes.map((like) => {
-    //     const user = users.find(u => u._id.toString() === like.userId)!
+    //     const user.integration-spec.ts = users.find(u => u._id.toString() === like.userId)!
     //     return {
     //       addedAt: like.lastUpdateAt,
-    //       userId: user._id.toString(),
-    //       login: user.login
+    //       userId: user.integration-spec.ts._id.toString(),
+    //       login: user.integration-spec.ts.login
     //     }
     //   })
     // }
@@ -106,11 +106,11 @@ export class PostQueryRepository {
     //     .exec();
     //
     //   const likesWithUserDetails = await Promise.all(likes.map(async (like) => {
-    //     const user = await this.userModel.findById(like.userId).exec();
+    //     const user.integration-spec.ts = await this.userModel.findById(like.userId).exec();
     //     return {
     //       addedAt: like.lastUpdateAt,
     //       userId: like.userId,
-    //       login: user!.login,
+    //       login: user.integration-spec.ts!.login,
     //     };
     //   }));
     //

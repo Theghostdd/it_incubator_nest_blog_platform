@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import { UserRepositories } from '../infrastructure/user-repositories';
 import { UserInputModel } from '../api/models/input/user-input.model';
 import { InjectModel } from '@nestjs/mongoose';
@@ -11,6 +11,7 @@ import { APIErrorsMessageType, AppResultType } from '../../../base/types/types';
 export class UserService {
   constructor(
     private readonly userRepositories: UserRepositories,
+    @Inject(forwardRef(() => AuthService))
     private readonly authService: AuthService,
     @InjectModel(User.name) private readonly userModel: UserModelType,
   ) {}
