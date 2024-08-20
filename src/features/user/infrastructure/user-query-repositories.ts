@@ -27,7 +27,7 @@ export class UserQueryRepositories {
   }
 
   async getUsers(
-    query: UserSortingQuery,
+    query?: UserSortingQuery,
   ): Promise<BasePagination<UserOutputModel[] | []>> {
     const {
       sortBy,
@@ -63,8 +63,8 @@ export class UserQueryRepositories {
 
     return {
       pagesCount: +pagesCount,
-      page: +pageNumber!,
-      pageSize: +pageSize!,
+      page: +pageNumber,
+      pageSize: +pageSize,
       totalCount: +totalCount,
       items:
         users.length > 0 ? this.userMapperOutputModel.usersModel(users) : [],
@@ -72,7 +72,6 @@ export class UserQueryRepositories {
   }
 
   async getUserByIdAuthMe(id: string): Promise<UserMeOutputModel> {
-    console.log('id', id);
     const user: UserDocumentType | null = await this.userModel.findOne({
       _id: id,
     });

@@ -1,5 +1,5 @@
-import { AnyObject, Connection } from 'mongoose';
-import { IInsertOneResult } from './interfaces';
+import { AnyObject, Connection, InsertManyResult } from 'mongoose';
+import { IInsertResult } from './interfaces';
 
 export class DataBase {
   constructor(private readonly databaseConnection: Connection) {
@@ -13,8 +13,15 @@ export class DataBase {
     await this.databaseConnection.close();
   }
 
-  async dbInsertOne<T>(collection: string, data: T): Promise<IInsertOneResult> {
+  async dbInsertOne<T>(collection: string, data: T): Promise<IInsertResult> {
     return this.databaseConnection.collection(collection).insertOne(data);
+  }
+
+  async dbInsertMany<T>(
+    collection: string,
+    data: T[],
+  ): Promise<InsertManyResult<any>> {
+    return this.databaseConnection.collection(collection).insertMany(data);
   }
 
   async dbFindOne<T>(collection: string, filter: T): Promise<AnyObject> {

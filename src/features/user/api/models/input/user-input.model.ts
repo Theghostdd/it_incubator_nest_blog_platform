@@ -28,12 +28,18 @@ export class UserSortingQuery extends BaseSorting {
   }
 
   public createUserQuery(query: UserSortingQuery): UserSortQueryType {
-    return {
-      ...this.createBaseQuery(query),
-      searchLoginTerm: query.searchLoginTerm ? query.searchLoginTerm : '',
-      searchEmailTerm: query.searchEmailTerm
-        ? query.searchEmailTerm
-        : 'searchEmailTerm',
-    };
+    return query
+      ? {
+          ...this.createBaseQuery(query),
+          searchLoginTerm: query.searchLoginTerm ? query.searchLoginTerm : '',
+          searchEmailTerm: query.searchEmailTerm
+            ? query.searchEmailTerm
+            : 'searchEmailTerm',
+        }
+      : {
+          ...this.createBaseQuery(query),
+          searchLoginTerm: '',
+          searchEmailTerm: 'searchEmailTerm',
+        };
   }
 }

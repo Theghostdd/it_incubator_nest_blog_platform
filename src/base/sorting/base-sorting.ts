@@ -1,5 +1,3 @@
-import { Injectable } from '@nestjs/common';
-
 export type BaseSortingType = {
   sortBy: string;
   sortDirection: string;
@@ -16,14 +14,21 @@ export class BaseSorting {
   ) {}
 
   public createBaseQuery(query: BaseSorting): BaseSortingType {
-    return {
-      sortBy: query.sortBy ? query.sortBy : 'createdAt',
-      sortDirection:
-        query.sortDirection === 'asc' || query.sortDirection === 'desc'
-          ? query.sortDirection
-          : 'desc',
-      pageNumber: query.pageNumber ? Number(query.pageNumber) : 1,
-      pageSize: query.pageSize ? Number(query.pageSize) : 10,
-    };
+    return query
+      ? {
+          sortBy: query.sortBy ? query.sortBy : 'createdAt',
+          sortDirection:
+            query.sortDirection === 'asc' || query.sortDirection === 'desc'
+              ? query.sortDirection
+              : 'desc',
+          pageNumber: query.pageNumber ? Number(query.pageNumber) : 1,
+          pageSize: query.pageSize ? Number(query.pageSize) : 10,
+        }
+      : {
+          sortBy: 'createdAt',
+          sortDirection: 'desc',
+          pageNumber: 1,
+          pageSize: 10,
+        };
   }
 }
