@@ -21,6 +21,7 @@ import { NodeMailerMockService } from '../../mock/nodemailer-mock';
 import { NodeMailerService } from '../../../src/features/nodemailer/application/nodemailer-application';
 import { Types } from 'mongoose';
 import { addMinutes, subDays } from 'date-fns';
+import { IAuthRecoveryPasswordSessionInsertModel } from '../../models/auth/interfaces';
 
 describe('Auth', () => {
   let authService: AuthService;
@@ -33,6 +34,7 @@ describe('Auth', () => {
   let userConfirmationEmailCodeModel: IUserConfirmationEmailTestModel;
   let userResendConfirmationCodeEmailModel: IUserResendConfirmationCodeEmailTestModel;
   let userPasswordRecoveryModel: IUserPasswordRecoveryTestModel;
+  let authRecoveryPasswordSessionModel: IAuthRecoveryPasswordSessionInsertModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -61,6 +63,8 @@ describe('Auth', () => {
       testSettings.testModels.userTestModel.getUserResendConfirmationCodeEmailModel();
     userPasswordRecoveryModel =
       testSettings.testModels.userTestModel.getUserPasswordRecoveryModel();
+    authRecoveryPasswordSessionModel =
+      testSettings.testModels.authTestModel.getRecoveryPasswordSessionInsertModel();
   });
 
   describe('Login user', () => {
@@ -472,25 +476,104 @@ describe('Auth', () => {
     });
   });
 
-  // describe('Change password', () => {
-  //   it('should send email with code to recovery password but did not create session to change password', async () => {
-  //     const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
-  //
-  //     const result: AppResultType<null, APIErrorsMessageType> =
-  //       await authService.passwordRecovery(userPasswordRecoveryModel);
-  //
-  //     expect(result).toEqual({
-  //       appResult: AppResult.Success,
-  //       data: null,
-  //     });
-  //
-  //     expect(sendMailSpy).toHaveBeenCalled();
-  //     sendMailSpy.mockReset();
-  //
-  //     const recoverySession = await testSettings.dataBase.dbFindAll(
-  //       'recoverypasswordsessions',
-  //     );
-  //     expect(recoverySession).toHaveLength(0);
-  //   });
-  // });
+  describe('Change password', () => {
+    it('should change password for user', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      await testSettings.dataBase.dbInsertOne(
+        'recoverypasswordsessions',
+        authRecoveryPasswordSessionModel,
+      );
+
+      const result: AppResultType<null, APIErrorMessageType> =
+        await authService.changeUserPassword(userChnagePasswordModel);
+
+      expect(result).toEqual({
+        appResult: AppResult.Success,
+        data: null,
+      });
+
+      const recoverySession = await testSettings.dataBase.dbFindAll(
+        'recoverypasswordsessions',
+      );
+      expect(recoverySession).toHaveLength(0);
+      const user = await testSettings.dataBase.dbFindOne('users', {
+        _id: new Types.ObjectId(userId),
+      });
+      expect(user.password).not.toBe(userInsertModel.password);
+    });
+
+    it('should not change password, recovery session not found', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+
+      const result: AppResultType<null, APIErrorMessageType> =
+        await authService.changeUserPassword(userChnagePasswordModel);
+
+      expect(result).toEqual({
+        appResult: AppResult.BadRequest,
+        data: null,
+        errorField: { message: expect.any(String), field: 'recoveryCode' },
+      });
+
+      const user = await testSettings.dataBase.dbFindOne('users', {
+        _id: new Types.ObjectId(userId),
+      });
+      expect(user.password).toBe(userInsertModel.password);
+    });
+
+    it('should not change password, recovery session is expired', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      await testSettings.dataBase.dbInsertOne('recoverypasswordsessions', {
+        ...authRecoveryPasswordSessionModel,
+        expAt: subDays(new Date(), 2),
+      });
+
+      const result: AppResultType<null, APIErrorMessageType> =
+        await authService.changeUserPassword(userChnagePasswordModel);
+
+      expect(result).toEqual({
+        appResult: AppResult.BadRequest,
+        data: null,
+        errorField: { message: expect.any(String), field: 'recoveryCode' },
+      });
+
+      const recoverySession = await testSettings.dataBase.dbFindAll(
+        'recoverypasswordsessions',
+      );
+      expect(recoverySession).toHaveLength(1);
+      const user = await testSettings.dataBase.dbFindOne('users', {
+        _id: new Types.ObjectId(userId),
+      });
+      expect(user.password).toBe(userInsertModel.password);
+    });
+
+    it('should not change password, user not found', async () => {
+      await testSettings.dataBase.dbInsertOne(
+        'recoverypasswordsessions',
+        authRecoveryPasswordSessionModel,
+      );
+
+      const result: AppResultType<null, APIErrorMessageType> =
+        await authService.changeUserPassword(userChnagePasswordModel);
+
+      expect(result).toEqual({
+        appResult: AppResult.BadRequest,
+        data: null,
+        errorField: null,
+      });
+
+      const recoverySession = await testSettings.dataBase.dbFindAll(
+        'recoverypasswordsessions',
+      );
+      expect(recoverySession).toHaveLength(1);
+    });
+  });
 });

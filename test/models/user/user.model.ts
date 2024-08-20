@@ -4,12 +4,14 @@ export class UserTestModel {
   private readonly password: string;
   private readonly newPassword: string;
   private readonly confirmationCode: string;
+  private readonly recoveryPasswordSessionCode: string;
   constructor() {
     this.login = 'user1';
     this.email = 'user1@example.com';
     this.password = 'myPassword';
     this.newPassword = 'myNewPassword';
     this.confirmationCode = 'this-confirmation-code';
+    this.recoveryPasswordSessionCode = 'my-recovery-code';
   }
 
   getUserCreateModel() {
@@ -45,7 +47,7 @@ export class UserTestModel {
   getUserChangePasswordModel() {
     return {
       newPassword: this.newPassword,
-      recoveryCode: '',
+      recoveryCode: this.recoveryPasswordSessionCode,
     };
   }
 
