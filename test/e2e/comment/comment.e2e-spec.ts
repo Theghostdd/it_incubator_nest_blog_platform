@@ -4,7 +4,7 @@ import { initSettings } from '../../settings/test-settings';
 import { CommentTestManager } from '../../utils/request-test-manager/comment-test-manager';
 import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
 
-describe('Blog e2e', () => {
+describe('Comment e2e', () => {
   let commentTestManager: CommentTestManager;
   let testSettings: ITestSettings;
   let commentInsertModel: ICommentInsertModel;
