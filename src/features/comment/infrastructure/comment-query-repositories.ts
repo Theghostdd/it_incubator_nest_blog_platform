@@ -52,7 +52,7 @@ export class CommentQueryRepositories {
     };
 
     const filter = {
-      postInfo: { postId: postId ? postId : { $ne: '' } },
+      'postInfo.postId': postId || { $ne: '' },
     };
 
     const getTotalDocument: number =

@@ -1,4 +1,3 @@
-import { Prop } from '@nestjs/mongoose';
 import { addMinutes } from 'date-fns';
 
 export class AuthTestModel {

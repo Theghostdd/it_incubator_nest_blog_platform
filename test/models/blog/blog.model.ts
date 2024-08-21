@@ -5,13 +5,19 @@ export class BlogTestModel {
   private readonly updateBlogName: string;
   private readonly updateBlogDescription: string;
   private readonly updateBlogWebsiteUrl: string;
+  private readonly postTitle: string;
+  private readonly postShortDescription: string;
+  private readonly postContent: string;
   constructor() {
     this.name = 'Blog1';
     this.description = 'description blog';
-    this.websiteUrl = 'www.google.com';
+    this.websiteUrl = 'https://www.google.com';
     this.updateBlogName = 'Blog2';
     this.updateBlogDescription = 'description blog for update';
-    this.updateBlogWebsiteUrl = 'www.yandex.com';
+    this.updateBlogWebsiteUrl = 'https://www.yandex.com';
+    this.postTitle = 'postTitle';
+    this.postShortDescription = 'post description';
+    this.postContent = 'post content';
   }
 
   getBlogCreateModel() {
@@ -19,6 +25,14 @@ export class BlogTestModel {
       name: this.name,
       description: this.description,
       websiteUrl: this.websiteUrl,
+    };
+  }
+
+  getBlogPostCreateModel() {
+    return {
+      title: this.postTitle,
+      shortDescription: this.postShortDescription,
+      content: this.postContent,
     };
   }
 
@@ -39,5 +53,98 @@ export class BlogTestModel {
       description: this.updateBlogDescription,
       websiteUrl: this.updateBlogWebsiteUrl,
     };
+  }
+
+  getBlogInsertManyModel() {
+    return [
+      {
+        name: this.name,
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'MyBlog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Your Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'This Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'About Me',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Jon`s Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Your Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Alina`s Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Try Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Pod Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+      {
+        name: 'Qwerty Blog',
+        description: this.description,
+        websiteUrl: this.websiteUrl,
+        createdAt: new Date().toISOString(),
+        isMembership: false,
+        __v: 0,
+      },
+    ];
   }
 }

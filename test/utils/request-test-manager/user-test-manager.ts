@@ -2,15 +2,47 @@ import request from 'supertest';
 import { apiPrefixSettings } from '../../../src/settings/app-prefix-settings';
 import { INestApplication } from '@nestjs/common';
 import { IUserCreateTestModel } from '../../models/user/interfaces';
+import { AnyObject } from 'mongoose';
 
 export class UserTestManager {
+  private readonly apiPrefix: string;
+  private readonly userEndpoint: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
+    this.apiPrefix = apiPrefixSettings.API_PREFIX;
+    this.userEndpoint = `${this.apiPrefix}/${apiPrefixSettings.USER_PREFIX.user}`;
   }
-  createUser(userModel: IUserCreateTestModel, statusCode: number) {
-    return request(this.app.getHttpServer())
-      .post(`/${apiPrefixSettings.USER_PREFIX.user}`)
+  async createUser(
+    userModel: IUserCreateTestModel,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.userEndpoint}`)
+      .set({ authorization: authorizationToken })
       .send(userModel)
       .expect(statusCode);
+    return result.body;
+  }
+
+  async getUsers(
+    query: AnyObject,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .get(`${this.userEndpoint}`)
+      .set({ authorization: authorizationToken })
+      .query(query)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async deleteUser(id: string, authorizationToken: string, statusCode: number) {
+    const result = await request(this.app.getHttpServer())
+      .delete(`${this.userEndpoint}/${id}`)
+      .set({ authorization: authorizationToken })
+      .expect(statusCode);
+    return result.body;
   }
 }

@@ -42,9 +42,14 @@ export class BlogSortingQuery extends BaseSorting {
   }
 
   public createBlogQuery(query: BlogSortingQuery): BlogSortQueryType {
-    return {
-      ...this.createBaseQuery(query),
-      searchNameTerm: query.searchNameTerm ? query.searchNameTerm : '',
-    };
+    return query
+      ? {
+          ...this.createBaseQuery(query),
+          searchNameTerm: query.searchNameTerm ? query.searchNameTerm : '',
+        }
+      : {
+          ...this.createBaseQuery(query),
+          searchNameTerm: '',
+        };
   }
 }

@@ -13,14 +13,13 @@
     "start:debug": "nest start --debug --watch",
     "start:prod": "node dist/main",
     "lint": "eslint \"{src,apps,libs,test}/**/*.ts\" --fix",
-    "test": "set ENV-DEVELOPMENT && jest -i",
+    "test": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-all.json",
     "test:watch": "jest --watch",
-    "test:cov": "jest --coverage",
+    "test:cov": "set ENV-TESTING && jest -i --coverage ",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "set ENV-DEVELOPMENT && jest --config ./test/jest-e2e.json",
-    "test:integration": "set ENV-DEVELOPMENT && jest -i --runInBand --detectOpenHandles --config ./test/jest-integration.json"
-
-  },
+    "test:e2e": "set ENV-TESTING && jest -i --config ./test/jest-e2e.json",
+    "test:integration": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-integration.json",
+    "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json"},
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^10.0.0",
@@ -79,13 +78,15 @@
       "json",
       "ts"
     ],
-    "rootDir": "src",
-    "testRegex": ".*\\.spec\\.ts$",
+    "testMatch": [
+      "**/src/**/*.spec.ts",
+      "**/test/**/*-spec.ts"
+    ],
     "transform": {
       "^.+\\.(t|j)s$": "ts-jest"
     },
     "collectCoverageFrom": [
-      "**/*.(t|j)s"
+      "src/**/*.(t|j)s"
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"

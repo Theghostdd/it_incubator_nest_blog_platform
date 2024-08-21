@@ -1,10 +1,5 @@
 import { config } from 'dotenv';
-import {
-  staticOption,
-  StaticOption,
-  SuperAdminAuth,
-  ValidationOption,
-} from './app-static-settings';
+import { staticOption, StaticOption } from './app-static-settings';
 config();
 
 type JWTSType = {};

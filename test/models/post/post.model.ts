@@ -52,4 +52,152 @@ export class PostTestModel {
       __v: 0,
     };
   }
+
+  getPostInsertModels() {
+    return [
+      {
+        title: this.title,
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p1',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p2',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p3',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p4',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p5',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p6',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p7',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p8',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p9',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+      {
+        title: this.title + 'p10',
+        shortDescription: this.shortDescription,
+        content: this.content,
+        blogId: '66c4e15b0520745731561266',
+        createdAt: new Date().toISOString(),
+        blogName: 'Some blog',
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+        },
+        __v: 0,
+      },
+    ];
+  }
 }

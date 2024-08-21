@@ -13,6 +13,9 @@ import { NodeMailerMockService } from '../mock/nodemailer-mock';
 import { AuthTestModel } from '../models/auth/auth.model';
 import { BlogTestModel } from '../models/blog/blog.model';
 import { PostTestModel } from '../models/post/post.model';
+import { BlogTestManager } from '../utils/request-test-manager/blog-test-manager';
+import { PostTestManager } from '../utils/request-test-manager/post-test-manager';
+import { CommentsTestModel } from '../models/comments/comments.model';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -51,20 +54,28 @@ const getTestModel = (): ITestModels => {
   );
   const blogTestModel: BlogTestModel = new BlogTestModel();
   const postTestModel: PostTestModel = new PostTestModel();
+  const commentsTestModel: CommentsTestModel = new CommentsTestModel(
+    userTestModel.getUserCreateModel().login,
+  );
 
   return {
     userTestModel: userTestModel,
     authTestModel: authTestModel,
     blogTestModel: blogTestModel,
     postTestModel: postTestModel,
+    commentsTestModel: commentsTestModel,
   };
 };
 
 const getTestManagers = (app: INestApplication): ITestManger => {
   const userTestManager = new UserTestManager(app);
+  const blogTestManager: BlogTestManager = new BlogTestManager(app);
+  const postTestManager: PostTestManager = new PostTestManager(app);
 
   return {
     userTestManager: userTestManager,
+    blogTestManager: blogTestManager,
+    postTestManager: postTestManager,
   };
 };
 
