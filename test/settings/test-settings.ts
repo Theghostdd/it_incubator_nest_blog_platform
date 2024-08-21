@@ -16,6 +16,7 @@ import { PostTestModel } from '../models/post/post.model';
 import { BlogTestManager } from '../utils/request-test-manager/blog-test-manager';
 import { PostTestManager } from '../utils/request-test-manager/post-test-manager';
 import { CommentsTestModel } from '../models/comments/comments.model';
+import { CommentTestManager } from '../utils/request-test-manager/comment-test-manager';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -71,11 +72,13 @@ const getTestManagers = (app: INestApplication): ITestManger => {
   const userTestManager = new UserTestManager(app);
   const blogTestManager: BlogTestManager = new BlogTestManager(app);
   const postTestManager: PostTestManager = new PostTestManager(app);
+  const commentTestManager: CommentTestManager = new CommentTestManager(app);
 
   return {
     userTestManager: userTestManager,
     blogTestManager: blogTestManager,
     postTestManager: postTestManager,
+    commentTestManager: commentTestManager,
   };
 };
 

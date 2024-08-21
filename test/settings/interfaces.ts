@@ -9,6 +9,7 @@ import { PostTestModel } from '../models/post/post.model';
 import { BlogTestManager } from '../utils/request-test-manager/blog-test-manager';
 import { PostTestManager } from '../utils/request-test-manager/post-test-manager';
 import { CommentsTestModel } from '../models/comments/comments.model';
+import { CommentTestManager } from '../utils/request-test-manager/comment-test-manager';
 
 export interface ITestSettings {
   app: INestApplication;
@@ -30,4 +31,5 @@ export interface ITestManger {
   userTestManager: UserTestManager;
   blogTestManager: BlogTestManager;
   postTestManager: PostTestManager;
+  commentTestManager: CommentTestManager;
 }
