@@ -1,0 +1,6 @@
+export enum EnvState {
+  DEVELOPMENT = 'DEVELOPMENT',
+  STAGING = 'STAGING',
+  PRODUCTION = 'PRODUCTION',
+  TESTING = 'TESTING',
+}

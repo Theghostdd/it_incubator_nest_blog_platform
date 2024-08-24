@@ -13,10 +13,8 @@ export class LoginOrEmailConstraint implements ValidatorConstraintInterface {
     if (!value) return false;
 
     const isLoginValid =
-      value.length >=
-        appSettings.staticSettings.validationOption.login.MIN_LENGTH &&
-      value.length <=
-        appSettings.staticSettings.validationOption.login.MAX_LENGTH &&
+      value.length >= appSettings.validationOptions.login.MIN_LENGTH &&
+      value.length <= appSettings.validationOptions.login.MAX_LENGTH &&
       /^[a-zA-Z0-9_-]*$/.test(value);
     const isEmailValid = /^[\w-\\.]+@([\w-]+\.)+[\w-]{2,4}$/.test(value);
 

@@ -116,10 +116,8 @@ export class AuthService {
     );
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .confirmationEmail.prefix,
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .confirmationEmail.key,
+      this.appSettings.staticSettings.uuidOptions.confirmationEmail.prefix,
+      this.appSettings.staticSettings.uuidOptions.confirmationEmail.key,
     );
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
@@ -194,10 +192,8 @@ export class AuthService {
       };
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .newConfirmationCode.prefix,
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .newConfirmationCode.key,
+      this.appSettings.staticSettings.uuidOptions.newConfirmationCode.prefix,
+      this.appSettings.staticSettings.uuidOptions.newConfirmationCode.key,
     );
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
@@ -220,10 +216,10 @@ export class AuthService {
       );
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .recoveryPasswordSessionCode.prefix,
-      this.appSettings.staticSettings.staticOptions.uuidOptions
-        .recoveryPasswordSessionCode.key,
+      this.appSettings.staticSettings.uuidOptions.recoveryPasswordSessionCode
+        .prefix,
+      this.appSettings.staticSettings.uuidOptions.recoveryPasswordSessionCode
+        .key,
     );
 
     if (user) {
@@ -290,7 +286,7 @@ export class AuthService {
   async generatePasswordHashAndSalt(password: string): Promise<string> {
     return await bcrypt.hash(
       password,
-      this.appSettings.api.PASSWORD_HASH_ROUNDS,
+      this.appSettings.env.PASSWORD_HASH_ROUNDS,
     );
   }
 

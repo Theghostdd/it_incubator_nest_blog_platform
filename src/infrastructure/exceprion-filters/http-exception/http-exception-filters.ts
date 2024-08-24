@@ -3,6 +3,7 @@ import {
   Catch,
   ExceptionFilter,
   HttpException,
+  HttpStatus,
 } from '@nestjs/common';
 import { Response, Request } from 'express';
 import {
@@ -18,7 +19,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     const request = ctx.getRequest<Request>();
     const status = exception.getStatus();
 
-    if (status === 400) {
+    if (status === HttpStatus.BAD_REQUEST) {
       const error: APIErrorsMessageType = { errorsMessages: [] };
       const responseBody: any = exception.getResponse();
 

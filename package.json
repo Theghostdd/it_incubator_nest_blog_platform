@@ -19,10 +19,12 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "set ENV-TESTING && jest -i --config ./test/jest-e2e.json",
     "test:integration": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-integration.json",
-    "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json"},
+    "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json"
+  },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
     "@nestjs/common": "^10.0.0",
+    "@nestjs/config": "^3.2.3",
     "@nestjs/core": "^10.0.0",
     "@nestjs/jwt": "^10.2.0",
     "@nestjs/mongoose": "^10.0.10",

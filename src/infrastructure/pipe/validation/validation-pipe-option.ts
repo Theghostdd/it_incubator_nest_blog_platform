@@ -12,6 +12,7 @@ export class ValidationPipeOption implements ValidationPipeOptions {
     this.exceptionFactory = (errors: ValidationError[]) => {
       const errorsApi: APIErrorMessageType[] = [];
       errors.forEach((e) => {
+        console.log(e);
         const key = Object.keys(e.constraints)[0];
         errorsApi.push({
           field: e.property,

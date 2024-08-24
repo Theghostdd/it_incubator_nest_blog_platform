@@ -101,7 +101,7 @@ const requestLimiterProvider = [
 
 @Module({
   imports: [
-    MongooseModule.forRoot(appSettings.api.MONGO_CONNECTION_URI),
+    MongooseModule.forRoot(appSettings.env.MONGO_CONNECTION_URI),
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },

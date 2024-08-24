@@ -7,9 +7,9 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule);
   applyAppSettings(app);
 
-  await app.listen(appSettings.api.APP_PORT, () => {
-    console.log(`Server started on port ${appSettings.api.APP_PORT}`);
-    console.log(`Env: ${appSettings.env.getEnv()}`);
+  await app.listen(appSettings.env.APP_PORT, () => {
+    console.log(`Server started on port ${appSettings.env.APP_PORT}`);
+    console.log(`Env: ${appSettings.env.getEnvState()}`);
   });
 }
 
