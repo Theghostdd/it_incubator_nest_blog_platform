@@ -19,5 +19,3 @@ export class StaticOptions {
     };
   }
 }
-
-export const staticOptions = new StaticOptions();

@@ -18,6 +18,8 @@ import { PostTestManager } from '../utils/request-test-manager/post-test-manager
 import { CommentsTestModel } from '../models/comments/comments.model';
 import { CommentTestManager } from '../utils/request-test-manager/comment-test-manager';
 import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../src/settings/configuration/configuration';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -39,12 +41,15 @@ export const initSettings = async (): Promise<ITestSettings> => {
 
   const testModels: ITestModels = getTestModel();
 
+  const configService = app.get(ConfigService<ConfigurationType, true>);
+
   return {
     app,
     testingAppModule,
     testManager,
     dataBase,
     testModels,
+    configService,
   };
 };
 

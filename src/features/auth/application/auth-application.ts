@@ -27,7 +27,6 @@ import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../../user/application/user-service';
 import { addDays, addMinutes, compareAsc } from 'date-fns';
-import { AppSettings } from '../../../settings/app-setting';
 import { NodeMailerService } from '../../nodemailer/application/nodemailer-application';
 import { MailTemplateService } from '../../mail-template/application/template-application';
 
@@ -37,14 +36,22 @@ import {
   RecoveryPasswordSessionModelType,
 } from '../domain/recovery-session.entity';
 import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
+import { StaticOptions } from '../../../settings/app-static-settings';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from '../../../settings/configuration/configuration';
+import { EnvSettings } from '../../../settings/env-settings';
+import { APISettings } from '../../../settings/api-settings';
 
 @Injectable()
 export class AuthService {
+  private readonly staticOptions: StaticOptions;
+  private readonly envSettings: EnvSettings;
+  private readonly apiSettings: APISettings;
   constructor(
     @Inject(forwardRef(() => UserService))
     private readonly userService: UserService,
     private readonly userRepositories: UserRepositories,
-    private readonly appSettings: AppSettings,
+    private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly jwtService: JwtService,
     private readonly nodeMailerService: NodeMailerService,
     private readonly mailTemplateService: MailTemplateService,
@@ -53,7 +60,15 @@ export class AuthService {
     @InjectModel(RecoveryPasswordSession.name)
     private readonly recoveryPasswordSession: RecoveryPasswordSessionModelType,
     @InjectModel(User.name) private readonly userModel: UserModelType,
-  ) {}
+  ) {
+    this.staticOptions = this.configService.get('staticSettings', {
+      infer: true,
+    });
+    this.envSettings = this.configService.get('environmentSettings', {
+      infer: true,
+    });
+    this.apiSettings = this.configService.get('apiSettings', { infer: true });
+  }
   async login(
     inputLoginModel: LoginInputModel,
   ): Promise<
@@ -86,8 +101,13 @@ export class AuthService {
     const payloadAccessToken: JWTAccessTokenPayloadType = {
       userId: user._id.toString(),
     };
-    const accessToken: string =
-      await this.jwtService.signAsync(payloadAccessToken);
+    const accessToken: string = await this.jwtService.signAsync(
+      payloadAccessToken,
+      {
+        secret: this.apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
+        expiresIn: this.apiSettings.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
+      },
+    );
 
     return {
       appResult: AppResult.Success,
@@ -116,8 +136,8 @@ export class AuthService {
     );
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.uuidOptions.confirmationEmail.prefix,
-      this.appSettings.staticSettings.uuidOptions.confirmationEmail.key,
+      this.staticOptions.uuidOptions.confirmationEmail.prefix,
+      this.staticOptions.uuidOptions.confirmationEmail.key,
     );
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
@@ -192,8 +212,8 @@ export class AuthService {
       };
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.uuidOptions.newConfirmationCode.prefix,
-      this.appSettings.staticSettings.uuidOptions.newConfirmationCode.key,
+      this.staticOptions.uuidOptions.newConfirmationCode.prefix,
+      this.staticOptions.uuidOptions.newConfirmationCode.key,
     );
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
@@ -216,10 +236,8 @@ export class AuthService {
       );
 
     const confirmationCode: string = this.generateUuidCode(
-      this.appSettings.staticSettings.uuidOptions.recoveryPasswordSessionCode
-        .prefix,
-      this.appSettings.staticSettings.uuidOptions.recoveryPasswordSessionCode
-        .key,
+      this.staticOptions.uuidOptions.recoveryPasswordSessionCode.prefix,
+      this.staticOptions.uuidOptions.recoveryPasswordSessionCode.key,
     );
 
     if (user) {
@@ -284,10 +302,7 @@ export class AuthService {
   }
 
   async generatePasswordHashAndSalt(password: string): Promise<string> {
-    return await bcrypt.hash(
-      password,
-      this.appSettings.env.PASSWORD_HASH_ROUNDS,
-    );
+    return await bcrypt.hash(password, this.envSettings.PASSWORD_HASH_ROUNDS);
   }
 
   async comparePasswordHashAndSalt(

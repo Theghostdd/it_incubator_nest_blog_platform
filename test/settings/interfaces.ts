@@ -11,6 +11,8 @@ import { PostTestManager } from '../utils/request-test-manager/post-test-manager
 import { CommentsTestModel } from '../models/comments/comments.model';
 import { CommentTestManager } from '../utils/request-test-manager/comment-test-manager';
 import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager';
+import { ConfigurationType } from '../../src/settings/configuration/configuration';
+import { ConfigService } from '@nestjs/config';
 
 export interface ITestSettings {
   app: INestApplication;
@@ -18,6 +20,7 @@ export interface ITestSettings {
   testManager: ITestManger;
   dataBase: DataBase;
   testModels: ITestModels;
+  configService: ConfigService<ConfigurationType, true>;
 }
 
 export interface ITestModels {

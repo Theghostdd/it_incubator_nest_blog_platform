@@ -7,9 +7,9 @@ import {
 import { UserOutputModel } from '../../../src/features/user/api/models/output/user-output.model';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { UserSortingQuery } from '../../../src/features/user/api/models/input/user-input.model';
-import { appSettings } from '../../../src/settings/app-setting';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import { APISettings } from '../../../src/settings/api-settings';
 
 describe('User e2e', () => {
   let testSettings: ITestSettings;
@@ -17,12 +17,20 @@ describe('User e2e', () => {
   let userTestManager: UserTestManager;
   let userCreateModel: IUserCreateTestModel;
   let userInsertModel: IUserInsertTestModel;
-  const login: string = appSettings.staticSettings.superAdminAuth.login;
-  const password: string = appSettings.staticSettings.superAdminAuth.password;
-  const adminAuthToken: string = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
+  let apiSettings: APISettings;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
 
   beforeAll(async () => {
     testSettings = await initSettings();
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {

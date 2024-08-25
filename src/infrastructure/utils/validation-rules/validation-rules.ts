@@ -6,31 +6,61 @@ import {
   Matches,
 } from 'class-validator';
 import { Trim } from '../../decorators/transform/trim';
-import { appSettings } from '../../../settings/app-setting';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
+
+type ValidationOptions = {
+  MIN_LENGTH: number | null;
+  MAX_LENGTH: number | null;
+  PATTERN: string | null;
+};
+
+export type ValidationRulesType = {
+  [key: string]: ValidationOptions;
+};
+
+export const validationRules: ValidationRulesType = {
+  login: { MIN_LENGTH: 3, MAX_LENGTH: 10, PATTERN: '^[a-zA-Z0-9_-]*$' },
+  title: { MIN_LENGTH: 1, MAX_LENGTH: 30, PATTERN: null },
+  name: { MIN_LENGTH: 1, MAX_LENGTH: 15, PATTERN: null },
+  email: {
+    MIN_LENGTH: null,
+    MAX_LENGTH: null,
+    PATTERN: '^[\\w-\\.]+@([\\w-]+\\.)+[\\w-]{2,4}$',
+  },
+  password: { MIN_LENGTH: 6, MAX_LENGTH: 20, PATTERN: null },
+  shortDescription: {
+    MIN_LENGTH: 1,
+    MAX_LENGTH: 100,
+    PATTERN: null,
+  },
+  content: { MIN_LENGTH: 1, MAX_LENGTH: 1000, PATTERN: null },
+  description: { MIN_LENGTH: 1, MAX_LENGTH: 500, PATTERN: null },
+  websiteUrl: {
+    MIN_LENGTH: 13,
+    MAX_LENGTH: 100,
+    PATTERN: '^https://([a-zA-Z0-9_-]+.)+[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*/?$',
+  },
+};
 
 export class UserInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.login.MIN_LENGTH,
-    appSettings.validationOptions.login.MAX_LENGTH,
-  )
-  @Matches(appSettings.validationOptions.login.PATTERN)
+  @Length(validationRules.login.MIN_LENGTH, validationRules.login.MAX_LENGTH)
+  @Matches(validationRules.login.PATTERN)
   public login: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.password.MIN_LENGTH,
-    appSettings.validationOptions.password.MAX_LENGTH,
+    validationRules.password.MIN_LENGTH,
+    validationRules.password.MAX_LENGTH,
   )
   public password: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Matches(appSettings.validationOptions.email.PATTERN)
+  @Matches(validationRules.email.PATTERN)
   public email: string;
 }
 
@@ -38,25 +68,22 @@ export class PostInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.title.MIN_LENGTH,
-    appSettings.validationOptions.title.MAX_LENGTH,
-  )
+  @Length(validationRules.title.MIN_LENGTH, validationRules.title.MAX_LENGTH)
   public title: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.shortDescription.MIN_LENGTH,
-    appSettings.validationOptions.shortDescription.MAX_LENGTH,
+    validationRules.shortDescription.MIN_LENGTH,
+    validationRules.shortDescription.MAX_LENGTH,
   )
   public shortDescription: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.content.MIN_LENGTH,
-    appSettings.validationOptions.content.MAX_LENGTH,
+    validationRules.content.MIN_LENGTH,
+    validationRules.content.MAX_LENGTH,
   )
   public content: string;
   @Trim()
@@ -69,25 +96,22 @@ export class PostUpdateModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.title.MIN_LENGTH,
-    appSettings.validationOptions.title.MAX_LENGTH,
-  )
+  @Length(validationRules.title.MIN_LENGTH, validationRules.title.MAX_LENGTH)
   public title: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.shortDescription.MIN_LENGTH,
-    appSettings.validationOptions.shortDescription.MAX_LENGTH,
+    validationRules.shortDescription.MIN_LENGTH,
+    validationRules.shortDescription.MAX_LENGTH,
   )
   public shortDescription: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.content.MIN_LENGTH,
-    appSettings.validationOptions.content.MAX_LENGTH,
+    validationRules.content.MIN_LENGTH,
+    validationRules.content.MAX_LENGTH,
   )
   public content: string;
   @Trim()
@@ -100,25 +124,22 @@ export class PostBlogInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.title.MIN_LENGTH,
-    appSettings.validationOptions.title.MAX_LENGTH,
-  )
+  @Length(validationRules.title.MIN_LENGTH, validationRules.title.MAX_LENGTH)
   public title: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.shortDescription.MIN_LENGTH,
-    appSettings.validationOptions.shortDescription.MAX_LENGTH,
+    validationRules.shortDescription.MIN_LENGTH,
+    validationRules.shortDescription.MAX_LENGTH,
   )
   public shortDescription: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.content.MIN_LENGTH,
-    appSettings.validationOptions.content.MAX_LENGTH,
+    validationRules.content.MIN_LENGTH,
+    validationRules.content.MAX_LENGTH,
   )
   public content: string;
 }
@@ -127,27 +148,24 @@ export class BlogInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.name.MIN_LENGTH,
-    appSettings.validationOptions.name.MAX_LENGTH,
-  )
+  @Length(validationRules.name.MIN_LENGTH, validationRules.name.MAX_LENGTH)
   public name: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.description.MIN_LENGTH,
-    appSettings.validationOptions.description.MAX_LENGTH,
+    validationRules.description.MIN_LENGTH,
+    validationRules.description.MAX_LENGTH,
   )
   public description: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.websiteUrl.MIN_LENGTH,
-    appSettings.validationOptions.websiteUrl.MAX_LENGTH,
+    validationRules.websiteUrl.MIN_LENGTH,
+    validationRules.websiteUrl.MAX_LENGTH,
   )
-  @Matches(appSettings.validationOptions.websiteUrl.PATTERN)
+  @Matches(validationRules.websiteUrl.PATTERN)
   public websiteUrl: string;
 }
 
@@ -155,27 +173,24 @@ export class BlogUpdateModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.name.MIN_LENGTH,
-    appSettings.validationOptions.name.MAX_LENGTH,
-  )
+  @Length(validationRules.name.MIN_LENGTH, validationRules.name.MAX_LENGTH)
   public name: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.description.MIN_LENGTH,
-    appSettings.validationOptions.description.MAX_LENGTH,
+    validationRules.description.MIN_LENGTH,
+    validationRules.description.MAX_LENGTH,
   )
   public description: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.websiteUrl.MIN_LENGTH,
-    appSettings.validationOptions.websiteUrl.MAX_LENGTH,
+    validationRules.websiteUrl.MIN_LENGTH,
+    validationRules.websiteUrl.MAX_LENGTH,
   )
-  @Matches(appSettings.validationOptions.websiteUrl.PATTERN)
+  @Matches(validationRules.websiteUrl.PATTERN)
   public websiteUrl: string;
 }
 
@@ -188,8 +203,8 @@ export class LoginInputModelValidationRules {
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.password.MIN_LENGTH,
-    appSettings.validationOptions.password.MAX_LENGTH,
+    validationRules.password.MIN_LENGTH,
+    validationRules.password.MAX_LENGTH,
   )
   public password: string;
 }
@@ -198,24 +213,21 @@ export class RegistrationInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Length(
-    appSettings.validationOptions.login.MIN_LENGTH,
-    appSettings.validationOptions.login.MAX_LENGTH,
-  )
-  @Matches(appSettings.validationOptions.login.PATTERN)
+  @Length(validationRules.login.MIN_LENGTH, validationRules.login.MAX_LENGTH)
+  @Matches(validationRules.login.PATTERN)
   public login: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.password.MIN_LENGTH,
-    appSettings.validationOptions.password.MAX_LENGTH,
+    validationRules.password.MIN_LENGTH,
+    validationRules.password.MAX_LENGTH,
   )
   public password: string;
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Matches(appSettings.validationOptions.email.PATTERN)
+  @Matches(validationRules.email.PATTERN)
   public email: string;
 }
 
@@ -230,7 +242,7 @@ export class ResendConfirmationCodeInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Matches(appSettings.validationOptions.email.PATTERN)
+  @Matches(validationRules.email.PATTERN)
   public email: string;
 }
 
@@ -238,7 +250,7 @@ export class PasswordRecoveryInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsString()
-  @Matches(appSettings.validationOptions.email.PATTERN)
+  @Matches(validationRules.email.PATTERN)
   public email: string;
 }
 
@@ -247,8 +259,8 @@ export class ChangePasswordInputModelValidationRules {
   @IsNotEmpty()
   @IsString()
   @Length(
-    appSettings.validationOptions.password.MIN_LENGTH,
-    appSettings.validationOptions.password.MAX_LENGTH,
+    validationRules.password.MIN_LENGTH,
+    validationRules.password.MAX_LENGTH,
   )
   public newPassword: string;
   @Trim()

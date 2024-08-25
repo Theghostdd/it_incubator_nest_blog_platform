@@ -1,4 +1,4 @@
-import { env, EnvSettings } from './env-settings';
+import { EnvSettings } from './env-settings';
 import {
   JWTTokensSettingsType,
   NodeMailerSettingsType,
@@ -71,5 +71,3 @@ export class APISettings {
     };
   }
 }
-
-export const api: APISettings = new APISettings(env);

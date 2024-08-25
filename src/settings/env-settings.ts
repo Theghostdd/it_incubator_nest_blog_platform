@@ -1,10 +1,7 @@
-import { config } from 'dotenv';
 import { EnvState } from './types/enum';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 import { Trim } from '../infrastructure/decorators/transform/trim';
 import { EnvVariableType } from './types/types';
-import * as process from 'node:process';
-config();
 
 export class EnvSettings {
   @IsEnum(EnvState)
@@ -47,7 +44,7 @@ export class EnvSettings {
   public readonly SUPER_ADMIN_PASSWORD: string;
 
   constructor(envVariable: EnvVariableType) {
-    this.ENV = envVariable.ENV as EnvState;
+    this.ENV = (envVariable.ENV as EnvState) || EnvState.DEVELOPMENT;
     this.APP_PORT = this.getNumberOrDefaultValue(envVariable.APP_PORT, 3000);
     this.PASSWORD_HASH_ROUNDS = this.getNumberOrDefaultValue(
       envVariable.PASSWORD_HASH_ROUNDS,
@@ -60,7 +57,7 @@ export class EnvSettings {
     this.JWT_ACCESS_TOKEN_SECRET = envVariable.JWT_ACCESS_TOKEN_SECRET;
     this.JWT_REFRESH_TOKEN_SECRET = envVariable.JWT_REFRESH_TOKEN_SECRET;
     this.SUPER_ADMIN_LOGIN = envVariable.SUPER_ADMIN_LOGIN;
-    this.SUPER_ADMIN_LOGIN = envVariable.SUPER_ADMIN_LOGIN;
+    this.SUPER_ADMIN_PASSWORD = envVariable.SUPER_ADMIN_PASSWORD;
   }
 
   getEnvState() {
@@ -91,10 +88,3 @@ export class EnvSettings {
     return parsedValue;
   }
 }
-
-const ENV = process.env.ENV as EnvState;
-if (ENV !== EnvState.PRODUCTION && ENV !== EnvState.STAGING) {
-  process.env.ENV = EnvState.DEVELOPMENT;
-}
-
-export const env: EnvSettings = new EnvSettings(process.env);

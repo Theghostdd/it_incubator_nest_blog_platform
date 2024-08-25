@@ -1,6 +1,5 @@
 import { Module } from '@nestjs/common';
 import { MongooseModule } from '@nestjs/mongoose';
-import { AppSettings, appSettings } from './settings/app-setting';
 import { UserController } from './features/user/api/user-controller';
 import { UserRepositories } from './features/user/infrastructure/user-repositories';
 import { UserQueryRepositories } from './features/user/infrastructure/user-query-repositories';
@@ -36,7 +35,7 @@ import { CommentMapperOutputModel } from './features/comment/api/model/output/co
 import { BasicStrategy } from './infrastructure/guards/basic/basic-strategy';
 import { BasicGuard } from './infrastructure/guards/basic/basic.guard';
 import { AuthController } from './features/auth/api/auth.controller';
-import { JwtModule } from '@nestjs/jwt';
+import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { NodeMailerService } from './features/nodemailer/application/nodemailer-application';
@@ -56,6 +55,9 @@ import {
 import { RequestLimiterStrategy } from './infrastructure/guards/request-limiter/request-limiter';
 import { AuthJWTAccessGuard } from './infrastructure/guards/jwt/jwt.guard';
 import { JwtStrategy } from './infrastructure/guards/jwt/jwt-strategy';
+import { configModule } from './settings/configuration/config.module';
+import { ConfigService } from '@nestjs/config';
+import { ConfigurationType } from './settings/configuration/configuration';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -82,10 +84,6 @@ const blogProviders = [
   BlogSortingQuery,
 ];
 const authProviders = [AuthService];
-const appSettingsProviders = {
-  provide: AppSettings,
-  useValue: appSettings,
-};
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -101,7 +99,16 @@ const requestLimiterProvider = [
 
 @Module({
   imports: [
-    MongooseModule.forRoot(appSettings.env.MONGO_CONNECTION_URI),
+    configModule,
+    MongooseModule.forRootAsync({
+      useFactory: (configService: ConfigService<ConfigurationType, true>) => {
+        const envSettings = configService.get('environmentSettings', {
+          infer: true,
+        });
+        return { uri: envSettings.MONGO_CONNECTION_URI };
+      },
+      inject: [ConfigService],
+    }),
     MongooseModule.forFeature([
       { name: User.name, schema: UserSchema },
       { name: Post.name, schema: PostSchema },
@@ -113,28 +120,40 @@ const requestLimiterProvider = [
       },
       { name: RequestLimiter.name, schema: RequestLimiterSchema },
     ]),
-    JwtModule.register({
-      global: true,
-      secret: appSettings.api.JWT_TOKENS.ACCESS_TOKEN.SECRET,
-      signOptions: {
-        expiresIn: appSettings.api.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
+    // JwtModule.registerAsync({
+    //   useFactory: (configService: ConfigService<ConfigurationType, true>) => {
+    //     const apiSettings = configService.get('apiSettings', { infer: true });
+    //     return {
+    //       global: true,
+    //       secret: apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
+    //       signOptions: {
+    //         expiresIn: apiSettings.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
+    //       },
+    //     };
+    //   },
+    //   inject: [ConfigService],
+    // }),
+    MailerModule.forRootAsync({
+      useFactory: (configService: ConfigService<ConfigurationType, true>) => {
+        const apiSettings = configService.get('apiSettings', { infer: true });
+        return {
+          transport: {
+            service: apiSettings.NODEMAILER.MAIL_SERVICE,
+            host: apiSettings.NODEMAILER.MAIL_HOST,
+            port: apiSettings.NODEMAILER.MAIL_PORT,
+            ignoreTLS: apiSettings.NODEMAILER.MAIL_IGNORE_TLS,
+            secure: apiSettings.NODEMAILER.MAIL_SECURE,
+            auth: {
+              user: apiSettings.NODEMAILER.MAIL_AGENT_SETTINGS.address,
+              pass: apiSettings.NODEMAILER.MAIL_AGENT_SETTINGS.password,
+            },
+          },
+          defaults: {
+            from: `"${apiSettings.NODEMAILER.MAIL_AGENT_SETTINGS.name}" <${apiSettings.NODEMAILER.MAIL_AGENT_SETTINGS.address}>`,
+          },
+        };
       },
-    }),
-    MailerModule.forRoot({
-      transport: {
-        service: appSettings.api.NODEMAILER.MAIL_SERVICE,
-        host: appSettings.api.NODEMAILER.MAIL_HOST,
-        port: appSettings.api.NODEMAILER.MAIL_PORT,
-        ignoreTLS: appSettings.api.NODEMAILER.MAIL_IGNORE_TLS,
-        secure: appSettings.api.NODEMAILER.MAIL_SECURE,
-        auth: {
-          user: appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.address,
-          pass: appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.password,
-        },
-      },
-      defaults: {
-        from: `"${appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.name}" <${appSettings.api.NODEMAILER.MAIL_AGENT_SETTINGS.address}>`,
-      },
+      inject: [ConfigService],
     }),
   ],
   controllers: [
@@ -149,7 +168,6 @@ const requestLimiterProvider = [
     ...authProviders,
     ...userProviders,
     ...postProviders,
-    appSettingsProviders,
     UUIDProvider,
     ...testingProviders,
     ...blogProviders,
@@ -162,6 +180,7 @@ const requestLimiterProvider = [
     ...requestLimiterProvider,
     AuthJWTAccessGuard,
     JwtStrategy,
+    JwtService,
   ],
 })
 export class AppModule {}
