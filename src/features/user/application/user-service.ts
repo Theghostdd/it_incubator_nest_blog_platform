@@ -1,57 +1,52 @@
-import { forwardRef, Inject, Injectable } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { UserRepositories } from '../infrastructure/user-repositories';
-import { UserInputModel } from '../api/models/input/user-input.model';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocumentType, UserModelType } from '../domain/user.entity';
-import { AuthService } from '../../auth/application/auth-application';
-import { AppResult } from '../../../base/enum/app-result.enum';
+import { UserDocumentType } from '../domain/user.entity';
 import { APIErrorsMessageType, AppResultType } from '../../../base/types/types';
+import { ApplicationObjectResult } from '../../../base/application-object-result/application-object-result';
 
 @Injectable()
 export class UserService {
   constructor(
     private readonly userRepositories: UserRepositories,
-    @Inject(forwardRef(() => AuthService))
-    private readonly authService: AuthService,
-    @InjectModel(User.name) private readonly userModel: UserModelType,
+    private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async createUser(
-    userInputModel: UserInputModel,
-  ): Promise<AppResultType<string, APIErrorsMessageType>> {
-    const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
-      await this.checkUniqLoginAndEmail(
-        userInputModel.email,
-        userInputModel.login,
-      );
+  // async createUser(
+  //   userInputModel: UserInputModel,
+  // ): Promise<AppResultType<string, APIErrorsMessageType>> {
+  //   const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
+  //     await this.checkUniqLoginAndEmail(
+  //       userInputModel.email,
+  //       userInputModel.login,
+  //     );
+  //
+  //   if (user.appResult !== AppResult.Success)
+  //     return {
+  //       appResult: AppResult.BadRequest,
+  //       data: null,
+  //       errorField: user.errorField,
+  //     };
+  //
+  //   const hash: string = await this.authService.generatePasswordHashAndSalt(
+  //     userInputModel.password,
+  //   );
+  //   const newUser: UserDocumentType = this.userModel.createUserInstance(
+  //     userInputModel,
+  //     hash,
+  //   );
+  //
+  //   await this.userRepositories.save(newUser);
+  //   return { appResult: AppResult.Success, data: newUser._id.toString() };
+  // }
 
-    if (user.appResult !== AppResult.Success)
-      return {
-        appResult: AppResult.BadRequest,
-        data: null,
-        errorField: user.errorField,
-      };
-
-    const hash: string = await this.authService.generatePasswordHashAndSalt(
-      userInputModel.password,
-    );
-    const newUser: UserDocumentType = this.userModel.createUserInstance(
-      userInputModel,
-      hash,
-    );
-
-    await this.userRepositories.save(newUser);
-    return { appResult: AppResult.Success, data: newUser._id.toString() };
-  }
-
-  async deleteUser(id: string): Promise<AppResultType> {
-    const user: UserDocumentType | null =
-      await this.userRepositories.getUserById(id);
-    if (!user) return { appResult: AppResult.NotFound, data: null };
-
-    await this.userRepositories.delete(user);
-    return { appResult: AppResult.Success, data: null };
-  }
+  // async deleteUser(id: string): Promise<AppResultType> {
+  //   const user: UserDocumentType | null =
+  //     await this.userRepositories.getUserById(id);
+  //   if (!user) return { appResult: AppResult.NotFound, data: null };
+  //
+  //   await this.userRepositories.delete(user);
+  //   return { appResult: AppResult.Success, data: null };
+  // }
 
   async checkUniqLoginAndEmail(
     email: string,
@@ -73,12 +68,19 @@ export class UserService {
             field: 'email',
           })
         : false;
-      return {
-        appResult: AppResult.BadRequest,
-        data: user,
-        errorField: errors,
-      };
+
+      return this.applicationObjectResult.badRequest(errors, user);
     }
-    return { appResult: AppResult.Success, data: null };
+    return this.applicationObjectResult.success(null);
+  }
+
+  async userIsExistById(
+    id: string,
+  ): Promise<AppResultType<UserDocumentType | null>> {
+    const user: UserDocumentType | null =
+      await this.userRepositories.getUserById(id);
+    if (!user) return this.applicationObjectResult.notFound();
+
+    return this.applicationObjectResult.success(user);
   }
 }

@@ -28,10 +28,10 @@ import {
 } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { UserQueryRepositories } from '../../user/infrastructure/user-query-repositories';
-import { LimitRequestGuard } from '../../../infrastructure/guards/request-limiter/request-limiter.guard';
 import { UserMeOutputModel } from '../../user/api/models/output/user-output.model';
-import { AuthJWTAccessGuard } from '../../../infrastructure/guards/jwt/jwt.guard';
-import { CurrentUser } from '../../../infrastructure/decorators/current-user';
+import { AuthJWTAccessGuard } from '../../../core/guards/jwt/jwt.guard';
+import { CurrentUser } from '../../../core/decorators/current-user';
+import { LimitRequestGuard } from '../../../core/guards/request-limiter/request-limiter.guard';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {

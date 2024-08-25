@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { apiPrefixSettings } from './app-prefix-settings';
-import { ValidationPipeOption } from '../infrastructure/pipe/validation/validation-pipe-option';
-import { HttpExceptionFilter } from '../infrastructure/exceprion-filters/http-exception/http-exception-filters';
+import { ValidationPipeOption } from '../core/pipe/validation/validation-pipe-option';
+import { HttpExceptionFilter } from '../core/exceprion-filters/http-exception/http-exception-filters';
 
 export const applyAppSettings = (app: INestApplication) => {
   setApiPrefix(app);
@@ -21,7 +21,12 @@ const enableCors = (app: INestApplication) => {
   app.enableCors();
 };
 const setPipes = (app: INestApplication) => {
-  app.useGlobalPipes(new ValidationPipe(new ValidationPipeOption()));
+  const validationPipeOptions: ValidationPipeOption =
+    new ValidationPipeOption();
+  const validationPipe: ValidationPipe = new ValidationPipe(
+    validationPipeOptions,
+  );
+  app.useGlobalPipes(validationPipe);
 };
 
 const setExceptionFilter = (app: INestApplication) => {

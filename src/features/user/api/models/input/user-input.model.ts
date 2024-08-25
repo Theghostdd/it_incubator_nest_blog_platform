@@ -2,7 +2,7 @@ import {
   BaseSorting,
   BaseSortingType,
 } from '../../../../../base/sorting/base-sorting';
-import { UserInputModelValidationRules } from '../../../../../infrastructure/utils/validation-rules/validation-rules';
+import { UserInputModelValidationRules } from '../../../../../core/utils/validation-rules/validation-rules';
 
 export class UserInputModel extends UserInputModelValidationRules {
   public login: string;

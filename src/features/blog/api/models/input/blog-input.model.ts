@@ -6,7 +6,7 @@ import {
   BlogInputModelValidationRules,
   BlogUpdateModelValidationRules,
   PostBlogInputModelValidationRules,
-} from '../../../../../infrastructure/utils/validation-rules/validation-rules';
+} from '../../../../../core/utils/validation-rules/validation-rules';
 
 export class PostBlogInputModel extends PostBlogInputModelValidationRules {
   public title: string;

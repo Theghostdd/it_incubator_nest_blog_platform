@@ -12,7 +12,6 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { UserService } from '../application/user-service';
 import {
   UserInputModel,
   UserSortingQuery,
@@ -23,12 +22,15 @@ import { UserOutputModel } from './models/output/user-output.model';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { BasePagination } from '../../../base/pagination/base-pagination';
 import { APIErrorsMessageType, AppResultType } from '../../../base/types/types';
-import { BasicGuard } from '../../../infrastructure/guards/basic/basic.guard';
+import { BasicGuard } from '../../../core/guards/basic/basic.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreateUserCommand } from '../application/command/create-user.command';
+import { DeleteUserByIdCommand } from '../application/command/delete-user.command';
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
 export class UserController {
   constructor(
-    private readonly userService: UserService,
+    private readonly commandBus: CommandBus,
     private readonly userQueryRepositories: UserQueryRepositories,
   ) {}
 
@@ -43,7 +45,7 @@ export class UserController {
     @Body() userInputModel: UserInputModel,
   ): Promise<UserOutputModel> {
     const result: AppResultType<string, APIErrorsMessageType> =
-      await this.userService.createUser(userInputModel);
+      await this.commandBus.execute(new CreateUserCommand(userInputModel));
     switch (result.appResult) {
       case AppResult.Success:
         return await this.userQueryRepositories.getUserById(result.data);
@@ -57,7 +59,9 @@ export class UserController {
   @Delete(':id')
   @HttpCode(204)
   async deleteUser(@Param('id') id: string): Promise<void> {
-    const result: AppResultType = await this.userService.deleteUser(id);
+    const result: AppResultType = await this.commandBus.execute(
+      new DeleteUserByIdCommand(id),
+    );
 
     switch (result.appResult) {
       case AppResult.Success:

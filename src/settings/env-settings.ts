@@ -1,7 +1,7 @@
 import { EnvState } from './types/enum';
 import { IsEnum, IsNotEmpty, IsNumber, IsString } from 'class-validator';
-import { Trim } from '../infrastructure/decorators/transform/trim';
 import { EnvVariableType } from './types/types';
+import { Trim } from '../core/decorators/transform/trim';
 
 export class EnvSettings {
   @IsEnum(EnvState)

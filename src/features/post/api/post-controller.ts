@@ -12,7 +12,6 @@ import {
   Put,
   Query,
 } from '@nestjs/common';
-import { PostService } from '../application/post-service';
 import { PostQueryRepository } from '../infrastructure/post-query-repositories';
 import { PostOutputModel } from './models/output/post-output.model';
 import { BaseSorting } from '../../../base/sorting/base-sorting';
@@ -25,13 +24,17 @@ import { AppResultType } from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { CommentOutputModel } from '../../comment/api/model/output/comment-output.model';
 import { CommentQueryRepositories } from '../../comment/infrastructure/comment-query-repositories';
+import { CommandBus } from '@nestjs/cqrs';
+import { CreatePostCommand } from '../application/command/create-post.command';
+import { DeletePostByIdCommand } from '../application/command/delete-post.command';
+import { UpdatePostByIdCommand } from '../application/command/update-post.command';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
   constructor(
-    private readonly postService: PostService,
     private readonly postQueryRepository: PostQueryRepository,
     private readonly commentQueryRepository: CommentQueryRepositories,
+    private readonly commandBus: CommandBus,
   ) {}
 
   @Get(`:id/${apiPrefixSettings.POST.comments}`)
@@ -58,8 +61,9 @@ export class PostController {
   async createPost(
     @Body() inputModel: PostInputModel,
   ): Promise<PostOutputModel> {
-    const result: AppResultType<string> =
-      await this.postService.createPostByBlogId(inputModel);
+    const result: AppResultType<string> = await this.commandBus.execute(
+      new CreatePostCommand(inputModel),
+    );
     switch (result.appResult) {
       case AppResult.Success:
         return await this.postQueryRepository.getPostById(result.data);
@@ -73,7 +77,9 @@ export class PostController {
   @Delete(':id')
   @HttpCode(204)
   async deletePostById(@Param('id') id: string): Promise<void> {
-    const result: AppResultType = await this.postService.deletePostById(id);
+    const result: AppResultType = await this.commandBus.execute(
+      new DeletePostByIdCommand(id),
+    );
     switch (result.appResult) {
       case AppResult.Success:
         return;
@@ -90,9 +96,8 @@ export class PostController {
     @Param('id') id: string,
     @Body() updateModel: PostUpdateModel,
   ): Promise<void> {
-    const result: AppResultType = await this.postService.updatePostById(
-      id,
-      updateModel,
+    const result: AppResultType = await this.commandBus.execute(
+      new UpdatePostByIdCommand(id, updateModel),
     );
     switch (result.appResult) {
       case AppResult.Success:

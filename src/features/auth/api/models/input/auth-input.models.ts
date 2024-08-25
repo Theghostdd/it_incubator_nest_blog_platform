@@ -5,7 +5,7 @@ import {
   PasswordRecoveryInputModelValidationRules,
   RegistrationInputModelValidationRules,
   ResendConfirmationCodeInputModelValidationRules,
-} from '../../../../../infrastructure/utils/validation-rules/validation-rules';
+} from '../../../../../core/utils/validation-rules/validation-rules';
 
 export class LoginInputModel extends LoginInputModelValidationRules {
   public loginOrEmail: string;

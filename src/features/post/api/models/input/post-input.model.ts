@@ -1,7 +1,7 @@
 import {
   PostInputModelValidationRules,
   PostUpdateModelValidationRules,
-} from '../../../../../infrastructure/utils/validation-rules/validation-rules';
+} from '../../../../../core/utils/validation-rules/validation-rules';
 
 export class PostInputModel extends PostInputModelValidationRules {
   public title: string;

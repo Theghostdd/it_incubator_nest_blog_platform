@@ -32,8 +32,6 @@ import {
   CommentSchema,
 } from './features/comment/domain/comment.entity';
 import { CommentMapperOutputModel } from './features/comment/api/model/output/comment-output.model';
-import { BasicStrategy } from './infrastructure/guards/basic/basic-strategy';
-import { BasicGuard } from './infrastructure/guards/basic/basic.guard';
 import { AuthController } from './features/auth/api/auth.controller';
 import { JwtService } from '@nestjs/jwt';
 import { v4 as uuidv4 } from 'uuid';
@@ -45,19 +43,31 @@ import {
   RecoveryPasswordSession,
   RecoveryPasswordSessionSchema,
 } from './features/auth/domain/recovery-session.entity';
-import { RequestLimiterRepositories } from './infrastructure/guards/request-limiter/infrastructure/request-limiter-repositories';
-import { RequestLimiterService } from './infrastructure/guards/request-limiter/application/request-limiter-application';
-import { LimitRequestGuard } from './infrastructure/guards/request-limiter/request-limiter.guard';
-import {
-  RequestLimiter,
-  RequestLimiterSchema,
-} from './infrastructure/guards/request-limiter/domain/request-limiter.entity';
-import { RequestLimiterStrategy } from './infrastructure/guards/request-limiter/request-limiter';
-import { AuthJWTAccessGuard } from './infrastructure/guards/jwt/jwt.guard';
-import { JwtStrategy } from './infrastructure/guards/jwt/jwt-strategy';
 import { configModule } from './settings/configuration/config.module';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from './settings/configuration/configuration';
+import { AuthJWTAccessGuard } from './core/guards/jwt/jwt.guard';
+import { JwtStrategy } from './core/guards/jwt/jwt-strategy';
+import { BasicGuard } from './core/guards/basic/basic.guard';
+import {
+  RequestLimiter,
+  RequestLimiterSchema,
+} from './core/guards/request-limiter/domain/request-limiter.entity';
+import { RequestLimiterRepositories } from './core/guards/request-limiter/infrastructure/request-limiter-repositories';
+import { RequestLimiterService } from './core/guards/request-limiter/application/request-limiter-application';
+import { RequestLimiterStrategy } from './core/guards/request-limiter/request-limiter';
+import { LimitRequestGuard } from './core/guards/request-limiter/request-limiter.guard';
+import { BasicStrategy } from './core/guards/basic/basic-strategy';
+import { CqrsModule } from '@nestjs/cqrs';
+import { CreateUserCommandHandler } from './features/user/application/command/create-user.command';
+import { ApplicationObjectResult } from './base/application-object-result/application-object-result';
+import { UpdateByIdHandler } from './features/post/application/command/update-post.command';
+import { DeletePostByIdHandler } from './features/post/application/command/delete-post.command';
+import { CreatePostHandler } from './features/post/application/command/create-post.command';
+import { DeleteUserByIdHandler } from './features/user/application/command/delete-user.command';
+import { CreateBlogHandler } from './features/blog/application/command/create-blog.command';
+import { DeleteBlogByIdHandler } from './features/blog/application/command/delete-blog.command';
+import { UpdateBlogByIdHandler } from './features/blog/application/command/update-blog.command';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -66,6 +76,8 @@ const userProviders = [
   UserService,
   UserMapperOutputModel,
   UserSortingQuery,
+  DeleteUserByIdHandler,
+  CreateUserCommandHandler,
 ];
 
 const commentProviders = [CommentQueryRepositories, CommentMapperOutputModel];
@@ -74,7 +86,9 @@ const postProviders = [
   PostRepository,
   PostQueryRepository,
   PostMapperOutputModel,
-  BaseSorting,
+  UpdateByIdHandler,
+  DeletePostByIdHandler,
+  CreatePostHandler,
 ];
 const blogProviders = [
   BlogRepository,
@@ -82,6 +96,9 @@ const blogProviders = [
   BlogService,
   BlogMapperOutputModel,
   BlogSortingQuery,
+  CreateBlogHandler,
+  DeleteBlogByIdHandler,
+  UpdateBlogByIdHandler,
 ];
 const authProviders = [AuthService];
 
@@ -99,6 +116,7 @@ const requestLimiterProvider = [
 
 @Module({
   imports: [
+    CqrsModule,
     configModule,
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
@@ -120,19 +138,6 @@ const requestLimiterProvider = [
       },
       { name: RequestLimiter.name, schema: RequestLimiterSchema },
     ]),
-    // JwtModule.registerAsync({
-    //   useFactory: (configService: ConfigService<ConfigurationType, true>) => {
-    //     const apiSettings = configService.get('apiSettings', { infer: true });
-    //     return {
-    //       global: true,
-    //       secret: apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
-    //       signOptions: {
-    //         expiresIn: apiSettings.JWT_TOKENS.ACCESS_TOKEN.EXPIRES,
-    //       },
-    //     };
-    //   },
-    //   inject: [ConfigService],
-    // }),
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
         const apiSettings = configService.get('apiSettings', { infer: true });
@@ -181,6 +186,8 @@ const requestLimiterProvider = [
     AuthJWTAccessGuard,
     JwtStrategy,
     JwtService,
+    ApplicationObjectResult,
+    BaseSorting,
   ],
 })
 export class AppModule {}
