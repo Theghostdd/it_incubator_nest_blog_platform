@@ -74,6 +74,8 @@ import { ChangeUserPasswordHandler } from './features/auth/application/command/c
 import { ResendConfirmationCodeHandler } from './features/auth/application/command/resend-confirmation-code.command';
 import { PasswordRecoveryHandler } from './features/auth/application/command/password-recovery.command';
 import { RegistrationHandler } from './features/auth/application/command/registration.command';
+import { CreateCommentByPostIdHandler } from './features/comment/application/command/create-comment';
+import { CommentRepositories } from './features/comment/infrastructure/comment-repositories';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -86,7 +88,12 @@ const userProviders = [
   CreateUserCommandHandler,
 ];
 
-const commentProviders = [CommentQueryRepositories, CommentMapperOutputModel];
+const commentProviders = [
+  CommentQueryRepositories,
+  CommentMapperOutputModel,
+  CreateCommentByPostIdHandler,
+  CommentRepositories,
+];
 const postProviders = [
   PostService,
   PostRepository,

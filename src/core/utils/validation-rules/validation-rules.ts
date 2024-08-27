@@ -34,6 +34,7 @@ export const validationRules: ValidationRulesType = {
     PATTERN: null,
   },
   content: { MIN_LENGTH: 1, MAX_LENGTH: 1000, PATTERN: null },
+  content_to_comment: { MIN_LENGTH: 20, MAX_LENGTH: 300, PATTERN: null },
   description: { MIN_LENGTH: 1, MAX_LENGTH: 500, PATTERN: null },
   websiteUrl: {
     MIN_LENGTH: 13,
@@ -267,4 +268,15 @@ export class ChangePasswordInputModelValidationRules {
   @IsNotEmpty()
   @IsString()
   public recoveryCode: string;
+}
+
+export class CommentInputModelValidationRules {
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  @Length(
+    validationRules.content_to_comment.MIN_LENGTH,
+    validationRules.content_to_comment.MAX_LENGTH,
+  )
+  public content: string;
 }

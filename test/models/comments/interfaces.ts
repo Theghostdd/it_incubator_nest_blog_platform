@@ -17,3 +17,7 @@ export interface ICommentInsertModel {
   createdAt: string;
   __v: number;
 }
+
+export interface ICommentCreateModel {
+  content: string;
+}

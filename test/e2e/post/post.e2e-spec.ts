@@ -12,8 +12,15 @@ import { IBlogInsertModel } from '../../models/blog/interfaces';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
-import { ICommentInsertModel } from '../../models/comments/interfaces';
+import {
+  ICommentCreateModel,
+  ICommentInsertModel,
+} from '../../models/comments/interfaces';
 import { APISettings } from '../../../src/settings/api-settings';
+import {
+  IUserInsertTestModel,
+  IUserLoginTestModel,
+} from '../../models/user/interfaces';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -23,7 +30,10 @@ describe('Post e2e', () => {
   let postUpdateModel: IPostUpdateModel;
   let postInsertModels: IPostInsertModel[];
   let blogInsertModel: IBlogInsertModel;
+  let commentCreateModel: ICommentCreateModel;
   let commentInsertManyModel: ICommentInsertModel[];
+  let userInsertModel: IUserInsertTestModel;
+  let userLoginModel: IUserLoginTestModel;
   let apiSettings: APISettings;
   let login: string;
   let password: string;
@@ -59,6 +69,11 @@ describe('Post e2e', () => {
       testSettings.testModels.postTestModel.getPostInsertModels();
     commentInsertManyModel =
       testSettings.testModels.commentsTestModel.getCommentInsertManyModel();
+    commentCreateModel =
+      testSettings.testModels.commentsTestModel.getCommentCreateModel();
+    userInsertModel =
+      testSettings.testModels.userTestModel.getUserInsertModel();
+    userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
   });
 
   describe('Get posts', () => {
@@ -660,6 +675,161 @@ describe('Post e2e', () => {
         .sort((a, b) => a.content.localeCompare(b.content));
 
       expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
+    });
+  });
+
+  describe('Create comment by post id for special post', () => {
+    it('should create comment by post id', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
+        'blogs',
+        blogInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        { ...postInsertModel, blogId: blogId.toString() },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const result: CommentOutputModel =
+        await postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          201,
+        );
+      expect(result).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: 'None',
+        },
+        createdAt: expect.any(String),
+      });
+    });
+
+    it('should not create comment by post id, bad input model', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
+        'blogs',
+        blogInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        { ...postInsertModel, blogId: blogId.toString() },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+      commentCreateModel.content = '';
+      const result: APIErrorsMessageType =
+        await postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          400,
+        );
+      expect(result).toEqual({
+        errorsMessages: [
+          {
+            field: 'content',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      commentCreateModel.content = 'short';
+      const shortContent: APIErrorsMessageType =
+        await postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          400,
+        );
+      expect(shortContent).toEqual({
+        errorsMessages: [
+          {
+            field: 'content',
+            message: expect.any(String),
+          },
+        ],
+      });
+    });
+
+    it('should not create comment by post id, user not authorized', async () => {
+      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
+        'blogs',
+        blogInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        { ...postInsertModel, blogId: blogId.toString() },
+      );
+      await postTestManager.createCommentByPostId(
+        postId.toString(),
+        commentCreateModel,
+        `Bearer accessToken`,
+        401,
+      );
+    });
+
+    it('should not create comment by post id, post not found', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await testSettings.dataBase.dbInsertOne('blogs', blogInsertModel);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await postTestManager.createCommentByPostId(
+        '66ce23e21b1e6e98e79f9f1d',
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        404,
+      );
+    });
+
+    it('should not create comment by post id, user not found', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.clearDatabase();
+
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      await postTestManager.createCommentByPostId(
+        postId.toString(),
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        404,
+      );
     });
   });
 });

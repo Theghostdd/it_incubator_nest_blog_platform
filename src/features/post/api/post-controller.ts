@@ -21,7 +21,10 @@ import {
   PostInputModel,
   PostUpdateModel,
 } from './models/input/post-input.model';
-import { AppResultType } from '../../../base/types/types';
+import {
+  AppResultType,
+  JWTAccessTokenPayloadType,
+} from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { CommentOutputModel } from '../../comment/api/model/output/comment-output.model';
 import { CommentQueryRepositories } from '../../comment/infrastructure/comment-query-repositories';
@@ -30,6 +33,10 @@ import { CreatePostCommand } from '../application/command/create-post.command';
 import { DeletePostByIdCommand } from '../application/command/delete-post.command';
 import { UpdatePostByIdCommand } from '../application/command/update-post.command';
 import { BasicGuard } from '../../../core/guards/basic/basic.guard';
+import { CommentInputModel } from '../../comment/api/model/input/comment-input.model';
+import { CreateCommentByPostIdCommand } from '../../comment/application/command/create-comment';
+import { AuthJWTAccessGuard } from '../../../core/guards/jwt/jwt.guard';
+import { CurrentUser } from '../../../core/decorators/current-user';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
@@ -109,6 +116,27 @@ export class PostController {
         return;
       case AppResult.NotFound:
         throw new NotFoundException('Post not found');
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(`:id/${apiPrefixSettings.POST.comments}`)
+  @UseGuards(AuthJWTAccessGuard)
+  async createCommentByPostId(
+    @Param('id') id: string,
+    @Body() inputCommentModel: CommentInputModel,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<CommentOutputModel> {
+    const result: AppResultType<string> = await this.commandBus.execute(
+      new CreateCommentByPostIdCommand(inputCommentModel, id, user.userId),
+    );
+
+    switch (result.appResult) {
+      case AppResult.Success:
+        return await this.commentQueryRepository.getCommentById(result.data);
+      case AppResult.NotFound:
+        throw new NotFoundException('Post or user not found');
       default:
         throw new InternalServerErrorException();
     }

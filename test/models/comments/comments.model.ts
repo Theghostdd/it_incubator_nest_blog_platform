@@ -7,7 +7,7 @@ export class CommentsTestModel {
   private readonly postInfo: { postId: string };
   private readonly blogInfo: { blogId: string };
   constructor(userLogin: string) {
-    this.content = 'content to comment';
+    this.content = 'content to comment fkjrfnjfrnjfrnjfjrfrrffrfr';
     this.commentatorInfo = {
       userId: '',
       userLogin: userLogin,
@@ -21,7 +21,9 @@ export class CommentsTestModel {
   }
 
   getCommentCreateModel() {
-    return {};
+    return {
+      content: this.content,
+    };
   }
 
   getCommentInsertModel() {

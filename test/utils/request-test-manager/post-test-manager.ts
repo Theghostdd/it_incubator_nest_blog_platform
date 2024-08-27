@@ -6,6 +6,7 @@ import {
   IPostCreateModel,
   IPostUpdateModel,
 } from '../../models/post/interfaces';
+import { ICommentCreateModel } from '../../models/comments/interfaces';
 
 export class PostTestManager {
   private readonly apiPrefix: string;
@@ -72,6 +73,20 @@ export class PostTestManager {
       .put(`${this.postEndpoint}/${id}`)
       .set({ authorization: authorizationToken })
       .send(updateModel)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async createCommentByPostId(
+    id: string,
+    commentModel: ICommentCreateModel,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.postEndpoint}/${id}/${this.commentEndpoint}`)
+      .set({ authorization: authorizationToken })
+      .send(commentModel)
       .expect(statusCode);
     return result.body;
   }
