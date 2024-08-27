@@ -96,6 +96,25 @@ export class AuthTestManager {
     return result.body;
   }
 
+  async loginAndCheckCookie(
+    loginModel: IUserLoginTestModel,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.loginEndpoint}`)
+      .send(loginModel)
+      .expect(statusCode);
+
+    const cookies = result.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    const cookiesArray = Array.isArray(cookies) ? cookies : [cookies];
+    const refreshTokenCookie = cookiesArray.find((cookie) =>
+      cookie.startsWith('refreshToken='),
+    );
+    expect(refreshTokenCookie).toBeDefined();
+    return result.body;
+  }
+
   async getCurrentUser(authorizationToken: string, statusCode: number) {
     const result = await request(this.app.getHttpServer())
       .get(`${this.currentUserEndpoint}`)

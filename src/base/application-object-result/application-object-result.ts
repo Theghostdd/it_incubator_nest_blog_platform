@@ -26,4 +26,12 @@ export class ApplicationObjectResult {
       errorField: null,
     };
   }
+
+  unauthorized<T = null, D = null>(data?: T, error?: D) {
+    return {
+      appResult: AppResult.Unauthorized,
+      data: data,
+      errorField: error,
+    };
+  }
 }

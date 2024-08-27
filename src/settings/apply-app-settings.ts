@@ -2,6 +2,7 @@ import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { apiPrefixSettings } from './app-prefix-settings';
 import { ValidationPipeOption } from '../core/pipe/validation/validation-pipe-option';
 import { HttpExceptionFilter } from '../core/exceprion-filters/http-exception/http-exception-filters';
+import cookieParser from 'cookie-parser';
 
 export const applyAppSettings = (app: INestApplication) => {
   setApiPrefix(app);
@@ -11,6 +12,8 @@ export const applyAppSettings = (app: INestApplication) => {
   setExceptionFilter(app);
 
   enableCors(app);
+
+  setCookieParser(app);
 };
 
 const setApiPrefix = (app: INestApplication) => {
@@ -31,4 +34,8 @@ const setPipes = (app: INestApplication) => {
 
 const setExceptionFilter = (app: INestApplication) => {
   app.useGlobalFilters(new HttpExceptionFilter());
+};
+
+const setCookieParser = (app: INestApplication) => {
+  app.use(cookieParser());
 };

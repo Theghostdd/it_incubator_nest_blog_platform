@@ -11,6 +11,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { PostQueryRepository } from '../infrastructure/post-query-repositories';
 import { PostOutputModel } from './models/output/post-output.model';
@@ -28,6 +29,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreatePostCommand } from '../application/command/create-post.command';
 import { DeletePostByIdCommand } from '../application/command/delete-post.command';
 import { UpdatePostByIdCommand } from '../application/command/update-post.command';
+import { BasicGuard } from '../../../core/guards/basic/basic.guard';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
@@ -58,6 +60,7 @@ export class PostController {
   }
 
   @Post()
+  @UseGuards(BasicGuard)
   async createPost(
     @Body() inputModel: PostInputModel,
   ): Promise<PostOutputModel> {
@@ -75,6 +78,7 @@ export class PostController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicGuard)
   @HttpCode(204)
   async deletePostById(@Param('id') id: string): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
@@ -91,6 +95,7 @@ export class PostController {
   }
 
   @Put(':id')
+  @UseGuards(BasicGuard)
   @HttpCode(204)
   async updatePostById(
     @Param('id') id: string,

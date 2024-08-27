@@ -10,6 +10,7 @@ import {
   Post,
   Put,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
 import { BlogQueryRepository } from '../infrastructure/blog-query-repositories';
@@ -32,6 +33,7 @@ import { CreatePostCommand } from '../../post/application/command/create-post.co
 import { CreateBlogCommand } from '../application/command/create-blog.command';
 import { DeleteBlogByIdCommand } from '../application/command/delete-blog.command';
 import { UpdateBlogByIdCommand } from '../application/command/update-blog.command';
+import { BasicGuard } from '../../../core/guards/basic/basic.guard';
 
 @Controller(apiPrefixSettings.BLOG.blogs)
 export class BlogController {
@@ -62,6 +64,7 @@ export class BlogController {
   }
 
   @Post(`:id/${apiPrefixSettings.BLOG.posts}`)
+  @UseGuards(BasicGuard)
   async createPostByBlogId(
     @Param('id') id: string,
     @Body() inputModel: PostBlogInputModel,
@@ -81,6 +84,7 @@ export class BlogController {
   }
 
   @Post()
+  @UseGuards(BasicGuard)
   async createBlog(
     @Body() inputModel: BlogInputModel,
   ): Promise<BlogOutputModel> {
@@ -96,6 +100,7 @@ export class BlogController {
   }
 
   @Delete(':id')
+  @UseGuards(BasicGuard)
   @HttpCode(204)
   async deleteBlogById(@Param('id') id: string): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
@@ -112,6 +117,7 @@ export class BlogController {
   }
 
   @Put(':id')
+  @UseGuards(BasicGuard)
   @HttpCode(204)
   async updateBlogById(
     @Param('id') id: string,

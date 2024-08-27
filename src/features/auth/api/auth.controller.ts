@@ -6,11 +6,12 @@ import {
   HttpCode,
   InternalServerErrorException,
   Post,
+  Res,
   UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
-import { AuthService } from '../application/auth-application';
+
 import {
   ChangePasswordInputModel,
   ConfirmUserByEmailInputModel,
@@ -32,12 +33,20 @@ import { UserMeOutputModel } from '../../user/api/models/output/user-output.mode
 import { AuthJWTAccessGuard } from '../../../core/guards/jwt/jwt.guard';
 import { CurrentUser } from '../../../core/decorators/current-user';
 import { LimitRequestGuard } from '../../../core/guards/request-limiter/request-limiter.guard';
+import { CommandBus } from '@nestjs/cqrs';
+import { LoginCommand } from '../application/command/login.command';
+import { RegistrationCommand } from '../application/command/registration.command';
+import { ConfirmUserEmailCommand } from '../application/command/confirm-user-email.command';
+import { ResendConfirmationCodeCommand } from '../application/command/resend-confirmation-code.command';
+import { ChangeUserPasswordCommand } from '../application/command/change-user-password.command';
+import { PasswordRecoveryCommand } from '../application/command/password-recovery.command';
+import { Response } from 'express';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
   constructor(
-    private readonly authService: AuthService,
     private readonly userQueryRepositories: UserQueryRepositories,
+    private readonly commandBus: CommandBus,
   ) {}
 
   @Get(apiPrefixSettings.AUTH.me)
@@ -47,16 +56,26 @@ export class AuthController {
   ): Promise<UserMeOutputModel> {
     return await this.userQueryRepositories.getUserByIdAuthMe(user.userId);
   }
+
   @Post(`/${apiPrefixSettings.AUTH.login}`)
   @HttpCode(200)
-  async login(@Body() inputLoginModel: LoginInputModel) {
+  async login(
+    @Body() inputLoginModel: LoginInputModel,
+    @Res({ passthrough: true }) response: Response,
+  ) {
     const result: AppResultType<
-      Omit<AuthorizationUserResponseType, 'refreshToken'>,
+      AuthorizationUserResponseType,
       APIErrorMessageType
-    > = await this.authService.login(inputLoginModel);
+    > = await this.commandBus.execute(new LoginCommand(inputLoginModel));
     switch (result.appResult) {
       case AppResult.Success:
-        return result.data;
+        const { refreshToken, ...data } = result.data;
+        response.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+        return data;
       case AppResult.Unauthorized:
         throw new UnauthorizedException();
       case AppResult.BadRequest:
@@ -73,7 +92,9 @@ export class AuthController {
     @Body() inputRegistrationModel: RegistrationInputModel,
   ): Promise<void> {
     const result: AppResultType<string, APIErrorsMessageType> =
-      await this.authService.registration(inputRegistrationModel);
+      await this.commandBus.execute(
+        new RegistrationCommand(inputRegistrationModel),
+      );
     switch (result.appResult) {
       case AppResult.Success:
         return;
@@ -91,7 +112,9 @@ export class AuthController {
     @Body() inputConfirmRegistrationModel: ConfirmUserByEmailInputModel,
   ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
-      await this.authService.confirmUserByEmail(inputConfirmRegistrationModel);
+      await this.commandBus.execute(
+        new ConfirmUserEmailCommand(inputConfirmRegistrationModel),
+      );
     switch (result.appResult) {
       case AppResult.Success:
         return;
@@ -109,7 +132,9 @@ export class AuthController {
     @Body() inputResendConfirmCodeModel: ResendConfirmationCodeInputModel,
   ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
-      await this.authService.resendConfirmCode(inputResendConfirmCodeModel);
+      await this.commandBus.execute(
+        new ResendConfirmationCodeCommand(inputResendConfirmCodeModel),
+      );
     switch (result.appResult) {
       case AppResult.Success:
         return;
@@ -126,7 +151,9 @@ export class AuthController {
     @Body() inputPasswordRecoveryModel: PasswordRecoveryInputModel,
   ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
-      await this.authService.passwordRecovery(inputPasswordRecoveryModel);
+      await this.commandBus.execute(
+        new PasswordRecoveryCommand(inputPasswordRecoveryModel),
+      );
     switch (result.appResult) {
       case AppResult.Success:
         return;
@@ -142,7 +169,9 @@ export class AuthController {
     @Body() inputChangePasswordModel: ChangePasswordInputModel,
   ): Promise<void> {
     const result: AppResultType<null, APIErrorMessageType> =
-      await this.authService.changeUserPassword(inputChangePasswordModel);
+      await this.commandBus.execute(
+        new ChangeUserPasswordCommand(inputChangePasswordModel),
+      );
     switch (result.appResult) {
       case AppResult.Success:
         return;

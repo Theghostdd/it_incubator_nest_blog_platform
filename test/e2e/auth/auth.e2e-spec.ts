@@ -170,6 +170,18 @@ describe('Auth e2e', () => {
         401,
       );
     });
+
+    it('should login user, and return access token, refresh token into cookie', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+
+      const result = await authTestManager.loginAndCheckCookie(
+        uesrLoginModel,
+        200,
+      );
+      expect(result).toEqual({
+        accessToken: expect.any(String),
+      });
+    });
   });
 
   describe('Registration', () => {

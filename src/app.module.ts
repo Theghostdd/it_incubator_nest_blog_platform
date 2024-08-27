@@ -68,6 +68,12 @@ import { DeleteUserByIdHandler } from './features/user/application/command/delet
 import { CreateBlogHandler } from './features/blog/application/command/create-blog.command';
 import { DeleteBlogByIdHandler } from './features/blog/application/command/delete-blog.command';
 import { UpdateBlogByIdHandler } from './features/blog/application/command/update-blog.command';
+import { LoginHandler } from './features/auth/application/command/login.command';
+import { ConfirmUserEmailHandler } from './features/auth/application/command/confirm-user-email.command';
+import { ChangeUserPasswordHandler } from './features/auth/application/command/change-user-password.command';
+import { ResendConfirmationCodeHandler } from './features/auth/application/command/resend-confirmation-code.command';
+import { PasswordRecoveryHandler } from './features/auth/application/command/password-recovery.command';
+import { RegistrationHandler } from './features/auth/application/command/registration.command';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -100,7 +106,15 @@ const blogProviders = [
   DeleteBlogByIdHandler,
   UpdateBlogByIdHandler,
 ];
-const authProviders = [AuthService];
+const authProviders = [
+  AuthService,
+  LoginHandler,
+  ConfirmUserEmailHandler,
+  ChangeUserPasswordHandler,
+  ResendConfirmationCodeHandler,
+  PasswordRecoveryHandler,
+  RegistrationHandler,
+];
 
 export const UUIDProvider = {
   provide: 'UUID',
