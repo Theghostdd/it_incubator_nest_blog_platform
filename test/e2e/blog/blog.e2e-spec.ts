@@ -15,6 +15,7 @@ import { PostOutputModel } from '../../../src/features/post/api/models/output/po
 import { IPostInsertModel } from '../../models/post/interfaces';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { Types } from 'mongoose';
+import { APISettings } from '../../../src/settings/api-settings';
 
 describe('Blog e2e', () => {
   let blogTestManager: BlogTestManager;
@@ -26,9 +27,19 @@ describe('Blog e2e', () => {
   let postInsertModel: IPostInsertModel;
   let blogPostCreateModel: IBlogPostCreateModel;
   let postInsertModels: IPostInsertModel[];
+  let apiSettings: APISettings;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
 
   beforeAll(async () => {
     testSettings = await initSettings();
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {
@@ -233,6 +244,7 @@ describe('Blog e2e', () => {
     it('should create blog', async () => {
       const result: BlogOutputModel = await blogTestManager.createBlog(
         blogCreateModel,
+        adminAuthToken,
         201,
       );
 
@@ -249,6 +261,7 @@ describe('Blog e2e', () => {
     it('should not create blog, bad input data', async () => {
       const result: APIErrorsMessageType = await blogTestManager.createBlog(
         { name: '', description: '', websiteUrl: '' },
+        adminAuthToken,
         400,
       );
       expect(result).toEqual({
@@ -274,6 +287,7 @@ describe('Blog e2e', () => {
           description: 'description',
           websiteUrl: 'https://www.google.com',
         },
+        adminAuthToken,
         400,
       );
       expect(withName).toEqual({
@@ -292,6 +306,7 @@ describe('Blog e2e', () => {
             description: '',
             websiteUrl: 'https://www.google.com',
           },
+          adminAuthToken,
           400,
         );
       expect(withDescription).toEqual({
@@ -310,6 +325,7 @@ describe('Blog e2e', () => {
             description: 'description',
             websiteUrl: 'google',
           },
+          adminAuthToken,
           400,
         );
       expect(withWebsiteUrl).toEqual({
@@ -330,11 +346,15 @@ describe('Blog e2e', () => {
         blogInsertModel,
       );
 
-      await blogTestManager.deleteBlog(blogId.toString(), 204);
+      await blogTestManager.deleteBlog(blogId.toString(), adminAuthToken, 204);
     });
 
     it('should not delete blog by id, blog not found', async () => {
-      await blogTestManager.deleteBlog('66bf39c8f855a5438d02adbf', 404);
+      await blogTestManager.deleteBlog(
+        '66bf39c8f855a5438d02adbf',
+        adminAuthToken,
+        404,
+      );
     });
   });
 
@@ -345,7 +365,12 @@ describe('Blog e2e', () => {
         blogInsertModel,
       );
 
-      await blogTestManager.updateBlog(blogId.toString(), blogUpdateModel, 204);
+      await blogTestManager.updateBlog(
+        blogId.toString(),
+        blogUpdateModel,
+        adminAuthToken,
+        204,
+      );
 
       const result: BlogOutputModel = await blogTestManager.getBlog(
         blogId.toString(),
@@ -364,6 +389,7 @@ describe('Blog e2e', () => {
       const result: APIErrorsMessageType = await blogTestManager.updateBlog(
         blogId.toString(),
         { name: '', description: '', websiteUrl: '' },
+        adminAuthToken,
         400,
       );
       expect(result).toEqual({
@@ -390,6 +416,7 @@ describe('Blog e2e', () => {
           description: 'description',
           websiteUrl: 'https://www.google.com',
         },
+        adminAuthToken,
         400,
       );
       expect(withName).toEqual({
@@ -409,6 +436,7 @@ describe('Blog e2e', () => {
             description: '',
             websiteUrl: 'https://www.google.com',
           },
+          adminAuthToken,
           400,
         );
       expect(withDescription).toEqual({
@@ -428,6 +456,7 @@ describe('Blog e2e', () => {
             description: 'description',
             websiteUrl: 'google',
           },
+          adminAuthToken,
           400,
         );
       expect(withWebsiteUrl).toEqual({
@@ -452,6 +481,7 @@ describe('Blog e2e', () => {
       await blogTestManager.updateBlog(
         '66bf39c8f855a5438d02adbf',
         blogUpdateModel,
+        adminAuthToken,
         404,
       );
     });
@@ -466,6 +496,7 @@ describe('Blog e2e', () => {
       const result: PostOutputModel = await blogTestManager.createPostByBlogId(
         blogId.toString(),
         blogPostCreateModel,
+        adminAuthToken,
         201,
       );
 
@@ -490,6 +521,7 @@ describe('Blog e2e', () => {
       await blogTestManager.createPostByBlogId(
         '66bf39c8f855a5438d02adbf',
         blogPostCreateModel,
+        adminAuthToken,
         404,
       );
     });
@@ -499,6 +531,7 @@ describe('Blog e2e', () => {
         await blogTestManager.createPostByBlogId(
           '66bf39c8f855a5438d02adbf',
           { title: '', shortDescription: '', content: '' },
+          adminAuthToken,
           400,
         );
       expect(result).toEqual({
@@ -526,6 +559,7 @@ describe('Blog e2e', () => {
             shortDescription: 'shortDescription',
             content: 'content',
           },
+          adminAuthToken,
           400,
         );
       expect(withTitle).toEqual({
@@ -545,6 +579,7 @@ describe('Blog e2e', () => {
             shortDescription: '',
             content: 'content',
           },
+          adminAuthToken,
           400,
         );
       expect(withShortDescription).toEqual({
@@ -564,6 +599,7 @@ describe('Blog e2e', () => {
             shortDescription: 'shortDescription',
             content: '',
           },
+          adminAuthToken,
           400,
         );
       expect(withContent).toEqual({

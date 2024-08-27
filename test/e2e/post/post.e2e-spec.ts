@@ -13,6 +13,7 @@ import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
 import { ICommentInsertModel } from '../../models/comments/interfaces';
+import { APISettings } from '../../../src/settings/api-settings';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -23,9 +24,19 @@ describe('Post e2e', () => {
   let postInsertModels: IPostInsertModel[];
   let blogInsertModel: IBlogInsertModel;
   let commentInsertManyModel: ICommentInsertModel[];
+  let apiSettings: APISettings;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
 
   beforeAll(async () => {
     testSettings = await initSettings();
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {
@@ -198,6 +209,7 @@ describe('Post e2e', () => {
       );
       const result: PostOutputModel = await postTestManager.createPost(
         { ...postCreateModel, blogId: blogId.toString() },
+        adminAuthToken,
         201,
       );
 
@@ -221,6 +233,7 @@ describe('Post e2e', () => {
     it('should not create post by blog id, blog not found', async () => {
       await postTestManager.createPost(
         { ...postCreateModel, blogId: '66bf39c8f855a5438d02adbf' },
+        adminAuthToken,
         404,
       );
     });
@@ -228,6 +241,7 @@ describe('Post e2e', () => {
     it('should not create post, bad input data', async () => {
       const result: APIErrorsMessageType = await postTestManager.createPost(
         { title: '', shortDescription: '', content: '', blogId: '' },
+        adminAuthToken,
         400,
       );
       expect(result).toEqual({
@@ -258,6 +272,7 @@ describe('Post e2e', () => {
           content: 'content',
           blogId: '66bf39c8f855a5438d02adbf',
         },
+        adminAuthToken,
         400,
       );
       expect(withTitle).toEqual({
@@ -277,6 +292,7 @@ describe('Post e2e', () => {
             content: 'content',
             blogId: '66bf39c8f855a5438d02adbf',
           },
+          adminAuthToken,
           400,
         );
       expect(withShortDescription).toEqual({
@@ -296,6 +312,7 @@ describe('Post e2e', () => {
             content: '',
             blogId: '66bf39c8f855a5438d02adbf',
           },
+          adminAuthToken,
           400,
         );
       expect(withContent).toEqual({
@@ -314,6 +331,7 @@ describe('Post e2e', () => {
           content: 'content',
           blogId: '',
         },
+        adminAuthToken,
         400,
       );
       expect(withBlogId).toEqual({
@@ -338,12 +356,16 @@ describe('Post e2e', () => {
         { ...postInsertModel, blogId: blogId.toString() },
       );
 
-      await postTestManager.deletePost(postId.toString(), 204);
+      await postTestManager.deletePost(postId.toString(), adminAuthToken, 204);
       await postTestManager.getPost(postId.toString(), 404);
     });
 
     it('should not delete post by id, post not found', async () => {
-      await postTestManager.deletePost('66bf39c8f855a5438d02adbf', 404);
+      await postTestManager.deletePost(
+        '66bf39c8f855a5438d02adbf',
+        adminAuthToken,
+        404,
+      );
     });
   });
 
@@ -361,6 +383,7 @@ describe('Post e2e', () => {
       await postTestManager.updatePost(
         postId.toString(),
         { ...postUpdateModel, blogId: blogId.toString() },
+        adminAuthToken,
         204,
       );
 
@@ -391,6 +414,7 @@ describe('Post e2e', () => {
       const result: APIErrorsMessageType = await postTestManager.updatePost(
         blogId.toString(),
         { title: '', shortDescription: '', content: '', blogId: '' },
+        adminAuthToken,
         400,
       );
       expect(result).toEqual({
@@ -422,6 +446,7 @@ describe('Post e2e', () => {
           content: 'content',
           blogId: '66bf39c8f855a5438d02adbf',
         },
+        adminAuthToken,
         400,
       );
       expect(withTitle).toEqual({
@@ -442,6 +467,7 @@ describe('Post e2e', () => {
             content: 'content',
             blogId: '66bf39c8f855a5438d02adbf',
           },
+          adminAuthToken,
           400,
         );
       expect(withShortDescription).toEqual({
@@ -462,6 +488,7 @@ describe('Post e2e', () => {
             content: '',
             blogId: '66bf39c8f855a5438d02adbf',
           },
+          adminAuthToken,
           400,
         );
       expect(withContent).toEqual({
@@ -481,6 +508,7 @@ describe('Post e2e', () => {
           content: 'content',
           blogId: '',
         },
+        adminAuthToken,
         400,
       );
       expect(withBlogId).toEqual({
@@ -505,6 +533,7 @@ describe('Post e2e', () => {
       await postTestManager.updatePost(
         '66bf39c8f855a5438d02adbf',
         { ...postUpdateModel, blogId: '66bf39c8f855a5438d02adbf' },
+        adminAuthToken,
         404,
       );
     });

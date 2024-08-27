@@ -18,9 +18,14 @@ export class PostTestManager {
     this.postEndpoint = `${this.apiPrefix}/${apiPrefixSettings.POST.posts}`;
     this.commentEndpoint = `${apiPrefixSettings.POST.comments}`;
   }
-  async createPost(postModel: IPostCreateModel, statusCode: number) {
+  async createPost(
+    postModel: IPostCreateModel,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
     const result = await request(this.app.getHttpServer())
       .post(`${this.postEndpoint}`)
+      .set({ authorization: authorizationToken })
       .send(postModel)
       .expect(statusCode);
     return result.body;
@@ -49,9 +54,10 @@ export class PostTestManager {
     return result.body;
   }
 
-  async deletePost(id: string, statusCode: number) {
+  async deletePost(id: string, authorizationToken: string, statusCode: number) {
     const result = await request(this.app.getHttpServer())
       .delete(`${this.postEndpoint}/${id}`)
+      .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
   }
@@ -59,10 +65,12 @@ export class PostTestManager {
   async updatePost(
     id: string,
     updateModel: IPostUpdateModel,
+    authorizationToken: string,
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
       .put(`${this.postEndpoint}/${id}`)
+      .set({ authorization: authorizationToken })
       .send(updateModel)
       .expect(statusCode);
     return result.body;

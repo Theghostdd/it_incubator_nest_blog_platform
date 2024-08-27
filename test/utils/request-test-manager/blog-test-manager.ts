@@ -18,9 +18,14 @@ export class BlogTestManager {
     this.blogEndpoint = `${this.apiPrefix}/${apiPrefixSettings.BLOG.blogs}`;
     this.postEndpoint = `${apiPrefixSettings.BLOG.posts}`;
   }
-  async createBlog(blogModel: IBlogCreateModel, statusCode: number) {
+  async createBlog(
+    blogModel: IBlogCreateModel,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
     const result = await request(this.app.getHttpServer())
       .post(`${this.blogEndpoint}`)
+      .set({ authorization: authorizationToken })
       .send(blogModel)
       .expect(statusCode);
     return result.body;
@@ -41,9 +46,10 @@ export class BlogTestManager {
     return result.body;
   }
 
-  async deleteBlog(id: string, statusCode: number) {
+  async deleteBlog(id: string, authorizationToken: string, statusCode: number) {
     const result = await request(this.app.getHttpServer())
       .delete(`${this.blogEndpoint}/${id}`)
+      .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
   }
@@ -51,10 +57,12 @@ export class BlogTestManager {
   async updateBlog(
     id: string,
     updateModel: IBlogUpdateModel,
+    authorizationToken: string,
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
       .put(`${this.blogEndpoint}/${id}`)
+      .set({ authorization: authorizationToken })
       .send(updateModel)
       .expect(statusCode);
     return result.body;
@@ -63,10 +71,12 @@ export class BlogTestManager {
   async createPostByBlogId(
     blogId: string,
     postModel: IBlogPostCreateModel,
+    authorizationToken: string,
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
       .post(`${this.blogEndpoint}/${blogId}/${this.postEndpoint}`)
+      .set({ authorization: authorizationToken })
       .send(postModel)
       .expect(statusCode);
     return result.body;
