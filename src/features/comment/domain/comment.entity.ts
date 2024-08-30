@@ -5,6 +5,7 @@ import {
   CommentUpdateModel,
 } from '../api/model/input/comment-input.model';
 import { use } from 'passport';
+import { LikeStatusEnum } from '../../like/domain/type';
 
 @Schema()
 export class Comment {
@@ -73,6 +74,27 @@ export class Comment {
 
   updateComment(commentUpdateModel: CommentUpdateModel) {
     this.content = commentUpdateModel.content;
+  }
+
+  updateLikesCount(
+    newLikesCount: number,
+    newDislikesCount: number,
+    likeStatus?: LikeStatusEnum,
+  ) {
+    if (likeStatus) {
+      switch (likeStatus) {
+        case LikeStatusEnum.Like:
+          ++this.likesInfo.likesCount;
+          break;
+        case LikeStatusEnum.Dislike:
+          ++this.likesInfo.dislikesCount;
+          break;
+      }
+      return;
+    }
+
+    this.likesInfo.likesCount += newLikesCount;
+    this.likesInfo.dislikesCount += newDislikesCount;
   }
 }
 

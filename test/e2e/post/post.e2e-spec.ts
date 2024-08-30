@@ -1100,6 +1100,161 @@ describe('Post e2e', () => {
 
       expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
     });
+
+    it('should get comments by post id with user`s like status', async () => {
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { id: userId1 } =
+        await testSettings.testManager.userTestManager.createUser(
+          userCreateModel,
+          adminAuthToken,
+          201,
+        );
+      const { id: userId2 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+
+      const { accessToken: accessToken1 } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login2' },
+          200,
+        );
+
+      const { id: commentId1 } =
+        await testSettings.testManager.postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken1}`,
+          201,
+        );
+      const { id: commentId2 } =
+        await testSettings.testManager.postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken1}`,
+          201,
+        );
+      const { id: commentId3 } =
+        await testSettings.testManager.postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken2}`,
+          201,
+        );
+      const { id: commentId4 } =
+        await testSettings.testManager.postTestManager.createCommentByPostId(
+          postId.toString(),
+          commentCreateModel,
+          `Bearer ${accessToken2}`,
+          201,
+        );
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId1.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken1}`,
+        204,
+      );
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId2.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken1}`,
+        204,
+      );
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId3.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken2}`,
+        204,
+      );
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId4.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken2}`,
+        204,
+      );
+
+      const getComments: BasePagination<CommentOutputModel[] | []> =
+        await postTestManager.getCommentsByPostId(
+          postId.toString(),
+          {},
+          200,
+          `Bearer ${accessToken2}`,
+        );
+
+      expect(getComments.items).toHaveLength(4);
+      expect(getComments.items[0]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId1,
+          userLogin: userLoginModel.loginOrEmail,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'None',
+        },
+        createdAt: expect.any(String),
+      });
+
+      expect(getComments.items[1]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId1,
+          userLogin: userLoginModel.loginOrEmail,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'None',
+        },
+        createdAt: expect.any(String),
+      });
+
+      expect(getComments.items[2]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId2,
+          userLogin: 'login2',
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+
+      expect(getComments.items[3]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId2,
+          userLogin: 'login2',
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+    });
   });
 
   describe('Create comment by post id for special post', () => {

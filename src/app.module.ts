@@ -84,6 +84,7 @@ import { VerifyUserGuard } from './core/guards/jwt/jwt-verify-user';
 import { UpdateCommentHandler } from './features/comment/application/command/update-comment';
 import { CommentService } from './features/comment/application/comment-service';
 import { DeleteCommentHandler } from './features/comment/application/command/delete-comment';
+import { UpdateCommentLikeStatusHandler } from './features/like/application/command/update-comment-like-status';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -104,6 +105,7 @@ const commentProviders = [
   UpdateCommentHandler,
   CommentService,
   DeleteCommentHandler,
+  UpdateCommentLikeStatusHandler,
 ];
 const postProviders = [
   PostService,

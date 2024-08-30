@@ -50,11 +50,17 @@ export class PostController {
   ) {}
 
   @Get(`:id/${apiPrefixSettings.POST.comments}`)
+  @UseGuards(VerifyUserGuard)
   async getCommentsByPostId(
     @Param('id') id: string,
     @Query() query: BaseSorting,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<CommentOutputModel[] | []>> {
-    return await this.commentQueryRepository.getCommentsByPostId(query, id);
+    return await this.commentQueryRepository.getCommentsByPostId(
+      query,
+      id,
+      user.userId,
+    );
   }
 
   @Get(':id')

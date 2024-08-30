@@ -1,5 +1,6 @@
 import { CommentDocumentType } from '../../../domain/comment.entity';
 import { LikeStatusEnum } from '../../../../like/domain/type';
+import { LikeDocumentType } from '../../../../like/domain/like.entity';
 
 export class CommentatorInfoViewModel {
   constructor(
@@ -30,7 +31,7 @@ export class CommentMapperOutputModel {
   constructor() {}
   commentModel(
     comment: CommentDocumentType,
-    userLikeStatus: LikeStatusEnum,
+    userLikeStatus: LikeDocumentType,
   ): CommentOutputModel {
     return {
       id: comment._id.toString(),
@@ -42,7 +43,7 @@ export class CommentMapperOutputModel {
       likesInfo: {
         likesCount: comment.likesInfo.likesCount,
         dislikesCount: comment.likesInfo.dislikesCount,
-        myStatus: !userLikeStatus ? LikeStatusEnum.None : userLikeStatus,
+        myStatus: !userLikeStatus ? LikeStatusEnum.None : userLikeStatus.status,
       },
       createdAt: comment.createdAt,
     };
@@ -50,11 +51,11 @@ export class CommentMapperOutputModel {
 
   commentsModel(
     comments: CommentDocumentType[],
-    likes: any,
+    likes: LikeDocumentType[],
   ): CommentOutputModel[] {
     return comments.map((comment: CommentDocumentType) => {
-      const foundLike = likes.find(
-        (like: any) => like.parentId === comment._id.toString(),
+      const foundLike: LikeDocumentType = likes.find(
+        (like: LikeDocumentType) => like.parentId === comment._id.toString(),
       );
       const userStatus: LikeStatusEnum = foundLike
         ? foundLike.status

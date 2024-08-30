@@ -8,6 +8,8 @@ import {
 } from '../../models/post/interfaces';
 import { ICommentCreateModel } from '../../models/comments/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
+import { BasePagination } from '../../../src/base/pagination/base-pagination';
+import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
 
 export class PostTestManager {
   private readonly apiPrefix: string;
@@ -56,9 +58,15 @@ export class PostTestManager {
     return result.body;
   }
 
-  async getCommentsByPostId(id: string, query: AnyObject, statusCode: number) {
+  async getCommentsByPostId(
+    id: string,
+    query: AnyObject,
+    statusCode: number,
+    authorizationToken?: string,
+  ) {
     const result = await request(this.app.getHttpServer())
       .get(`${this.postEndpoint}/${id}/${this.commentEndpoint}`)
+      .set({ authorization: authorizationToken || null })
       .query(query)
       .expect(statusCode);
     return result.body;

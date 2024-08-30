@@ -12,6 +12,11 @@ import {
 import { SortOrder } from 'mongoose';
 import { BaseSorting } from '../../../base/sorting/base-sorting';
 import { BasePagination } from '../../../base/pagination/base-pagination';
+import {
+  Like,
+  LikeDocumentType,
+  LikeModelType,
+} from '../../like/domain/like.entity';
 
 @Injectable()
 export class CommentQueryRepositories {
@@ -19,19 +24,22 @@ export class CommentQueryRepositories {
     private readonly commentMapperOutputModel: CommentMapperOutputModel,
     private readonly baseSorting: BaseSorting,
     @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
+    @InjectModel(Like.name) private readonly likeModel: LikeModelType,
   ) {}
 
   async getCommentById(
     id: string,
     userId?: string,
   ): Promise<CommentOutputModel> {
-    const like = null;
-    //if (userId) like = await this.likeModel.findOne({ userId: userId, parentId: id });
+    let like: LikeDocumentType | null = null;
+    if (userId)
+      like = await this.likeModel.findOne({ userId: userId, parentId: id });
     const comment: CommentDocumentType | null = await this.commentModel.findOne(
       {
         _id: id,
       },
     );
+
     if (!comment) {
       throw new NotFoundException('Comment not found');
     }
@@ -67,14 +75,16 @@ export class CommentQueryRepositories {
       .skip(skip)
       .limit(pageSize);
 
-    const likes = [];
-    // if (userId) {
-    //   const commentsIds: string[] = comments.map((id) => id._id.toString());
-    //   likes = await this.likeModel.find({
-    //     userId: userId,
-    //     parentId: { $in: commentsIds },
-    //   });
-    // }
+    let likes: LikeDocumentType[] | [] = [];
+    if (userId) {
+      const commentsIds: string[] = comments.map(
+        (comment: CommentDocumentType) => comment._id.toString(),
+      );
+      likes = await this.likeModel.find({
+        userId: userId,
+        parentId: { $in: commentsIds },
+      });
+    }
 
     return {
       pagesCount: +pagesCount,

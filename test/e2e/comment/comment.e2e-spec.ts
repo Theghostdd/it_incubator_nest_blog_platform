@@ -11,6 +11,8 @@ import {
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
+import { LikeStatusEnum } from '../../../src/features/like/domain/type';
+import { ILikeUpdateModel } from '../../models/like/interfaces';
 
 describe('Comment e2e', () => {
   let commentTestManager: CommentTestManager;
@@ -19,6 +21,7 @@ describe('Comment e2e', () => {
   let commentUpdateModel: ICommentUpdateModel;
   let userInsertModel: IUserInsertTestModel;
   let userLoginModel: IUserLoginTestModel;
+  let likeUpdateModel: ILikeUpdateModel;
   beforeAll(async () => {
     testSettings = await initSettings();
   });
@@ -38,7 +41,8 @@ describe('Comment e2e', () => {
     userInsertModel =
       testSettings.testModels.userTestModel.getUserInsertModel();
     userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
-
+    likeUpdateModel =
+      testSettings.testModels.likeTestModel.getLikeUpdateModel();
     commentInsertModel.postInfo = {
       ...commentInsertModel.postInfo,
       postId: '64f2023fa7c8bfa62d7c8c77',
@@ -390,6 +394,333 @@ describe('Comment e2e', () => {
         `Bearer ${accessToken}`,
         404,
       );
+    });
+  });
+
+  describe('Update like status for comment by comment id', () => {
+    it('should update like status, the status must be "Like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+
+      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
+        'comments',
+        {
+          ...commentInsertModel,
+          commentatorInfo: {
+            ...commentInsertModel.commentatorInfo,
+            userId: userId.toString(),
+          },
+        },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+    });
+
+    it('should update like status to "Like" and update again with "Like" the status must be "Like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
+        'comments',
+        {
+          ...commentInsertModel,
+          commentatorInfo: {
+            ...commentInsertModel.commentatorInfo,
+            userId: userId.toString(),
+          },
+        },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment2 =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment2).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+    });
+
+    it('should update like status to "Like" and change status to dislike, the status must be "Dislike"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
+        'comments',
+        {
+          ...commentInsertModel,
+          commentatorInfo: {
+            ...commentInsertModel.commentatorInfo,
+            userId: userId.toString(),
+          },
+        },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment2 =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment2).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 0,
+          dislikesCount: 1,
+          myStatus: 'Dislike',
+        },
+        createdAt: expect.any(String),
+      });
+    });
+
+    it('should update like status to "Like" and change status to dislike, than remove like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
+        'comments',
+        {
+          ...commentInsertModel,
+          commentatorInfo: {
+            ...commentInsertModel.commentatorInfo,
+            userId: userId.toString(),
+          },
+        },
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment2 =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment2).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 0,
+          dislikesCount: 1,
+          myStatus: 'Dislike',
+        },
+        createdAt: expect.any(String),
+      });
+
+      await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
+        commentId.toString(),
+        { likeStatus: 'None' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getComment3 =
+        await testSettings.testManager.commentTestManager.getComment(
+          commentId.toString(),
+          200,
+          `Bearer ${accessToken}`,
+        );
+
+      expect(getComment3).toEqual({
+        id: commentId.toString(),
+        content: commentInsertModel.content,
+        commentatorInfo: {
+          userId: userId.toString(),
+          userLogin: userInsertModel.login,
+        },
+        likesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: 'None',
+        },
+        createdAt: expect.any(String),
+      });
     });
   });
 });

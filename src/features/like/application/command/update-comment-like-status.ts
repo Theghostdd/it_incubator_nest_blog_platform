@@ -1,60 +1,63 @@
+import { LikeInputModel } from '../../api/models/input/like-input-model';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AppResultType } from '../../../../base/types/types';
-import { PostDocumentType } from '../../../post/domain/post.entity';
-import { PostService } from '../../../post/application/post-service';
-import { LikeInputModel } from '../../api/models/input/like-input-model';
-import { AppResult } from '../../../../base/enum/app-result.enum';
-import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
+import { CommentService } from '../../../comment/application/comment-service';
 import { LikeService } from '../like-service';
+import { LikeRepositories } from '../../infrastructure/like-repositories';
+import { CommentRepositories } from '../../../comment/infrastructure/comment-repositories';
 import {
   Like,
   LikeDocumentType,
   LikeModelType,
 } from '../../domain/like.entity';
+import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
 import { InjectModel } from '@nestjs/mongoose';
+import { CommentDocumentType } from '../../../comment/domain/comment.entity';
+import { AppResult } from '../../../../base/enum/app-result.enum';
 import { LikeStatusEnum } from '../../domain/type';
-import { LikeRepositories } from '../../infrastructure/like-repositories';
-import { PostRepository } from '../../../post/infrastructure/post-repositories';
 import { LikeChangeCount } from '../../domain/models';
 
-export class UpdatePostLikeStatusCommand {
+export class UpdateCommentLikeStatusCommand {
   constructor(
-    public postId: string,
+    public commentId: string,
     public userId: string,
     public likeInputModel: LikeInputModel,
   ) {}
 }
 
-@CommandHandler(UpdatePostLikeStatusCommand)
-export class UpdatePostLikeStatusHandler
-  implements ICommandHandler<UpdatePostLikeStatusCommand, AppResultType>
+@CommandHandler(UpdateCommentLikeStatusCommand)
+export class UpdateCommentLikeStatusHandler
+  implements ICommandHandler<UpdateCommentLikeStatusCommand, AppResultType>
 {
   constructor(
-    private readonly postService: PostService,
+    private readonly commentService: CommentService,
     private readonly likeService: LikeService,
     private readonly likeRepositories: LikeRepositories,
-    private readonly postRepositories: PostRepository,
+    private readonly commentRepositories: CommentRepositories,
     @InjectModel(Like.name) private readonly likeModel: LikeModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async execute(command: UpdatePostLikeStatusCommand): Promise<AppResultType> {
-    const { postId, userId } = command;
-    const post: AppResultType<PostDocumentType | null> =
-      await this.postService.postIsExistById(postId);
-    if (post.appResult !== AppResult.Success)
+  async execute(
+    command: UpdateCommentLikeStatusCommand,
+  ): Promise<AppResultType> {
+    const { commentId, userId } = command;
+    const comment: AppResultType<CommentDocumentType> =
+      await this.commentService.commentIsExistById(commentId);
+    if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
     const like: AppResultType<LikeDocumentType | null> =
-      await this.likeService.likeIsExistByUserIdAndParentId(userId, postId);
+      await this.likeService.likeIsExistByUserIdAndParentId(userId, commentId);
+
     if (like.appResult !== AppResult.Success) {
       const newLike: LikeDocumentType = this.likeModel.createLikeInstance(
         command.likeInputModel,
-        postId,
+        commentId,
         userId,
       );
 
-      post.data.updateLikesCount(
+      comment.data.updateLikesCount(
         0,
         0,
         command.likeInputModel.likeStatus as LikeStatusEnum,
@@ -62,7 +65,7 @@ export class UpdatePostLikeStatusHandler
 
       await Promise.all([
         this.likeRepositories.save(newLike),
-        this.postRepositories.save(post.data),
+        this.commentRepositories.save(comment.data),
       ]);
 
       return this.applicationObjectResult.success(null);
@@ -73,14 +76,14 @@ export class UpdatePostLikeStatusHandler
       like.data.status,
     );
     like.data.updateLikeStatus(changeCountLike.newStatus);
-    post.data.updateLikesCount(
+    comment.data.updateLikesCount(
       changeCountLike.newLikesCount,
       changeCountLike.newDislikesCount,
     );
 
     await Promise.all([
       this.likeRepositories.save(like.data),
-      this.postRepositories.save(post.data),
+      this.commentRepositories.save(comment.data),
     ]);
 
     return this.applicationObjectResult.success(null);

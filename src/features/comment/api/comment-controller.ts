@@ -26,6 +26,8 @@ import {
 import { AppResult } from '../../../base/enum/app-result.enum';
 import { DeleteCommentCommand } from '../application/command/delete-comment';
 import { LikeInputModel } from '../../like/api/models/input/like-input-model';
+import { UpdateCommentLikeStatusCommand } from '../../like/application/command/update-comment-like-status';
+import { VerifyUserGuard } from '../../../core/guards/jwt/jwt-verify-user';
 
 @Controller(apiPrefixSettings.COMMENT.comments)
 export class CommentController {
@@ -35,8 +37,12 @@ export class CommentController {
   ) {}
 
   @Get(':id')
-  async getPostById(@Param('id') id: string): Promise<CommentOutputModel> {
-    return await this.commentQueryRepository.getCommentById(id);
+  @UseGuards(VerifyUserGuard)
+  async getCommentById(
+    @Param('id') id: string,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<CommentOutputModel> {
+    return await this.commentQueryRepository.getCommentById(id, user.userId);
   }
 
   @Put(':id')
@@ -87,10 +93,24 @@ export class CommentController {
   }
 
   @Put(`:id/${apiPrefixSettings.COMMENT.like_status}`)
+  @HttpCode(204)
   @UseGuards(AuthJWTAccessGuard)
   async updateCommentLikeStatusByCommentId(
     @Param('id') id: string,
     @Body() likeInputModel: LikeInputModel,
     @CurrentUser() user: JWTAccessTokenPayloadType,
-  ) {}
+  ) {
+    const result = await this.commandBus.execute(
+      new UpdateCommentLikeStatusCommand(id, user.userId, likeInputModel),
+    );
+
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.NotFound:
+        throw new NotFoundException('Comment not found');
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
 }
