@@ -18,6 +18,7 @@ export const apiPrefixSettings = {
   },
   COMMENT: {
     comments: 'comments',
+    like_status: 'like-status',
   },
   AUTH: {
     auth: 'auth',

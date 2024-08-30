@@ -58,12 +58,12 @@ export class PostMapperOutputModel {
 
   postsModel(
     posts: PostDocumentType[],
-    likes: any,
-    newestLikesArray: NewestLikesModel[],
+    likes: LikeDocumentType[] | [],
+    newestLikesArray: MapPostsType,
   ): PostOutputModel[] {
     return posts.map((post: PostDocumentType) => {
-      const foundLike = likes.find(
-        (like: any) => like.parentId === post._id.toString(),
+      const foundLike: LikeDocumentType = likes.find(
+        (like: LikeDocumentType) => like.parentId === post._id.toString(),
       );
       const userStatus: LikeStatusEnum = foundLike
         ? foundLike.status
@@ -89,3 +89,7 @@ export class PostMapperOutputModel {
     });
   }
 }
+
+export type MapPostsType = {
+  [key: string]: NewestLikesModel[];
+};

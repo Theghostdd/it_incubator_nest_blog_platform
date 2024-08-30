@@ -34,4 +34,12 @@ export class ApplicationObjectResult {
       errorField: error,
     };
   }
+
+  forbidden<T = null, D = null>(data?: T, error?: D) {
+    return {
+      appResult: AppResult.Forbidden,
+      data: data,
+      errorField: error,
+    };
+  }
 }

@@ -17,9 +17,3 @@ export class LikeStatusState {
     Object.assign(this, likeStatus);
   }
 }
-
-export class NewestLikesModel {
-  public addedAt: string;
-  public userId: string;
-  public login: string;
-}

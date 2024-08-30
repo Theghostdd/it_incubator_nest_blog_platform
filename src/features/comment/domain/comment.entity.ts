@@ -1,6 +1,9 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
-import { CommentInputModel } from '../api/model/input/comment-input.model';
+import {
+  CommentInputModel,
+  CommentUpdateModel,
+} from '../api/model/input/comment-input.model';
 import { use } from 'passport';
 
 @Schema()
@@ -66,6 +69,10 @@ export class Comment {
       dislikesCount: 0,
     };
     return comment;
+  }
+
+  updateComment(commentUpdateModel: CommentUpdateModel) {
+    this.content = commentUpdateModel.content;
   }
 }
 

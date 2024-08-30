@@ -43,9 +43,14 @@ export class PostTestManager {
     return result.body;
   }
 
-  async getPosts(query: AnyObject, statusCode: number) {
+  async getPosts(
+    query: AnyObject,
+    statusCode: number,
+    authorizationToken?: string,
+  ) {
     const result = await request(this.app.getHttpServer())
       .get(`${this.postEndpoint}`)
+      .set({ authorization: authorizationToken || null })
       .query(query)
       .expect(statusCode);
     return result.body;

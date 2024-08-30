@@ -1,5 +1,7 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import {
+  MapPostsType,
+  NewestLikesModel,
   PostMapperOutputModel,
   PostOutputModel,
 } from '../api/models/output/post-output.model';
@@ -15,7 +17,6 @@ import {
   LikeModelType,
 } from '../../like/domain/like.entity';
 import { LikeStatusEnum } from '../../like/domain/type';
-import { NewestLikesModel } from '../../like/domain/models';
 import {
   User,
   UserDocumentType,
@@ -109,36 +110,45 @@ export class PostQueryRepository {
       .skip(skip)
       .limit(pageSize);
 
-    const likes = [];
-    //const postIds: string[] = posts.map((id) => id._id.toString());
-    if (userId) {
-      //likes = await this.likeModel.find({userId: userId, parentId: {$in: postIds}})
-    }
+    const postIds: string[] = posts.map((post: PostDocumentType) =>
+      post._id.toString(),
+    );
 
-    // const lastLikes = await Promise.all(postIds.map(async (postId) => {
-    //   const likes = await this.likeModel
-    //     .find({ parentId: postId, status: LikeStatusEnum.Like })
-    //     .sort({ lastUpdateAt: -1 })
-    //     .limit(3)
-    //     .exec();
-    //
-    //   const likesWithUserDetails = await Promise.all(likes.map(async (like) => {
-    //     const user.integration-spec.ts = await this.userModel.findById(like.userId).exec();
-    //     return {
-    //       addedAt: like.lastUpdateAt,
-    //       userId: like.userId,
-    //       login: user.integration-spec.ts!.login,
-    //     };
-    //   }));
-    //
-    //   return { postId, likes: likesWithUserDetails };
-    // }));
+    const likes: LikeDocumentType[] | [] = userId
+      ? await this.likeModel.find({ userId, parentId: { $in: postIds } })
+      : [];
 
-    const lastLikesMap = [];
-    // const lastLikesMap = lastLikes.reduce((acc: {[key: string]: NewestLikesDto[]}, { postId, likes }) => {
-    //   acc[postId] = likes;
-    //   return acc;
-    // }, {});
+    const lastLikes = await Promise.all(
+      postIds.map(async (postId: string) => {
+        const likes: LikeDocumentType[] | [] = await this.likeModel
+          .find({ parentId: postId, status: LikeStatusEnum.Like })
+          .sort({ lastUpdateAt: -1 })
+          .limit(3);
+
+        const likesWithUserDetails: NewestLikesModel[] | [] = await Promise.all(
+          likes.map(async (like: LikeDocumentType) => {
+            const user: UserDocumentType = await this.userModel.findById(
+              like.userId,
+            );
+            return {
+              addedAt: like.lastUpdateAt,
+              userId: like.userId,
+              login: user.login,
+            };
+          }),
+        );
+
+        return { postId, likes: likesWithUserDetails };
+      }),
+    );
+
+    const lastLikesMap: MapPostsType = lastLikes.reduce(
+      (acc: { [key: string]: NewestLikesModel[] }, { postId, likes }) => {
+        acc[postId] = likes;
+        return acc;
+      },
+      {},
+    );
 
     return {
       pagesCount: pagesCount,

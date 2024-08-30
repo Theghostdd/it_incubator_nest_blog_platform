@@ -81,6 +81,9 @@ import { LikeService } from './features/like/application/like-service';
 import { LikeRepositories } from './features/like/infrastructure/like-repositories';
 import { Like, LikeSchema } from './features/like/domain/like.entity';
 import { VerifyUserGuard } from './core/guards/jwt/jwt-verify-user';
+import { UpdateCommentHandler } from './features/comment/application/command/update-comment';
+import { CommentService } from './features/comment/application/comment-service';
+import { DeleteCommentHandler } from './features/comment/application/command/delete-comment';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -98,6 +101,9 @@ const commentProviders = [
   CommentMapperOutputModel,
   CreateCommentByPostIdHandler,
   CommentRepositories,
+  UpdateCommentHandler,
+  CommentService,
+  DeleteCommentHandler,
 ];
 const postProviders = [
   PostService,

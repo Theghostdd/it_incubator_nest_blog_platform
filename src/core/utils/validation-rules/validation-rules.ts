@@ -283,6 +283,17 @@ export class CommentInputModelValidationRules {
   public content: string;
 }
 
+export class CommentUpdateModelValidationRules {
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  @Length(
+    validationRules.content_to_comment.MIN_LENGTH,
+    validationRules.content_to_comment.MAX_LENGTH,
+  )
+  public content: string;
+}
+
 export class LikeInputModelValidationRules {
   @IsEnum(LikeStatusEnum)
   public likeStatus: string;

@@ -24,7 +24,6 @@ import {
 } from '../../models/user/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
 import { LikeStatusEnum } from '../../../src/features/like/domain/type';
-import { delay } from '../../utils/delay/delay';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -189,6 +188,164 @@ describe('Post e2e', () => {
         .sort((a, b) => a.title.localeCompare(b.title));
 
       expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
+    });
+
+    it('should get posts with last likes array, with 2 users and 2 like and 2 dislike', async () => {
+      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
+        'blogs',
+        blogInsertModel,
+      );
+      const { id: postId1 } =
+        await testSettings.testManager.postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId.toString() },
+          adminAuthToken,
+          201,
+        );
+      const { id: postId2 } =
+        await testSettings.testManager.postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId.toString() },
+          adminAuthToken,
+          201,
+        );
+
+      const { id: userId1 } =
+        await testSettings.testManager.userTestManager.createUser(
+          userCreateModel,
+          adminAuthToken,
+          201,
+        );
+      const { id: userId2 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+      const { id: userId3 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login3', email: 'email3@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+      const { id: userId4 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login4', email: 'email4@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+
+      const { accessToken: accessToken1 } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login2' },
+          200,
+        );
+      const { accessToken: accessToken3 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login3' },
+          200,
+        );
+      const { accessToken: accessToken4 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login4' },
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId1.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken1}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId1.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken2}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId1.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken3}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId1.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken4}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId2.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken1}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId2.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken2}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId2.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken3}`,
+        204,
+      );
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId2.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken4}`,
+        204,
+      );
+
+      const getPosts: BasePagination<PostOutputModel[] | []> =
+        await testSettings.testManager.postTestManager.getPosts(
+          {},
+          200,
+          `Bearer ${accessToken4}`,
+        );
+
+      expect(getPosts.items[0].extendedLikesInfo).toEqual({
+        likesCount: 2,
+        dislikesCount: 2,
+        myStatus: 'Like',
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId4,
+            login: 'login4',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId3,
+            login: 'login3',
+          },
+        ],
+      });
+
+      expect(getPosts.items[1].extendedLikesInfo).toEqual({
+        likesCount: 2,
+        dislikesCount: 2,
+        myStatus: 'Dislike',
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId2,
+            login: 'login2',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId1,
+            login: userLoginModel.loginOrEmail,
+          },
+        ],
+      });
     });
   });
 

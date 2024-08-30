@@ -49,7 +49,9 @@ export class CommentsTestModel {
   }
 
   getCommentUpdateModel() {
-    return {};
+    return {
+      content: 'this is new comment content for update comment by id',
+    };
   }
 
   getCommentInsertManyModel() {
