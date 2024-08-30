@@ -7,17 +7,30 @@ import { BaseSorting } from '../../../base/sorting/base-sorting';
 import { Post, PostDocumentType, PostModelType } from '../domain/post.entity';
 import { BasePagination } from '../../../base/pagination/base-pagination';
 import { SortOrder } from 'mongoose';
-import { LikeStatusEnum } from '../../../base/enum/enum';
 import { InjectModel } from '@nestjs/mongoose';
-import { Blog } from '../../blog/domain/blog.entity';
+import { Blog, BlogModelType } from '../../blog/domain/blog.entity';
+import {
+  Like,
+  LikeDocumentType,
+  LikeModelType,
+} from '../../like/domain/like.entity';
+import { LikeStatusEnum } from '../../like/domain/type';
+import { NewestLikesModel } from '../../like/domain/models';
+import {
+  User,
+  UserDocumentType,
+  UserModelType,
+} from '../../user/domain/user.entity';
 
 @Injectable()
 export class PostQueryRepository {
   constructor(
     private readonly postMapperOutputModel: PostMapperOutputModel,
     private readonly baseSorting: BaseSorting,
-    @InjectModel(Blog.name) private readonly blogModel: PostModelType,
+    @InjectModel(Blog.name) private readonly blogModel: BlogModelType,
+    @InjectModel(User.name) private readonly userModel: UserModelType,
     @InjectModel(Post.name) private readonly postModel: PostModelType,
+    @InjectModel(Like.name) private readonly likeModel: LikeModelType,
   ) {}
 
   async getPostById(id: string, userId?: string): Promise<PostOutputModel> {
@@ -28,30 +41,34 @@ export class PostQueryRepository {
       throw new NotFoundException('Post not found');
     }
 
-    const userLike = null;
+    let userLike: LikeDocumentType | null = null;
     if (userId) {
-      // userLike = await this.likeModel.findOne({userId: userId, parentId: id})
+      userLike = await this.likeModel.findOne({ userId: userId, parentId: id });
     }
 
-    // const lastLikes = await this.likeModel
-    //   .find({parentId: id, status: LikeStatusEnum.Like})
-    //   .sort({ lastUpdateAt: -1 })
-    //   .limit(3)
+    const lastLikes: LikeDocumentType[] | [] = await this.likeModel
+      .find({ parentId: id, status: LikeStatusEnum.Like })
+      .sort({ lastUpdateAt: -1 })
+      .limit(3);
 
-    const newestLikesArray = [];
-    //if (lastLikes.length > 0) {
-    //   const userIds: string[] = lastLikes.map((like) => like.userId)
-    //   const users = await this.userModel.find({_id: {$in: userIds}})
-    //
-    //   newestLikesArray = lastLikes.map((like) => {
-    //     const user.integration-spec.ts = users.find(u => u._id.toString() === like.userId)!
-    //     return {
-    //       addedAt: like.lastUpdateAt,
-    //       userId: user.integration-spec.ts._id.toString(),
-    //       login: user.integration-spec.ts.login
-    //     }
-    //   })
-    // }
+    let newestLikesArray: NewestLikesModel[] | [] = [];
+    if (lastLikes.length > 0) {
+      const userIds: string[] = lastLikes.map(
+        (like: LikeDocumentType) => like.userId,
+      );
+      const users = await this.userModel.find({ _id: { $in: userIds } });
+
+      newestLikesArray = lastLikes.map((like: LikeDocumentType) => {
+        const user: UserDocumentType = users.find(
+          (u) => u._id.toString() === like.userId,
+        )!;
+        return {
+          addedAt: like.lastUpdateAt,
+          userId: user._id.toString(),
+          login: user.login,
+        };
+      });
+    }
 
     return this.postMapperOutputModel.postModel(
       post,

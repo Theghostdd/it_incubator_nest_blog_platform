@@ -14,6 +14,7 @@ export const apiPrefixSettings = {
   POST: {
     posts: 'posts',
     comments: 'comments',
+    like_status: 'like-status',
   },
   COMMENT: {
     comments: 'comments',

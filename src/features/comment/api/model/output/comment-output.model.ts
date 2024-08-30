@@ -1,5 +1,5 @@
 import { CommentDocumentType } from '../../../domain/comment.entity';
-import { LikeStatusEnum } from '../../../../../base/enum/enum';
+import { LikeStatusEnum } from '../../../../like/domain/type';
 
 export class CommentatorInfoViewModel {
   constructor(

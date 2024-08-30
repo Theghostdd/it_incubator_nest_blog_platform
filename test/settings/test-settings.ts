@@ -20,6 +20,7 @@ import { CommentTestManager } from '../utils/request-test-manager/comment-test-m
 import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../src/settings/configuration/configuration';
+import { LikeTestModel } from '../models/like/likes.model';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -64,12 +65,14 @@ const getTestModel = (): ITestModels => {
   const commentsTestModel: CommentsTestModel = new CommentsTestModel(
     userTestModel.getUserCreateModel().login,
   );
+  const likeTestModel: LikeTestModel = new LikeTestModel();
 
   return {
     userTestModel: userTestModel,
     authTestModel: authTestModel,
     blogTestModel: blogTestModel,
     postTestModel: postTestModel,
+    likeTestModel: likeTestModel,
     commentsTestModel: commentsTestModel,
   };
 };

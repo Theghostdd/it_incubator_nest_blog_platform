@@ -1,33 +1,15 @@
 import { forwardRef, Inject, Injectable } from '@nestjs/common';
 import bcrypt from 'bcrypt';
 import { UserRepositories } from '../../user/infrastructure/user-repositories';
+import { User, UserModelType } from '../../user/domain/user.entity';
 import {
-  User,
-  UserDocumentType,
-  UserModelType,
-} from '../../user/domain/user.entity';
-import { AppResult } from '../../../base/enum/app-result.enum';
-import {
-  APIErrorMessageType,
-  APIErrorsMessageType,
   AppResultType,
-  AuthorizationUserResponseType,
   JWTAccessTokenPayloadType,
   JWTRefreshTokenPayloadType,
-  MailTemplateType,
 } from '../../../base/types/types';
-import {
-  ChangePasswordInputModel,
-  ConfirmUserByEmailInputModel,
-  LoginInputModel,
-  PasswordRecoveryInputModel,
-  RegistrationInputModel,
-  ResendConfirmationCodeInputModel,
-} from '../api/models/input/auth-input.models';
 import { JwtService } from '@nestjs/jwt';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserService } from '../../user/application/user-service';
-import { addDays, addMinutes, compareAsc } from 'date-fns';
 import { NodeMailerService } from '../../nodemailer/application/nodemailer-application';
 import { MailTemplateService } from '../../mail-template/application/template-application';
 

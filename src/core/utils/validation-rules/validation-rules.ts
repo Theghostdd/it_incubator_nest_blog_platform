@@ -1,4 +1,5 @@
 import {
+  IsEnum,
   IsMongoId,
   IsNotEmpty,
   IsString,
@@ -7,6 +8,7 @@ import {
 } from 'class-validator';
 import { Trim } from '../../decorators/transform/trim';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
+import { LikeStatusEnum } from '../../../features/like/domain/type';
 
 type ValidationOptions = {
   MIN_LENGTH: number | null;
@@ -279,4 +281,9 @@ export class CommentInputModelValidationRules {
     validationRules.content_to_comment.MAX_LENGTH,
   )
   public content: string;
+}
+
+export class LikeInputModelValidationRules {
+  @IsEnum(LikeStatusEnum)
+  public likeStatus: string;
 }

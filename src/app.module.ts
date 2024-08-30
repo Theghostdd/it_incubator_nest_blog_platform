@@ -76,6 +76,11 @@ import { PasswordRecoveryHandler } from './features/auth/application/command/pas
 import { RegistrationHandler } from './features/auth/application/command/registration.command';
 import { CreateCommentByPostIdHandler } from './features/comment/application/command/create-comment';
 import { CommentRepositories } from './features/comment/infrastructure/comment-repositories';
+import { UpdatePostLikeStatusHandler } from './features/like/application/command/update-post-like-status';
+import { LikeService } from './features/like/application/like-service';
+import { LikeRepositories } from './features/like/infrastructure/like-repositories';
+import { Like, LikeSchema } from './features/like/domain/like.entity';
+import { VerifyUserGuard } from './core/guards/jwt/jwt-verify-user';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -135,6 +140,12 @@ const requestLimiterProvider = [
   LimitRequestGuard,
 ];
 
+const likeProviders = [
+  UpdatePostLikeStatusHandler,
+  LikeService,
+  LikeRepositories,
+];
+
 @Module({
   imports: [
     CqrsModule,
@@ -153,6 +164,7 @@ const requestLimiterProvider = [
       { name: Post.name, schema: PostSchema },
       { name: Blog.name, schema: BlogSchema },
       { name: Comment.name, schema: CommentSchema },
+      { name: Like.name, schema: LikeSchema },
       {
         name: RecoveryPasswordSession.name,
         schema: RecoveryPasswordSessionSchema,
@@ -209,6 +221,8 @@ const requestLimiterProvider = [
     JwtService,
     ApplicationObjectResult,
     BaseSorting,
+    ...likeProviders,
+    VerifyUserGuard,
   ],
 })
 export class AppModule {}

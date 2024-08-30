@@ -37,6 +37,9 @@ import { CommentInputModel } from '../../comment/api/model/input/comment-input.m
 import { CreateCommentByPostIdCommand } from '../../comment/application/command/create-comment';
 import { AuthJWTAccessGuard } from '../../../core/guards/jwt/jwt.guard';
 import { CurrentUser } from '../../../core/decorators/current-user';
+import { LikeInputModel } from '../../like/api/models/input/like-input-model';
+import { UpdatePostLikeStatusCommand } from '../../like/application/command/update-post-like-status';
+import { VerifyUserGuard } from '../../../core/guards/jwt/jwt-verify-user';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
@@ -55,15 +58,25 @@ export class PostController {
   }
 
   @Get(':id')
-  async getPostById(@Param('id') id: string): Promise<PostOutputModel> {
-    return await this.postQueryRepository.getPostById(id);
+  @UseGuards(VerifyUserGuard)
+  async getPostById(
+    @Param('id') id: string,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<PostOutputModel> {
+    return await this.postQueryRepository.getPostById(id, user?.userId || null);
   }
 
   @Get()
+  @UseGuards(VerifyUserGuard)
   async getPosts(
     @Query() query: BaseSorting,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<PostOutputModel[] | []>> {
-    return await this.postQueryRepository.getPosts(query);
+    return await this.postQueryRepository.getPosts(
+      query,
+      null,
+      user?.userId || null,
+    );
   }
 
   @Post()
@@ -135,6 +148,27 @@ export class PostController {
     switch (result.appResult) {
       case AppResult.Success:
         return await this.commentQueryRepository.getCommentById(result.data);
+      case AppResult.NotFound:
+        throw new NotFoundException('Post or user not found');
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Put(`:id/${apiPrefixSettings.POST.like_status}`)
+  @UseGuards(AuthJWTAccessGuard)
+  @HttpCode(204)
+  async updateLikeStatusForPost(
+    @Param('id') id: string,
+    @Body() likeInputModel: LikeInputModel,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ) {
+    const result: AppResultType = await this.commandBus.execute(
+      new UpdatePostLikeStatusCommand(id, user.userId, likeInputModel),
+    );
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
       case AppResult.NotFound:
         throw new NotFoundException('Post or user not found');
       default:

@@ -4,6 +4,7 @@ import {
   PostUpdateModel,
 } from '../api/models/input/post-input.model';
 import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
+import { LikeStatusEnum } from '../../like/domain/type';
 
 @Schema()
 export class Post {
@@ -54,6 +55,27 @@ export class Post {
     this.title = title;
     this.shortDescription = shortDescription;
     this.content = content;
+  }
+
+  updateLikesCount(
+    newLikesCount: number,
+    newDislikesCount: number,
+    likeStatus?: LikeStatusEnum,
+  ) {
+    if (likeStatus) {
+      switch (likeStatus) {
+        case LikeStatusEnum.Like:
+          ++this.extendedLikesInfo.likesCount;
+          break;
+        case LikeStatusEnum.Dislike:
+          ++this.extendedLikesInfo.dislikesCount;
+          break;
+      }
+      return;
+    }
+
+    this.extendedLikesInfo.likesCount += newLikesCount;
+    this.extendedLikesInfo.dislikesCount += newDislikesCount;
   }
 }
 

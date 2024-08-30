@@ -1,5 +1,6 @@
-import { LikeStatusEnum } from '../../../../../base/enum/enum';
 import { PostDocumentType } from '../../../domain/post.entity';
+import { LikeStatusEnum } from '../../../../like/domain/type';
+import { LikeDocumentType } from '../../../../like/domain/like.entity';
 
 export class NewestLikesModel {
   constructor(
@@ -35,8 +36,8 @@ export class PostMapperOutputModel {
   constructor() {}
   postModel(
     post: PostDocumentType,
-    userStatusLike: LikeStatusEnum,
-    newestLikesArray: NewestLikesModel[],
+    userLike: LikeDocumentType | null,
+    newestLikesArray: NewestLikesModel[] | [],
   ): PostOutputModel {
     return {
       id: post._id.toString(),
@@ -49,7 +50,7 @@ export class PostMapperOutputModel {
       extendedLikesInfo: {
         likesCount: post.extendedLikesInfo.likesCount,
         dislikesCount: post.extendedLikesInfo.dislikesCount,
-        myStatus: !userStatusLike ? LikeStatusEnum.None : userStatusLike,
+        myStatus: !userLike ? LikeStatusEnum.None : userLike.status,
         newestLikes: newestLikesArray,
       },
     };

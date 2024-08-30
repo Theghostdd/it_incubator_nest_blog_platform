@@ -13,6 +13,7 @@ import { CommentTestManager } from '../utils/request-test-manager/comment-test-m
 import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager';
 import { ConfigurationType } from '../../src/settings/configuration/configuration';
 import { ConfigService } from '@nestjs/config';
+import { LikeTestModel } from '../models/like/likes.model';
 
 export interface ITestSettings {
   app: INestApplication;
@@ -29,6 +30,7 @@ export interface ITestModels {
   blogTestModel: BlogTestModel;
   postTestModel: PostTestModel;
   commentsTestModel: CommentsTestModel;
+  likeTestModel: LikeTestModel;
 }
 
 export interface ITestManger {

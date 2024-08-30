@@ -7,17 +7,20 @@ import {
   IPostUpdateModel,
 } from '../../models/post/interfaces';
 import { ICommentCreateModel } from '../../models/comments/interfaces';
+import { ILikeUpdateModel } from '../../models/like/interfaces';
 
 export class PostTestManager {
   private readonly apiPrefix: string;
   private readonly postEndpoint: string;
   private readonly commentEndpoint: string;
+  private readonly likeEndpoint: string;
 
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
     this.postEndpoint = `${this.apiPrefix}/${apiPrefixSettings.POST.posts}`;
     this.commentEndpoint = `${apiPrefixSettings.POST.comments}`;
+    this.likeEndpoint = `${apiPrefixSettings.POST.like_status}`;
   }
   async createPost(
     postModel: IPostCreateModel,
@@ -32,9 +35,10 @@ export class PostTestManager {
     return result.body;
   }
 
-  async getPost(id: string, statusCode: number) {
+  async getPost(id: string, statusCode: number, authorizationToken?: string) {
     const result = await request(this.app.getHttpServer())
       .get(`${this.postEndpoint}/${id}`)
+      .set({ authorization: authorizationToken || null })
       .expect(statusCode);
     return result.body;
   }
@@ -87,6 +91,20 @@ export class PostTestManager {
       .post(`${this.postEndpoint}/${id}/${this.commentEndpoint}`)
       .set({ authorization: authorizationToken })
       .send(commentModel)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async updatePostLikeStatusByPostId(
+    id: string,
+    likeModel: ILikeUpdateModel,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .put(`${this.postEndpoint}/${id}/${this.likeEndpoint}`)
+      .set({ authorization: authorizationToken })
+      .send(likeModel)
       .expect(statusCode);
     return result.body;
   }

@@ -18,9 +18,13 @@ import {
 } from '../../models/comments/interfaces';
 import { APISettings } from '../../../src/settings/api-settings';
 import {
+  IUserCreateTestModel,
   IUserInsertTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
+import { ILikeUpdateModel } from '../../models/like/interfaces';
+import { LikeStatusEnum } from '../../../src/features/like/domain/type';
+import { delay } from '../../utils/delay/delay';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -33,11 +37,13 @@ describe('Post e2e', () => {
   let commentCreateModel: ICommentCreateModel;
   let commentInsertManyModel: ICommentInsertModel[];
   let userInsertModel: IUserInsertTestModel;
+  let userCreateModel: IUserCreateTestModel;
   let userLoginModel: IUserLoginTestModel;
   let apiSettings: APISettings;
   let login: string;
   let password: string;
   let adminAuthToken: string;
+  let likeUpdateModel: ILikeUpdateModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -74,6 +80,10 @@ describe('Post e2e', () => {
     userInsertModel =
       testSettings.testModels.userTestModel.getUserInsertModel();
     userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
+    likeUpdateModel =
+      testSettings.testModels.likeTestModel.getLikeUpdateModel();
+    userCreateModel =
+      testSettings.testModels.userTestModel.getUserCreateModel();
   });
 
   describe('Get posts', () => {
@@ -213,6 +223,263 @@ describe('Post e2e', () => {
 
     it('should not get post by id, post not found', async () => {
       await postTestManager.getPost('66bf39c8f855a5438d02adbf', 404);
+    });
+
+    it('should get post with last likes array, with 2 users and 2 like and 2 dislike', async () => {
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { id: userId1 } =
+        await testSettings.testManager.userTestManager.createUser(
+          userCreateModel,
+          adminAuthToken,
+          201,
+        );
+      const { id: userId2 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+      await testSettings.testManager.userTestManager.createUser(
+        { ...userCreateModel, login: 'login3', email: 'email3@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+      await testSettings.testManager.userTestManager.createUser(
+        { ...userCreateModel, login: 'login4', email: 'email4@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+
+      const { accessToken: accessToken1 } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login2' },
+          200,
+        );
+      const { accessToken: accessToken3 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login3' },
+          200,
+        );
+      const { accessToken: accessToken4 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login4' },
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken1}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken2}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken3}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken4}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken1}`,
+      );
+      expect(getPost.extendedLikesInfo).toEqual({
+        likesCount: 2,
+        dislikesCount: 2,
+        myStatus: LikeStatusEnum.Like,
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId2,
+            login: 'login2',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId1,
+            login: userCreateModel.login,
+          },
+        ],
+      });
+
+      const getPost2 = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken3}`,
+      );
+      expect(getPost2.extendedLikesInfo).toEqual({
+        likesCount: 2,
+        dislikesCount: 2,
+        myStatus: LikeStatusEnum.Dislike,
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId2,
+            login: 'login2',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId1,
+            login: userCreateModel.login,
+          },
+        ],
+      });
+
+      const withoutToken = await postTestManager.getPost(
+        postId.toString(),
+        200,
+      );
+      expect(withoutToken.extendedLikesInfo).toEqual({
+        likesCount: 2,
+        dislikesCount: 2,
+        myStatus: LikeStatusEnum.None,
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId2,
+            login: 'login2',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId1,
+            login: userCreateModel.login,
+          },
+        ],
+      });
+    });
+
+    it('should get post with last likes array, with 4 like and need get last likes', async () => {
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      await testSettings.testManager.userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: userId2 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+      const { id: userId3 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login3', email: 'email3@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+      const { id: userId4 } =
+        await testSettings.testManager.userTestManager.createUser(
+          { ...userCreateModel, login: 'login4', email: 'email4@mail.ru' },
+          adminAuthToken,
+          201,
+        );
+
+      const { accessToken: accessToken1 } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login2' },
+          200,
+        );
+      const { accessToken: accessToken3 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login3' },
+          200,
+        );
+      const { accessToken: accessToken4 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login4' },
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken1}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken2}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken3}`,
+        204,
+      );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken4}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken1}`,
+      );
+      expect(getPost.extendedLikesInfo).toEqual({
+        likesCount: 4,
+        dislikesCount: 0,
+        myStatus: LikeStatusEnum.Like,
+        newestLikes: [
+          {
+            addedAt: expect.any(String),
+            userId: userId4,
+            login: 'login4',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId3,
+            login: 'login3',
+          },
+          {
+            addedAt: expect.any(String),
+            userId: userId2,
+            login: 'login2',
+          },
+        ],
+      });
     });
   });
 
@@ -830,6 +1097,338 @@ describe('Post e2e', () => {
         `Bearer ${accessToken}`,
         404,
       );
+    });
+  });
+
+  describe('Update like status for post by post id', () => {
+    it('should update like status, the status must be "Like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPost).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: userId.toString(),
+              login: userInsertModel.login,
+            },
+          ],
+        },
+      });
+    });
+
+    it('should update like status to "Like" and update again with "Like" the status must be "Like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPost).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: userId.toString(),
+              login: userInsertModel.login,
+            },
+          ],
+        },
+      });
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPostSecond = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPostSecond).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: userId.toString(),
+              login: userInsertModel.login,
+            },
+          ],
+        },
+      });
+    });
+
+    it('should update like status to "Like" and change status to dislike, the status must be "Dislike"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPost).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: userId.toString(),
+              login: userInsertModel.login,
+            },
+          ],
+        },
+      });
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPostSecond = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPostSecond).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 1,
+          myStatus: LikeStatusEnum.Dislike,
+          newestLikes: [],
+        },
+      });
+    });
+
+    it('should update like status to "Like" and change status to dislike, than remove like"', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        likeUpdateModel,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPost = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPost).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.Like,
+          newestLikes: [
+            {
+              addedAt: expect.any(String),
+              userId: userId.toString(),
+              login: userInsertModel.login,
+            },
+          ],
+        },
+      });
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        { likeStatus: 'Dislike' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPostSecond = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPostSecond).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 1,
+          myStatus: LikeStatusEnum.Dislike,
+          newestLikes: [],
+        },
+      });
+
+      await postTestManager.updatePostLikeStatusByPostId(
+        postId.toString(),
+        { likeStatus: 'None' as LikeStatusEnum },
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      const getPostThree = await postTestManager.getPost(
+        postId.toString(),
+        200,
+        `Bearer ${accessToken}`,
+      );
+
+      expect(getPostThree).toEqual({
+        id: postId.toString(),
+        title: postInsertModel.title,
+        shortDescription: postInsertModel.shortDescription,
+        content: postInsertModel.content,
+        blogId: postInsertModel.blogId,
+        blogName: postInsertModel.blogName,
+        createdAt: postInsertModel.createdAt,
+        extendedLikesInfo: {
+          likesCount: 0,
+          dislikesCount: 0,
+          myStatus: LikeStatusEnum.None,
+          newestLikes: [],
+        },
+      });
     });
   });
 });
