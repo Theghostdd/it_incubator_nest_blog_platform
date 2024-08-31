@@ -3,8 +3,12 @@ import { apiPrefixSettings } from './app-prefix-settings';
 import { ValidationPipeOption } from '../core/pipe/validation/validation-pipe-option';
 import { HttpExceptionFilter } from '../core/exceprion-filters/http-exception/http-exception-filters';
 import cookieParser from 'cookie-parser';
+import { useContainer } from 'class-validator';
+import { AppModule } from '../app.module';
 
 export const applyAppSettings = (app: INestApplication) => {
+  useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
   setApiPrefix(app);
 
   setPipes(app);

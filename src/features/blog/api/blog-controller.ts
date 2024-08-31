@@ -14,7 +14,10 @@ import {
 } from '@nestjs/common';
 import { apiPrefixSettings } from '../../../settings/app-prefix-settings';
 import { BlogQueryRepository } from '../infrastructure/blog-query-repositories';
-import { AppResultType } from '../../../base/types/types';
+import {
+  AppResultType,
+  JWTAccessTokenPayloadType,
+} from '../../../base/types/types';
 import { AppResult } from '../../../base/enum/app-result.enum';
 import {
   BlogInputModel,
@@ -34,6 +37,8 @@ import { CreateBlogCommand } from '../application/command/create-blog.command';
 import { DeleteBlogByIdCommand } from '../application/command/delete-blog.command';
 import { UpdateBlogByIdCommand } from '../application/command/update-blog.command';
 import { BasicGuard } from '../../../core/guards/basic/basic.guard';
+import { VerifyUserGuard } from '../../../core/guards/jwt/jwt-verify-user';
+import { CurrentUser } from '../../../core/decorators/current-user';
 
 @Controller(apiPrefixSettings.BLOG.blogs)
 export class BlogController {
@@ -44,11 +49,13 @@ export class BlogController {
   ) {}
 
   @Get(`:id/${apiPrefixSettings.BLOG.posts}`)
+  @UseGuards(VerifyUserGuard)
   async getPostByBlogId(
     @Query() query: BaseSorting,
     @Param('id') id: string,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<PostOutputModel[] | []>> {
-    return await this.postQueryRepository.getPosts(query, id);
+    return await this.postQueryRepository.getPosts(query, id, user.userId);
   }
 
   @Get(':id')

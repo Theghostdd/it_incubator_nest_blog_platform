@@ -17,6 +17,11 @@ import {
   LikeDocumentType,
   LikeModelType,
 } from '../../like/domain/like.entity';
+import {
+  Post,
+  PostDocumentType,
+  PostModelType,
+} from '../../post/domain/post.entity';
 
 @Injectable()
 export class CommentQueryRepositories {
@@ -25,6 +30,7 @@ export class CommentQueryRepositories {
     private readonly baseSorting: BaseSorting,
     @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
     @InjectModel(Like.name) private readonly likeModel: LikeModelType,
+    @InjectModel(Post.name) private readonly postModel: PostModelType,
   ) {}
 
   async getCommentById(
@@ -52,6 +58,10 @@ export class CommentQueryRepositories {
     postId: string,
     userId?: string,
   ): Promise<BasePagination<CommentOutputModel[] | []>> {
+    const post: PostDocumentType = await this.postModel
+      .findById(postId)
+      .select('_id');
+    if (!post) throw new NotFoundException('Post not found');
     const { sortBy, sortDirection, pageSize, pageNumber } =
       this.baseSorting.createBaseQuery(query);
 

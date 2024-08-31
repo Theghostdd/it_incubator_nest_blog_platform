@@ -85,6 +85,7 @@ import { UpdateCommentHandler } from './features/comment/application/command/upd
 import { CommentService } from './features/comment/application/comment-service';
 import { DeleteCommentHandler } from './features/comment/application/command/delete-comment';
 import { UpdateCommentLikeStatusHandler } from './features/like/application/command/update-comment-like-status';
+import { FindBlogConstraint } from './core/decorators/find-blog';
 
 const testingProviders = [TestingRepositories, TestingService];
 const userProviders = [
@@ -231,6 +232,7 @@ const likeProviders = [
     BaseSorting,
     ...likeProviders,
     VerifyUserGuard,
+    FindBlogConstraint,
   ],
 })
 export class AppModule {}

@@ -9,6 +9,7 @@ import {
 import { Trim } from '../../decorators/transform/trim';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
 import { LikeStatusEnum } from '../../../features/like/domain/type';
+import { FindBlog } from '../../decorators/find-blog';
 
 type ValidationOptions = {
   MIN_LENGTH: number | null;
@@ -92,6 +93,7 @@ export class PostInputModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsMongoId()
+  @FindBlog()
   public blogId: string;
 }
 
@@ -120,6 +122,7 @@ export class PostUpdateModelValidationRules {
   @Trim()
   @IsNotEmpty()
   @IsMongoId()
+  @FindBlog()
   public blogId: string;
 }
 

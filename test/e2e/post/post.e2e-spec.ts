@@ -670,16 +670,29 @@ describe('Post e2e', () => {
     });
 
     it('should not create post by blog id, blog not found', async () => {
-      await postTestManager.createPost(
+      const result = await postTestManager.createPost(
         { ...postCreateModel, blogId: '66bf39c8f855a5438d02adbf' },
         adminAuthToken,
-        404,
+        400,
       );
+      expect(result).toEqual({
+        errorsMessages: [
+          {
+            field: 'blogId',
+            message: expect.any(String),
+          },
+        ],
+      });
     });
 
     it('should not create post, bad input data', async () => {
       const result: APIErrorsMessageType = await postTestManager.createPost(
-        { title: '', shortDescription: '', content: '', blogId: '' },
+        {
+          title: '',
+          shortDescription: '',
+          content: '',
+          blogId: '',
+        },
         adminAuthToken,
         400,
       );
@@ -709,7 +722,7 @@ describe('Post e2e', () => {
           title: '',
           shortDescription: 'shortDescription',
           content: 'content',
-          blogId: '66bf39c8f855a5438d02adbf',
+          blogId: '66d2278807f033d83e59f5f6',
         },
         adminAuthToken,
         400,
@@ -718,6 +731,10 @@ describe('Post e2e', () => {
         errorsMessages: [
           {
             field: 'title',
+            message: expect.any(String),
+          },
+          {
+            field: 'blogId',
             message: expect.any(String),
           },
         ],
@@ -729,7 +746,7 @@ describe('Post e2e', () => {
             title: 'title',
             shortDescription: '',
             content: 'content',
-            blogId: '66bf39c8f855a5438d02adbf',
+            blogId: '66d2278807f033d83e59f5f6',
           },
           adminAuthToken,
           400,
@@ -738,6 +755,10 @@ describe('Post e2e', () => {
         errorsMessages: [
           {
             field: 'shortDescription',
+            message: expect.any(String),
+          },
+          {
+            field: 'blogId',
             message: expect.any(String),
           },
         ],
@@ -749,7 +770,7 @@ describe('Post e2e', () => {
             title: 'title',
             shortDescription: 'shortDescription',
             content: '',
-            blogId: '66bf39c8f855a5438d02adbf',
+            blogId: '66d2278807f033d83e59f5f6',
           },
           adminAuthToken,
           400,
@@ -758,6 +779,10 @@ describe('Post e2e', () => {
         errorsMessages: [
           {
             field: 'content',
+            message: expect.any(String),
+          },
+          {
+            field: 'blogId',
             message: expect.any(String),
           },
         ],
@@ -838,20 +863,16 @@ describe('Post e2e', () => {
     });
 
     it('should not update post, bad input data', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
-      );
       const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
         'posts',
         {
           ...postInsertModel,
-          blogId: blogId.toString(),
+          blogId: '66d22840fe8ba2e6f7319152',
         },
       );
 
       const result: APIErrorsMessageType = await postTestManager.updatePost(
-        blogId.toString(),
+        'blogId.toString()',
         { title: '', shortDescription: '', content: '', blogId: '' },
         adminAuthToken,
         400,
@@ -878,7 +899,7 @@ describe('Post e2e', () => {
       });
 
       const withTitle: APIErrorsMessageType = await postTestManager.updatePost(
-        blogId.toString(),
+        '66d22840fe8ba2e6f7319152',
         {
           title: '',
           shortDescription: 'shortDescription',
@@ -894,12 +915,16 @@ describe('Post e2e', () => {
             field: 'title',
             message: expect.any(String),
           },
+          {
+            field: 'blogId',
+            message: expect.any(String),
+          },
         ],
       });
 
       const withShortDescription: APIErrorsMessageType =
         await postTestManager.updatePost(
-          blogId.toString(),
+          '66d22840fe8ba2e6f7319152',
           {
             title: 'title',
             shortDescription: '',
@@ -915,12 +940,16 @@ describe('Post e2e', () => {
             field: 'shortDescription',
             message: expect.any(String),
           },
+          {
+            field: 'blogId',
+            message: expect.any(String),
+          },
         ],
       });
 
       const withContent: APIErrorsMessageType =
         await postTestManager.updatePost(
-          blogId.toString(),
+          '66bf39c8f855a5438d02adbf',
           {
             title: 'title',
             shortDescription: 'shortDescription',
@@ -936,11 +965,15 @@ describe('Post e2e', () => {
             field: 'content',
             message: expect.any(String),
           },
+          {
+            field: 'blogId',
+            message: expect.any(String),
+          },
         ],
       });
 
       const withBlogId: APIErrorsMessageType = await postTestManager.updatePost(
-        blogId.toString(),
+        '66bf39c8f855a5438d02adbf',
         {
           title: 'title',
           shortDescription: 'shortDescription',
@@ -969,9 +1002,13 @@ describe('Post e2e', () => {
     });
 
     it('should not update post by id, post not found', async () => {
+      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
+        'blogs',
+        blogInsertModel,
+      );
       await postTestManager.updatePost(
         '66bf39c8f855a5438d02adbf',
-        { ...postUpdateModel, blogId: '66bf39c8f855a5438d02adbf' },
+        { ...postUpdateModel, blogId: blogId.toString() },
         adminAuthToken,
         404,
       );

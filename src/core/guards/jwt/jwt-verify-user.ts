@@ -5,6 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { APISettings } from '../../../settings/api-settings';
 import { Observable } from 'rxjs';
+import { JWTAccessTokenPayloadType } from '../../../base/types/types';
 
 @Injectable()
 export class VerifyUserGuard implements CanActivate {
@@ -26,10 +27,16 @@ export class VerifyUserGuard implements CanActivate {
     }
 
     const token = request.headers.authorization.split(' ')[1];
+    let jwtAccessPayload: JWTAccessTokenPayloadType;
+    try {
+      jwtAccessPayload = this.jwtService.verify(token, {
+        secret: this.apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
+      });
+    } catch (e) {
+      request.user = { userId: null };
+      return true;
+    }
 
-    const jwtAccessPayload = this.jwtService.verify(token, {
-      secret: this.apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
-    });
     request.user = {
       userId: jwtAccessPayload.userId,
     };

@@ -4,7 +4,6 @@ import {
   CommentInputModel,
   CommentUpdateModel,
 } from '../api/model/input/comment-input.model';
-import { use } from 'passport';
 import { LikeStatusEnum } from '../../like/domain/type';
 
 @Schema()
@@ -69,6 +68,7 @@ export class Comment {
       likesCount: 0,
       dislikesCount: 0,
     };
+    comment.createdAt = new Date().toISOString();
     return comment;
   }
 

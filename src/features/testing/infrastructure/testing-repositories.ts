@@ -4,6 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { Blog, BlogModelType } from '../../blog/domain/blog.entity';
 import { Post, PostModelType } from '../../post/domain/post.entity';
 import { Comment, CommentModelType } from '../../comment/domain/comment.entity';
+import { Like, LikeModelType } from '../../like/domain/like.entity';
 @Injectable()
 export class TestingRepositories {
   constructor(
@@ -11,6 +12,7 @@ export class TestingRepositories {
     @InjectModel(Blog.name) private readonly blogModel: BlogModelType,
     @InjectModel(Post.name) private readonly postModel: PostModelType,
     @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
+    @InjectModel(Like.name) private readonly likeModel: LikeModelType,
   ) {}
 
   async clearDb(): Promise<void> {
@@ -19,6 +21,7 @@ export class TestingRepositories {
       this.blogModel.deleteMany(),
       this.postModel.deleteMany(),
       this.commentModel.deleteMany(),
+      this.likeModel.deleteMany(),
     ]);
   }
 }
