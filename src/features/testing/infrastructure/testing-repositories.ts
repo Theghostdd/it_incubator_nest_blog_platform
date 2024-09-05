@@ -1,10 +1,22 @@
 import { InjectModel } from '@nestjs/mongoose';
-import { User, UserModelType } from '../../user/domain/user.entity';
+import { User, UserModelType } from '../../users/user/domain/user.entity';
 import { Injectable } from '@nestjs/common';
-import { Blog, BlogModelType } from '../../blog/domain/blog.entity';
-import { Post, PostModelType } from '../../post/domain/post.entity';
-import { Comment, CommentModelType } from '../../comment/domain/comment.entity';
-import { Like, LikeModelType } from '../../like/domain/like.entity';
+import {
+  Blog,
+  BlogModelType,
+} from '../../blog-platform/blog/domain/blog.entity';
+import {
+  Post,
+  PostModelType,
+} from '../../blog-platform/post/domain/post.entity';
+import {
+  Comment,
+  CommentModelType,
+} from '../../blog-platform/comment/domain/comment.entity';
+import {
+  Like,
+  LikeModelType,
+} from '../../blog-platform/like/domain/like.entity';
 @Injectable()
 export class TestingRepositories {
   constructor(

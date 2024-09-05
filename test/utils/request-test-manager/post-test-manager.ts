@@ -9,7 +9,7 @@ import {
 import { ICommentCreateModel } from '../../models/comments/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
-import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
+import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 
 export class PostTestManager {
   private readonly apiPrefix: string;

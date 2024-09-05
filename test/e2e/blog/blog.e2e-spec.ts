@@ -1,7 +1,7 @@
 import { BlogTestManager } from '../../utils/request-test-manager/blog-test-manager';
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
-import { BlogOutputModel } from '../../../src/features/blog/api/models/output/blog-output.model';
+import { BlogOutputModel } from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
 import {
   IBlogCreateModel,
   IBlogInsertModel,
@@ -10,8 +10,8 @@ import {
 } from '../../models/blog/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
-import { BlogSortingQuery } from '../../../src/features/blog/api/models/input/blog-input.model';
-import { PostOutputModel } from '../../../src/features/post/api/models/output/post-output.model';
+import { BlogSortingQuery } from '../../../src/features/blog-platform/blog/api/models/input/blog-input.model';
+import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { IPostInsertModel } from '../../models/post/interfaces';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { Types } from 'mongoose';

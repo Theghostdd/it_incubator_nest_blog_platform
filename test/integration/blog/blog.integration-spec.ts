@@ -1,4 +1,4 @@
-import { BlogService } from '../../../src/features/blog/application/blog-service';
+import { BlogService } from '../../../src/features/blog-platform/blog/application/blog-service';
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
 import { AppResultType } from '../../../src/base/types/types';

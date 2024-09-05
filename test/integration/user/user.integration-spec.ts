@@ -1,4 +1,4 @@
-import { UserService } from '../../../src/features/user/application/user-service';
+import { UserService } from '../../../src/features/users/user/application/user-service';
 import { AppResult } from '../../../src/base/enum/app-result.enum';
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
@@ -10,7 +10,7 @@ import {
   APIErrorsMessageType,
   AppResultType,
 } from '../../../src/base/types/types';
-import { UserDocumentType } from '../../../src/features/user/domain/user.entity';
+import { UserDocumentType } from '../../../src/features/users/user/domain/user.entity';
 import { Types } from 'mongoose';
 
 describe('User', () => {

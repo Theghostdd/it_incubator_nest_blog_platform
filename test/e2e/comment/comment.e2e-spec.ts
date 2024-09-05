@@ -5,13 +5,13 @@ import {
 } from '../../models/comments/interfaces';
 import { initSettings } from '../../settings/test-settings';
 import { CommentTestManager } from '../../utils/request-test-manager/comment-test-manager';
-import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
+import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 import {
   IUserInsertTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
-import { LikeStatusEnum } from '../../../src/features/like/domain/type';
+import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
 
 describe('Comment e2e', () => {

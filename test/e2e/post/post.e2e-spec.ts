@@ -6,12 +6,12 @@ import {
   IPostInsertModel,
   IPostUpdateModel,
 } from '../../models/post/interfaces';
-import { PostOutputModel } from '../../../src/features/post/api/models/output/post-output.model';
+import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
 import { IBlogInsertModel } from '../../models/blog/interfaces';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
-import { CommentOutputModel } from '../../../src/features/comment/api/model/output/comment-output.model';
+import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 import {
   ICommentCreateModel,
   ICommentInsertModel,
@@ -23,7 +23,7 @@ import {
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
-import { LikeStatusEnum } from '../../../src/features/like/domain/type';
+import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -1017,14 +1017,19 @@ describe('Post e2e', () => {
 
   describe('Get comments by post id', () => {
     it('should get comments by post id without query', async () => {
-      await testSettings.dataBase.dbInsertMany(
-        'comments',
-        commentInsertManyModel,
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
       );
+      const comments = commentInsertManyModel.map((comment) => {
+        comment.postInfo.postId = postId.toString();
+        return comment;
+      });
+      await testSettings.dataBase.dbInsertMany('comments', comments);
 
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          commentInsertManyModel[1].postInfo.postId,
+          comments[1].postInfo.postId,
           {},
           200,
         );
@@ -1039,14 +1044,19 @@ describe('Post e2e', () => {
     });
 
     it('should get comments by post id with pagination, page size: 11', async () => {
-      await testSettings.dataBase.dbInsertMany(
-        'comments',
-        commentInsertManyModel,
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
       );
+      const comments = commentInsertManyModel.map((comment) => {
+        comment.postInfo.postId = postId.toString();
+        return comment;
+      });
+      await testSettings.dataBase.dbInsertMany('comments', comments);
 
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          commentInsertManyModel[0].postInfo.postId,
+          comments[0].postInfo.postId,
           {
             pageSize: 11,
           } as BaseSorting,
@@ -1063,13 +1073,18 @@ describe('Post e2e', () => {
     });
 
     it('should get comments by post id with pagination, page number: 2', async () => {
-      await testSettings.dataBase.dbInsertMany(
-        'comments',
-        commentInsertManyModel,
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
       );
+      const comments = commentInsertManyModel.map((comment) => {
+        comment.postInfo.postId = postId.toString();
+        return comment;
+      });
+      await testSettings.dataBase.dbInsertMany('comments', comments);
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          commentInsertManyModel[0].postInfo.postId,
+          comments[0].postInfo.postId,
           {
             pageNumber: 2,
           } as BaseSorting,
@@ -1085,34 +1100,28 @@ describe('Post e2e', () => {
       });
     });
 
-    it('should get empty comments array by post id', async () => {
-      const result: BasePagination<CommentOutputModel[] | []> =
-        await postTestManager.getCommentsByPostId(
-          '66c5d451de17090f93186261',
-          {},
-          200,
-        );
-
-      expect(result).toEqual({
-        pagesCount: 0,
-        page: 1,
-        pageSize: 10,
-        totalCount: 0,
-        items: expect.any(Array),
-      });
-
-      expect(result.items).toHaveLength(0);
+    it('should not get comments array by post id, 404 not found', async () => {
+      await postTestManager.getCommentsByPostId(
+        '66c5d451de17090f93186261',
+        {},
+        404,
+      );
     });
 
     it('should get comments by post id with sorting by content, asc', async () => {
-      await testSettings.dataBase.dbInsertMany(
-        'comments',
-        commentInsertManyModel,
+      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
+        'posts',
+        postInsertModel,
       );
+      const comments = commentInsertManyModel.map((comment) => {
+        comment.postInfo.postId = postId.toString();
+        return comment;
+      });
+      await testSettings.dataBase.dbInsertMany('comments', comments);
 
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          commentInsertManyModel[0].postInfo.postId,
+          comments[0].postInfo.postId,
           {
             sortBy: 'content',
             sortDirection: 'asc',
@@ -1127,7 +1136,7 @@ describe('Post e2e', () => {
         };
       });
 
-      const mapInsertModelAndSortByAsc = commentInsertManyModel
+      const mapInsertModelAndSortByAsc = comments
         .map((item) => {
           return {
             content: item.content,
@@ -1236,13 +1245,13 @@ describe('Post e2e', () => {
         id: expect.any(String),
         content: commentCreateModel.content,
         commentatorInfo: {
-          userId: userId1,
-          userLogin: userLoginModel.loginOrEmail,
+          userId: userId2,
+          userLogin: 'login2',
         },
         likesInfo: {
           likesCount: 1,
           dislikesCount: 0,
-          myStatus: 'None',
+          myStatus: 'Like',
         },
         createdAt: expect.any(String),
       });
@@ -1251,6 +1260,21 @@ describe('Post e2e', () => {
         id: expect.any(String),
         content: commentCreateModel.content,
         commentatorInfo: {
+          userId: userId2,
+          userLogin: 'login2',
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'Like',
+        },
+        createdAt: expect.any(String),
+      });
+
+      expect(getComments.items[2]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
           userId: userId1,
           userLogin: userLoginModel.loginOrEmail,
         },
@@ -1262,32 +1286,17 @@ describe('Post e2e', () => {
         createdAt: expect.any(String),
       });
 
-      expect(getComments.items[2]).toEqual({
-        id: expect.any(String),
-        content: commentCreateModel.content,
-        commentatorInfo: {
-          userId: userId2,
-          userLogin: 'login2',
-        },
-        likesInfo: {
-          likesCount: 1,
-          dislikesCount: 0,
-          myStatus: 'Like',
-        },
-        createdAt: expect.any(String),
-      });
-
       expect(getComments.items[3]).toEqual({
         id: expect.any(String),
         content: commentCreateModel.content,
         commentatorInfo: {
-          userId: userId2,
-          userLogin: 'login2',
+          userId: userId1,
+          userLogin: userLoginModel.loginOrEmail,
         },
         likesInfo: {
           likesCount: 1,
           dislikesCount: 0,
-          myStatus: 'Like',
+          myStatus: 'None',
         },
         createdAt: expect.any(String),
       });

@@ -8,7 +8,7 @@ import {
 } from 'class-validator';
 import { Trim } from '../../decorators/transform/trim';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
-import { LikeStatusEnum } from '../../../features/like/domain/type';
+import { LikeStatusEnum } from '../../../features/blog-platform/like/domain/type';
 import { FindBlog } from '../../decorators/find-blog';
 
 type ValidationOptions = {

@@ -21,6 +21,8 @@ import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../src/settings/configuration/configuration';
 import { LikeTestModel } from '../models/like/likes.model';
+import { ThrottlerMock } from '../mock/throttler-mock';
+import { ThrottlerGuard } from '@nestjs/throttler';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -97,5 +99,7 @@ const setGlobalMock = (testingModule: TestingModuleBuilder) => {
   const nodemailerMockService = new NodeMailerMockService();
   testingModule
     .overrideProvider(NodeMailerService)
-    .useValue(nodemailerMockService);
+    .useValue(nodemailerMockService)
+    .overrideGuard(ThrottlerGuard)
+    .useClass(ThrottlerMock);
 };

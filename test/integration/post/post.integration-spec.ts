@@ -1,6 +1,6 @@
 import { ITestSettings } from '../../settings/interfaces';
 import { initSettings } from '../../settings/test-settings';
-import { PostService } from '../../../src/features/post/application/post-service';
+import { PostService } from '../../../src/features/blog-platform/post/application/post-service';
 import {
   IPostCreateModel,
   IPostInsertModel,
