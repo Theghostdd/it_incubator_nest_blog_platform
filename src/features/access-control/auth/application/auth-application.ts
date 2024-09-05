@@ -15,6 +15,8 @@ import {
   JWTRefreshTokenPayloadType,
 } from '../../../../base/types/types';
 import { format } from 'date-fns';
+import { AuthSessionDocumentType } from '../domain/auth-session.entity';
+import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
 
 @Injectable()
 export class AuthService {
@@ -26,6 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
     private readonly applicationObjectResult: ApplicationObjectResult,
+    private readonly authSessionRepositories: AuthSessionRepositories,
     @Inject('UUID') private readonly uuidv4: () => string,
   ) {
     this.envSettings = this.configService.get('environmentSettings', {
@@ -84,5 +87,16 @@ export class AuthService {
       return this.applicationObjectResult.notFound();
 
     return this.applicationObjectResult.success(recoveryPasswordSession);
+  }
+
+  async authSessionIsExistByDeviceId(
+    deviceId: string,
+  ): Promise<AppResultType<AuthSessionDocumentType | null>> {
+    const authSession: AuthSessionDocumentType | null =
+      await this.authSessionRepositories.getSessionByDeviceId(deviceId);
+
+    if (!authSession) return this.applicationObjectResult.notFound();
+
+    return this.applicationObjectResult.success(authSession);
   }
 }

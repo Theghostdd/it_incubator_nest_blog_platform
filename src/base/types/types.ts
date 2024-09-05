@@ -26,6 +26,7 @@ export type JWTAccessTokenPayloadType = {
 
 export type JWTRefreshTokenPayloadType = {
   userId: string;
+  deviceId: string;
 };
 
 export type MailTemplateType = {

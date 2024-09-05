@@ -65,12 +65,17 @@ export class LoginHandler
         field: 'code',
       });
 
+    const dId: string = this.authService.generateDeviceId(
+      user.data._id.toString(),
+    );
+
     const payloadAccessToken: JWTAccessTokenPayloadType = {
       userId: user.data._id.toString(),
     };
 
     const payloadRefreshToken: JWTRefreshTokenPayloadType = {
       userId: user.data._id.toString(),
+      deviceId: dId,
     };
 
     const accessToken: string =
@@ -80,7 +85,7 @@ export class LoginHandler
       await this.authService.generateRefreshToken(payloadRefreshToken);
 
     const session: AppResultType = await this.commandBus.execute(
-      new CreateAuthSessionCommand(refreshToken, ip, userAgent),
+      new CreateAuthSessionCommand(dId, refreshToken, ip, userAgent),
     );
 
     if (session.appResult !== AppResult.Success)

@@ -3,6 +3,7 @@ import { ApplicationObjectResult } from '../../../../../base/application-object-
 import { InjectModel } from '@nestjs/mongoose';
 import {
   AuthSession,
+  AuthSessionDocumentType,
   AuthSessionModelType,
 } from '../../domain/auth-session.entity';
 import { AuthService } from '../auth-application';
@@ -14,6 +15,7 @@ import { AuthSessionRepositories } from '../../infrastructure/auth-session-repos
 
 export class CreateAuthSessionCommand {
   constructor(
+    public deviceId: string,
     public refreshToken: string,
     public ip: string,
     public deviceName: string,
@@ -32,7 +34,7 @@ export class CreateAuthSessionHandler
     private readonly authSessionRepositories: AuthSessionRepositories,
   ) {}
   async execute(command: CreateAuthSessionCommand): Promise<AppResultType> {
-    const { refreshToken, ip, deviceName } = command;
+    const { deviceId, refreshToken, ip, deviceName } = command;
 
     const refreshTokenPayload: JWTRefreshTokenPayloadType & {
       iat: number;
@@ -43,18 +45,18 @@ export class CreateAuthSessionHandler
       return this.applicationObjectResult.badRequest(null);
 
     const { userId, iat, exp } = refreshTokenPayload;
-    const dId = this.authService.generateDeviceId(userId);
-    const iatDate = new Date(iat * 1000).toISOString();
-    const expDate = new Date(exp * 1000).toISOString();
+    const iatDate: string = new Date(iat * 1000).toISOString();
+    const expDate: string = new Date(exp * 1000).toISOString();
 
-    const authSession = this.authSessionModel.createSessionInstance(
-      dId,
-      ip,
-      deviceName,
-      userId,
-      iatDate,
-      expDate,
-    );
+    const authSession: AuthSessionDocumentType =
+      this.authSessionModel.createSessionInstance(
+        deviceId,
+        ip,
+        deviceName,
+        userId,
+        iatDate,
+        expDate,
+      );
     await this.authSessionRepositories.save(authSession);
     return this.applicationObjectResult.success(null);
   }

@@ -36,13 +36,15 @@ import {
   AuthorizationUserResponseType,
   ClientInfoType,
   JWTAccessTokenPayloadType,
+  JWTRefreshTokenPayloadType,
 } from '../../../../base/types/types';
 import { UserMeOutputModel } from '../../../users/user/api/models/output/user-output.model';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { ClientInfo } from '../../../../core/decorators/client-info';
-import { CreateAuthSessionCommand } from '../application/command/create-auth-session.command';
+import { LogoutCommand } from '../application/command/logout.command';
+import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
@@ -183,6 +185,29 @@ export class AuthController {
         return;
       case AppResult.BadRequest:
         throw new BadRequestException(result.errorField);
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(apiPrefixSettings.AUTH.logout)
+  @UseGuards(ThrottlerGuard)
+  @UseGuards(RefreshJWTAccessGuard)
+  @HttpCode(204)
+  async logout(
+    @CurrentUser()
+    user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<void> {
+    const result: AppResultType = await this.commandBus.execute(
+      new LogoutCommand(user),
+    );
+    switch (result.appResult) {
+      case AppResult.Success:
+        response.clearCookie('refreshToken');
+        return;
+      case AppResult.Unauthorized:
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }

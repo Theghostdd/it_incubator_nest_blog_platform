@@ -20,4 +20,10 @@ export class AuthSessionRepositories {
   async delete(session: AuthSessionDocumentType): Promise<void> {
     await session.deleteOne();
   }
+
+  async getSessionByDeviceId(
+    deviceId: string,
+  ): Promise<AuthSessionDocumentType | null> {
+    return this.authSession.findOne({ dId: deviceId });
+  }
 }

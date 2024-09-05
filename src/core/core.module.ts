@@ -5,8 +5,10 @@ import { BasicGuard } from './guards/basic/basic.guard';
 import { JwtStrategy } from './guards/jwt/jwt-strategy';
 import { VerifyUserGuard } from './guards/jwt/jwt-verify-user';
 import { AuthJWTAccessGuard } from './guards/jwt/jwt.guard';
-import { CommandBus, CqrsModule } from '@nestjs/cqrs';
+import { CqrsModule } from '@nestjs/cqrs';
 import { ThrottlerModule } from '@nestjs/throttler';
+import { RefreshJWTAccessGuard } from './guards/jwt/jwt-refresh-toke.guard';
+import { JwtRefreshTokenStrategyStrategy } from './guards/jwt/jwt-refresh-token-strategy';
 
 @Global()
 @Module({
@@ -26,6 +28,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     JwtStrategy,
     VerifyUserGuard,
     AuthJWTAccessGuard,
+    RefreshJWTAccessGuard,
+    JwtRefreshTokenStrategyStrategy,
   ],
   exports: [
     CqrsModule,
@@ -35,6 +39,8 @@ import { ThrottlerModule } from '@nestjs/throttler';
     JwtStrategy,
     VerifyUserGuard,
     AuthJWTAccessGuard,
+    RefreshJWTAccessGuard,
+    JwtRefreshTokenStrategyStrategy,
     ThrottlerModule,
   ],
 })

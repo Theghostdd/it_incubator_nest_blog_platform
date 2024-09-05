@@ -24,10 +24,12 @@ export const apiPrefixSettings = {
     auth: 'auth',
     me: 'me',
     login: 'login',
+    logout: 'logout',
     registration: 'registration',
     registration_confirmation: 'registration-confirmation',
     registration_email_resending: 'registration-email-resending',
     password_recovery: 'password-recovery',
     new_password: 'new-password',
+    refresh_token: 'refresh-token',
   },
 };

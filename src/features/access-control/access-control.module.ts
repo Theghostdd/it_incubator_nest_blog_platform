@@ -26,6 +26,7 @@ import {
   AuthSession,
   AuthSessionSchema,
 } from './auth/domain/auth-session.entity';
+import { LogoutHandler } from './auth/application/command/logout.command';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -61,6 +62,7 @@ export const UUIDProvider = {
     PasswordRecoveryHandler,
     RegistrationHandler,
     CreateAuthSessionHandler,
+    LogoutHandler,
   ],
   exports: [AuthService, MongooseModule],
 })
