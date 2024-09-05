@@ -1,6 +1,9 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth/application/auth-application';
-import { LoginHandler } from './auth/application/command/login.command';
+import {
+  LoginCommand,
+  LoginHandler,
+} from './auth/application/command/login.command';
 import { ConfirmUserEmailHandler } from './auth/application/command/confirm-user-email.command';
 import { ChangeUserPasswordHandler } from './auth/application/command/change-user-password.command';
 import { ResendConfirmationCodeHandler } from './auth/application/command/resend-confirmation-code.command';
@@ -17,8 +20,6 @@ import { RecoveryPasswordSessionRepositories } from './auth/infrastructure/recov
 import { UsersModule } from '../users/users.module';
 import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
-import { CoreModule } from '../../core/core.module';
-import { CqrsModule } from '@nestjs/cqrs';
 import { AuthSessionRepositories } from './auth/infrastructure/auth-session-repositories';
 import { CreateAuthSessionHandler } from './auth/application/command/create-auth-session.command';
 import {

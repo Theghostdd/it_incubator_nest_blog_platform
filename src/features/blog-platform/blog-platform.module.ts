@@ -35,8 +35,6 @@ import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
 import { FindBlogConstraint } from '../../core/decorators/find-blog';
-import { CoreModule } from '../../core/core.module';
-import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [

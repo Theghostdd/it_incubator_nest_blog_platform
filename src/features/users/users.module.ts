@@ -10,8 +10,6 @@ import { DeleteUserByIdHandler } from './user/application/command/delete-user.co
 import { CreateUserCommandHandler } from './user/application/command/create-user.command';
 import { UserController } from './user/api/user-controller';
 import { AccessControlModule } from '../access-control/access-control.module';
-import { CoreModule } from '../../core/core.module';
-import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -29,9 +27,9 @@ import { CqrsModule } from '@nestjs/cqrs';
     CreateUserCommandHandler,
   ],
   exports: [
-    UserService,
-    UserQueryRepositories,
     UserRepositories,
+    UserQueryRepositories,
+    UserService,
     MongooseModule,
   ],
 })

@@ -9,15 +9,16 @@ import { ApplicationObjectResultModule } from './base/application-object-result/
 import { BaseSortingModule } from './base/sorting/base-sorting.module';
 import { BasePaginationModule } from './base/pagination/base-pagination.module';
 import { AccessControlModule } from './features/access-control/access-control.module';
-import { MailTemplateModule } from './features/mail-template/mail-template.module';
-import { NodeMailerModule } from './features/nodemailer/nodemailer.module';
 import { TestingModule } from './features/testing/testing.module';
 import { UsersModule } from './features/users/users.module';
 import { CoreModule } from './core/core.module';
-import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
+    CoreModule,
+    ApplicationObjectResultModule,
+    BaseSortingModule,
+    BasePaginationModule,
     configModule,
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
@@ -50,14 +51,8 @@ import { CqrsModule } from '@nestjs/cqrs';
       },
       inject: [ConfigService],
     }),
-    CoreModule,
     BlogPlatformModule,
-    ApplicationObjectResultModule,
     AccessControlModule,
-    BaseSortingModule,
-    BasePaginationModule,
-    MailTemplateModule,
-    NodeMailerModule,
     UsersModule,
     TestingModule,
   ],

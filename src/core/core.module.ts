@@ -21,25 +21,21 @@ import { ThrottlerModule } from '@nestjs/throttler';
   ],
   providers: [
     JwtService,
-    JwtService,
     BasicStrategy,
     BasicGuard,
     JwtStrategy,
     VerifyUserGuard,
     AuthJWTAccessGuard,
-    CommandBus,
   ],
   exports: [
-    JwtService,
+    CqrsModule,
     JwtService,
     BasicStrategy,
     BasicGuard,
     JwtStrategy,
     VerifyUserGuard,
     AuthJWTAccessGuard,
-    CommandBus,
     ThrottlerModule,
-    CqrsModule,
   ],
 })
 export class CoreModule {}
