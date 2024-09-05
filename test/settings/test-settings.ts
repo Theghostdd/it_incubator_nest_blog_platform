@@ -35,7 +35,7 @@ export const initSettings = async (): Promise<ITestSettings> => {
   const app: INestApplication = testingAppModule.createNestApplication();
   applyAppSettings(app);
   await app.init();
-
+  //
   const databaseConnection: Connection =
     app.get<Connection>(getConnectionToken());
   const dataBase: DataBase = new DataBase(databaseConnection);
