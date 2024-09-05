@@ -29,6 +29,9 @@ jobs:
         with:
           mongodb-version: ${{ matrix.mongodb-version }}
 
+      - name: Wait for MongoDB to start
+        run: sleep 10
+
       - name: Run e2e tests
         run: yarn test:e2e
         env:
