@@ -13,18 +13,6 @@ jobs:
     name: Tests
     runs-on: ubuntu-latest
 
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })' --quiet"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 3
-          --health-start-period 30s
-
     steps:
       - name: Checkout
         uses: actions/checkout@v3
@@ -32,33 +20,15 @@ jobs:
       - name: Install dependencies
         run: yarn
 
-      - name: Check MongoDB logs
-        run: docker logs $(docker ps -q --filter ancestor=mongo:latest)
-
-      - name: Wait for MongoDB to start
-        run: |
-          echo "Waiting for MongoDB to start..."
-          for i in {1..30}; do
-            if mongo --eval "db.runCommand({ ping: 1 })" --quiet; then
-              echo "MongoDB is up and running!"
-              exit 0
-            else
-              echo "MongoDB is not ready yet. Waiting..."
-              sleep 5
-            fi
-          done
-          echo "MongoDB did not start in time. Exiting..."
-          exit 1
-
       - name: Run e2e tests
         run: yarn test:e2e
         env:
           ENV: ${{ vars.ENV_GH }}
-          SUPER_ADMIN_LOGIN: ${{ secrets.SUPER_ADMIN_LOGIN }}
-          SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
-          PASSWORD_MAIL_AGENT: ${{ vars.ENV_GH_PASSWORD_MAIL_AGENT }}
-          JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
-          MONGO_CONNECTION_URI: mongodb://localhost:27017/blog_platform
+          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
+          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
+          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
+          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
+          MONGO_CONNECTION_URI: ${{secrets.MONGO_CONNECTION_URI}}
 
   deploy:
     name: Deploy
@@ -73,4 +43,4 @@ jobs:
       - name: Build Project Artifacts
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
