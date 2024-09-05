@@ -12,6 +12,10 @@ jobs:
   tests:
     name: Tests
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node-version: [ 20.x, 22.x ]
+        mongodb-version: [ '6.0', '7.0', '8.0' ]
 
     steps:
       - name: Checkout
@@ -20,10 +24,19 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.11.0
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
+
       - name: Run e2e tests
         run: yarn test:e2e
         env:
           ENV: ${{ vars.ENV_GH }}
+          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
+          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
+          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
+          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
 
   deploy:
     name: Deploy
