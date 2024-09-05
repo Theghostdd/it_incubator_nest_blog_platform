@@ -50,6 +50,44 @@
 #
 
 
+
+
+name: Tests
+
+on:
+  push:
+    branches: [ "main" ]
+
+
+jobs:
+  test:
+    runs-on: ubuntu-20.04
+    services:
+        mongodb:
+          image: mongo:4.4.6
+          ports:
+            - 27017:27017
+          options: >-
+            --health-cmd mongo
+            --health-interval 10s
+            --health-timeout 5s
+            --health-retries 5
+
+    steps:
+      - uses: actions/checkout@v3
+
+
+
+
+
+
+
+
+
+
+
+
+#
 #
 #name: Tests & Vercel Deploy
 #
@@ -68,13 +106,18 @@
 #
 #    services:
 #      mongodb:
-#        image: mongo:latest
+#        image: mongo:4.4.6
+#        env:
+#          MONGO_INITDB_ROOT_USERNAME: admin
+#          MONGO_INITDB_ROOT_PASSWORD: admin
+#          MONGO_INITDB_DATABASE: APP-DATABASE
+#        ports:
+#          - 27017:27017
 #        options: >-
-#          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })' --quiet"
+#          --health-cmd mongo
 #          --health-interval 10s
 #          --health-timeout 5s
-#          --health-retries 3
-#          --health-start-period 30s
+#          --health-retries 5
 #
 #    steps:
 #      - name: Checkout
@@ -83,17 +126,15 @@
 #      - name: Install dependencies
 #        run: yarn
 #
-#      - name: Check MongoDB logs
-#        run: docker logs $(docker ps -q --filter ancestor=mongo:latest)
-#
 #      - name: Run e2e tests
 #        run: yarn test:e2e
 #        env:
 #          ENV: ${{ vars.ENV_GH }}
-#          SUPER_ADMIN_LOGIN: ${{ secrets.SUPER_ADMIN_LOGIN }}
-#          SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
-#          PASSWORD_MAIL_AGENT: ${{ vars.ENV_GH_PASSWORD_MAIL_AGENT }}
-#          JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
+#          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
+#          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
+#          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
+#          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
+#          MONGO_CONNECTION_URI: ${{secrets.MONGO_CONNECTION_URI}}
 #
 #  deploy:
 #    name: Deploy
@@ -108,45 +149,9 @@
 #      - name: Build Project Artifacts
 #        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
 #      - name: Deploy Project Artifacts to Vercel
-#        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-
-
-name: Tests
-
-on:
-  push:
-    branches: [ "main" ]
-
-
-jobs:
-  test:
-    runs-on: ubuntu-20.04
-
-    services:
-      mongodb:
-        image: mongo:4.4.6
-        env:
-          MONGO_INITDB_ROOT_USERNAME: admin
-          MONGO_INITDB_ROOT_PASSWORD: admin
-          MONGO_INITDB_DATABASE: APP-DATABASE
-        ports:
-          - 27017:27017
-        options: >-
-          --health-cmd mongo
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
-
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install mongosh
-        run: |
-          sudo apt-get install gnupg
-          wget -qO- https://www.mongodb.org/static/pgp/server-7.0.asc | sudo tee /etc/apt/trusted.gpg.d/server-7.0.asc
-          echo "deb [ arch=amd64,arm64 ] https://repo.mongodb.org/apt/ubuntu focal/mongodb-org/7.0 multiverse" | sudo tee /etc/apt/sources.list.d/mongodb-org-7.0.list
-          sudo apt-get update
-          sudo apt-get install -y mongodb-mongosh
-          mongosh --version
-
+#        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+#
+#
+#
+#
+#
