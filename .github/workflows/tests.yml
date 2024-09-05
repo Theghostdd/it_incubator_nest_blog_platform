@@ -1,46 +1,136 @@
-name: Tests & Vercel Deploy
+#name: Tests & Vercel Deploy
+#
+#env:
+#  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#
+#jobs:
+#  tests:
+#    name: Tests
+#    runs-on: ubuntu-latest
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - name: Install dependencies
+#        run: yarn
+#
+#      - name: Run e2e tests
+#        run: yarn test:e2e
+#        env:
+#          ENV: ${{ vars.ENV_GH }}
+#          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
+#          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
+#          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
+#          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
+#          MONGO_CONNECTION_URI: ${{secrets.MONGO_CONNECTION_URI}}
+#
+#  deploy:
+#    name: Deploy
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Install Vercel CLI
+#        run: npm install --global vercel@latest
+#      - name: Pull Vercel Environment Information
+#        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Build Project Artifacts
+#        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Deploy Project Artifacts to Vercel
+#        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+#
+#
+#
+#
 
-env:
-  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
 
-on:
-  push:
-    branches: [ "main" ]
+#
+#name: Tests & Vercel Deploy
+#
+#env:
+#  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#
+#jobs:
+#  tests:
+#    name: Tests
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      mongodb:
+#        image: mongo:latest
+#        options: >-
+#          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })' --quiet"
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 3
+#          --health-start-period 30s
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - name: Install dependencies
+#        run: yarn
+#
+#      - name: Check MongoDB logs
+#        run: docker logs $(docker ps -q --filter ancestor=mongo:latest)
+#
+#      - name: Run e2e tests
+#        run: yarn test:e2e
+#        env:
+#          ENV: ${{ vars.ENV_GH }}
+#          SUPER_ADMIN_LOGIN: ${{ secrets.SUPER_ADMIN_LOGIN }}
+#          SUPER_ADMIN_PASSWORD: ${{ secrets.SUPER_ADMIN_PASSWORD }}
+#          PASSWORD_MAIL_AGENT: ${{ vars.ENV_GH_PASSWORD_MAIL_AGENT }}
+#          JWT_ACCESS_TOKEN_SECRET: ${{ secrets.JWT_ACCESS_TOKEN_SECRET }}
+#
+#  deploy:
+#    name: Deploy
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Install Vercel CLI
+#        run: npm install --global vercel@latest
+#      - name: Pull Vercel Environment Information
+#        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Build Project Artifacts
+#        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Deploy Project Artifacts to Vercel
+#        run: vercel deploy --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+
+
+
+name: Start MongoDB Server
+
+on: [push, pull_request]
 
 jobs:
-  tests:
-    name: Tests
+  mongodb-action:
+    name: Start MongoDB Server v${{ matrix.mongodb-version }}
+
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mongodb-version: ['4.0', '4.2', '4.4', '5.0', '6.0']
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
-      - name: Install dependencies
-        run: yarn
-
-      - name: Run e2e tests
-        run: yarn test:e2e
-        env:
-          ENV: ${{ vars.ENV_GH }}
-          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
-          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
-          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
-          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
-          MONGO_CONNECTION_URI: ${{secrets.MONGO_CONNECTION_URI}}
-
-  deploy:
-    name: Deploy
-    needs: tests
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-      - name: Install Vercel CLI
-        run: npm install --global vercel@latest
-      - name: Pull Vercel Environment Information
-        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Build Project Artifacts
-        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
-      - name: Deploy Project Artifacts to Vercel
-        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+      - name: Start MongoDB Server
+        uses: ./
+        with:
+          mongodb-version: ${{ matrix.mongodb-version }}
