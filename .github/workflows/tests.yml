@@ -41,7 +41,7 @@ jobs:
           JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
           JWT_REFRESH_TOKEN_SECRET: ${{secrets.JWT_REFRESH_TOKEN_SECRET}}
           LOGIN_MAIL_AGENT: "some@gmail.com"
-
+#
 
   deploy:
     name: Deploy
