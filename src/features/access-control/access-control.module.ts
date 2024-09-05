@@ -19,6 +19,12 @@ import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
 import { CoreModule } from '../../core/core.module';
 import { CqrsModule } from '@nestjs/cqrs';
+import { AuthSessionRepositories } from './auth/infrastructure/auth-session-repositories';
+import { CreateAuthSessionHandler } from './auth/application/command/create-auth-session.command';
+import {
+  AuthSession,
+  AuthSessionSchema,
+} from './auth/domain/auth-session.entity';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -28,8 +34,6 @@ export const UUIDProvider = {
 @Module({
   imports: [
     NodeMailerModule,
-    CoreModule,
-    CqrsModule,
     forwardRef(() => UsersModule),
     MailTemplateModule,
     MongooseModule.forFeature([
@@ -37,19 +41,25 @@ export const UUIDProvider = {
         name: RecoveryPasswordSession.name,
         schema: RecoveryPasswordSessionSchema,
       },
+      {
+        name: AuthSession.name,
+        schema: AuthSessionSchema,
+      },
     ]),
   ],
   controllers: [AuthController],
   providers: [
     AuthService,
+    RecoveryPasswordSessionRepositories,
+    UUIDProvider,
+    AuthSessionRepositories,
     LoginHandler,
     ConfirmUserEmailHandler,
     ChangeUserPasswordHandler,
     ResendConfirmationCodeHandler,
     PasswordRecoveryHandler,
     RegistrationHandler,
-    RecoveryPasswordSessionRepositories,
-    UUIDProvider,
+    CreateAuthSessionHandler,
   ],
   exports: [AuthService, MongooseModule],
 })

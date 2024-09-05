@@ -33,11 +33,11 @@ export class APISettings {
   ): JWTTokensSettingsType {
     return {
       ACCESS_TOKEN: {
-        SECRET: aSecret || 'JWT_A_SECRET',
+        SECRET: aSecret,
         EXPIRES: '10m',
       },
       REFRESH_TOKEN: {
-        SECRET: rSecret || 'JWT_R_SECRET',
+        SECRET: rSecret,
         EXPIRES: '1h',
       },
     };

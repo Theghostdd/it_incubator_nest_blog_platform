@@ -11,36 +11,6 @@ export class BlogService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  // async createBlog(
-  //   blogInputModel: BlogInputModel,
-  // ): Promise<AppResultType<string>> {
-  //   const blog: BlogDocumentType =
-  //     this.blogModel.createBlogInstance(blogInputModel);
-  //
-  //   await this.blogRepository.save(blog);
-  //   return { appResult: AppResult.Success, data: blog._id.toString() };
-  // }
-
-  // async deleteBlogById(id: string): Promise<AppResultType> {
-  //   const blog: BlogDocumentType = await this.blogRepository.getBlogById(id);
-  //   if (!blog) return { appResult: AppResult.NotFound, data: null };
-  //
-  //   await this.blogRepository.delete(blog);
-  //   return { appResult: AppResult.Success, data: null };
-  // }
-
-  // async updateBlogById(
-  //   id: string,
-  //   blogUpdateModel: BlogUpdateModel,
-  // ): Promise<AppResultType> {
-  //   const blog: BlogDocumentType = await this.blogRepository.getBlogById(id);
-  //   if (!blog) return { appResult: AppResult.NotFound, data: null };
-  //
-  //   blog.updateBlogInstance(blogUpdateModel);
-  //   await this.blogRepository.save(blog);
-  //   return { appResult: AppResult.Success, data: null };
-  // }
-
   async blogIsExistsById(
     id: string,
   ): Promise<AppResultType<BlogDocumentType | null>> {

@@ -32,3 +32,8 @@ export type MailTemplateType = {
   subject: string;
   html: string;
 };
+
+export type ClientInfoType = {
+  ip: string | null;
+  userAgent: string | null;
+};

@@ -14,6 +14,7 @@ import { NodeMailerModule } from './features/nodemailer/nodemailer.module';
 import { TestingModule } from './features/testing/testing.module';
 import { UsersModule } from './features/users/users.module';
 import { CoreModule } from './core/core.module';
+import { CqrsModule } from '@nestjs/cqrs';
 
 @Module({
   imports: [
@@ -49,6 +50,7 @@ import { CoreModule } from './core/core.module';
       },
       inject: [ConfigService],
     }),
+    CoreModule,
     BlogPlatformModule,
     ApplicationObjectResultModule,
     AccessControlModule,

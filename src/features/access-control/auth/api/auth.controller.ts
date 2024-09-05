@@ -34,12 +34,15 @@ import {
   APIErrorsMessageType,
   AppResultType,
   AuthorizationUserResponseType,
+  ClientInfoType,
   JWTAccessTokenPayloadType,
 } from '../../../../base/types/types';
 import { UserMeOutputModel } from '../../../users/user/api/models/output/user-output.model';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { ClientInfo } from '../../../../core/decorators/client-info';
+import { CreateAuthSessionCommand } from '../application/command/create-auth-session.command';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
@@ -61,11 +64,15 @@ export class AuthController {
   async login(
     @Body() inputLoginModel: LoginInputModel,
     @Res({ passthrough: true }) response: Response,
+    @ClientInfo() clientInfo: ClientInfoType,
   ) {
     const result: AppResultType<
       AuthorizationUserResponseType,
       APIErrorMessageType
-    > = await this.commandBus.execute(new LoginCommand(inputLoginModel));
+    > = await this.commandBus.execute(
+      new LoginCommand(inputLoginModel, clientInfo),
+    );
+
     switch (result.appResult) {
       case AppResult.Success:
         const { refreshToken, ...data } = result.data;

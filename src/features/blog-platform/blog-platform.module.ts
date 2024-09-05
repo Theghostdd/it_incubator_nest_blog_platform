@@ -41,8 +41,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 @Module({
   imports: [
     UsersModule,
-    CoreModule,
-    CqrsModule,
     MongooseModule.forFeature([
       { name: Post.name, schema: PostSchema },
       { name: Blog.name, schema: BlogSchema },

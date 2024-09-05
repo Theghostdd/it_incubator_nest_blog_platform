@@ -5,9 +5,12 @@ import { HttpExceptionFilter } from '../core/exceprion-filters/http-exception/ht
 import cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
 import { AppModule } from '../app.module';
+import * as useragent from 'express-useragent';
 
 export const applyAppSettings = (app: INestApplication) => {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
+
+  app.use(useragent.express());
 
   setApiPrefix(app);
 

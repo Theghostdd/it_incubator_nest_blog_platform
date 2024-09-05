@@ -16,8 +16,6 @@ import { CqrsModule } from '@nestjs/cqrs';
 @Module({
   imports: [
     AccessControlModule,
-    CoreModule,
-    CqrsModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UserController],

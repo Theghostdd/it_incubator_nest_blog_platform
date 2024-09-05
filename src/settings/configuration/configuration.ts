@@ -6,7 +6,6 @@ import { EnvVariableType } from '../types/types';
 
 export type ConfigurationType = Configuration;
 export class Configuration {
-  @ValidateNested()
   apiSettings: APISettings;
   @ValidateNested()
   environmentSettings: EnvSettings;
@@ -29,7 +28,9 @@ export class Configuration {
 
 export function validate(environmentVariables: EnvVariableType) {
   const config = Configuration.createConfig(environmentVariables);
-  const errors = validateSync(config, { skipMissingProperties: false });
+  const errors = validateSync(config, {
+    skipMissingProperties: false,
+  });
   if (errors.length > 0) {
     throw new Error(errors.toString());
   }

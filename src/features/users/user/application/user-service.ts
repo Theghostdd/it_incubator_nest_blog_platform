@@ -14,43 +14,6 @@ export class UserService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  // async createUser(
-  //   userInputModel: UserInputModel,
-  // ): Promise<AppResultType<string, APIErrorsMessageType>> {
-  //   const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
-  //     await this.checkUniqLoginAndEmail(
-  //       userInputModel.email,
-  //       userInputModel.login,
-  //     );
-  //
-  //   if (user.appResult !== AppResult.Success)
-  //     return {
-  //       appResult: AppResult.BadRequest,
-  //       data: null,
-  //       errorField: user.errorField,
-  //     };
-  //
-  //   const hash: string = await this.authService.generatePasswordHashAndSalt(
-  //     userInputModel.password,
-  //   );
-  //   const newUser: UserDocumentType = this.userModel.createUserInstance(
-  //     userInputModel,
-  //     hash,
-  //   );
-  //
-  //   await this.userRepositories.save(newUser);
-  //   return { appResult: AppResult.Success, data: newUser._id.toString() };
-  // }
-
-  // async deleteUser(id: string): Promise<AppResultType> {
-  //   const user: UserDocumentType | null =
-  //     await this.userRepositories.getUserById(id);
-  //   if (!user) return { appResult: AppResult.NotFound, data: null };
-  //
-  //   await this.userRepositories.delete(user);
-  //   return { appResult: AppResult.Success, data: null };
-  // }
-
   async checkUniqLoginAndEmail(
     email: string,
     login: string,
