@@ -51,7 +51,8 @@ export class EnvSettings {
       10,
     );
     this.MONGO_CONNECTION_URI =
-      envVariable.MONGO_CONNECTION_URI || 'mongodb://localhost/blog_platform';
+      envVariable.MONGO_CONNECTION_URI ||
+      'mongodb://localhost:27017/blog_platform';
     this.PASSWORD_MAIL_AGENT = envVariable.PASSWORD_MAIL_AGENT;
     this.LOGIN_MAIL_AGENT = envVariable.LOGIN_MAIL_AGENT;
     this.JWT_ACCESS_TOKEN_SECRET = envVariable.JWT_ACCESS_TOKEN_SECRET;
