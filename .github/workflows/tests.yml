@@ -113,24 +113,29 @@
 
 
 
-name: Start MongoDB Server
-
-on: [push, pull_request]
+name: Run tests
+on: [push]
 
 jobs:
-  mongodb-action:
-    name: Start MongoDB Server v${{ matrix.mongodb-version }}
-
+  build:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mongodb-version: ['4.0', '4.2', '4.4', '5.0', '6.0']
+        node-version: [20.x, 22.x]
+        mongodb-version: ['6.0', '7.0', '8.0']
 
     steps:
-      - name: Checkout
+      - name: Git checkout
         uses: actions/checkout@v4
 
-      - name: Start MongoDB Server
-        uses: ./
+      - name: Use Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+
+      - name: Start MongoDB
+        uses: supercharge/mongodb-github-action@1.11.0
         with:
           mongodb-version: ${{ matrix.mongodb-version }}
+
+      - run: npm install
