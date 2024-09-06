@@ -184,6 +184,102 @@ describe('Auth e2e', () => {
     });
   });
 
+  describe('Logout', () => {
+    it('should logout user', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        204,
+      );
+    });
+
+    it('should not logout user, refresh token is not correct', async () => {
+      await testSettings.testManager.authTestManager.logOut('token', 401);
+    });
+
+    it('should not logout user, session not found', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+      await testSettings.dataBase.clearDatabase();
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not logout user, session is not found', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        204,
+      );
+
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not logout user, session is not correct', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.findAndUpdate(
+        'authsessions',
+        { userId: userId.toString() },
+        { issueAt: '2023-09-05T12:34:56Z' },
+      );
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not logout user, user not found', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.findAndUpdate(
+        'authsessions',
+        { userId: userId.toString() },
+        { userId: '123456' },
+      );
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+  });
+
   describe('Registration', () => {
     it('should registration user', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');

@@ -47,6 +47,8 @@ export class LoginHandler
   > {
     const { loginOrEmail, password } = command.inputLoginModel;
     const { ip, userAgent } = command.clientInfo;
+    if (!ip) return this.applicationObjectResult.unauthorized();
+
     const user: AppResultType<UserDocumentType | null> =
       await this.userService.userIsExistByLoginOrEmail(loginOrEmail);
     if (user.appResult !== AppResult.Success)

@@ -1,7 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { apiPrefixSettings } from '../../../src/settings/app-prefix-settings';
 import request from 'supertest';
-import { AnyObject } from 'mongoose';
 import {
   IUserChangePasswordTestModel,
   IUserConfirmationEmailTestModel,
@@ -21,6 +20,7 @@ export class AuthTestManager {
   private readonly passwordRecoveryEndpoint: string;
   private readonly changePasswordEndpoint: string;
   private readonly currentUserEndpoint: string;
+  private readonly logoutEndpoint: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
@@ -32,6 +32,7 @@ export class AuthTestManager {
     this.passwordRecoveryEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.password_recovery}`;
     this.changePasswordEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.new_password}`;
     this.currentUserEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.me}`;
+    this.logoutEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.logout}`;
   }
   async registration(
     registrationModel: IUserRegistrationTestModel,
@@ -112,6 +113,36 @@ export class AuthTestManager {
       cookie.startsWith('refreshToken='),
     );
     expect(refreshTokenCookie).toBeDefined();
+    return result.body;
+  }
+
+  async loginAndReturnRefreshToken(
+    loginModel: IUserLoginTestModel,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.loginEndpoint}`)
+      .send(loginModel)
+      .expect(statusCode);
+
+    const cookies = result.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    const cookiesArray = Array.isArray(cookies) ? cookies : [cookies];
+    const refreshTokenCookie = cookiesArray.find((cookie) =>
+      cookie.startsWith('refreshToken='),
+    );
+    expect(refreshTokenCookie).toBeDefined();
+
+    const match = refreshTokenCookie.match(/refreshToken=([^;]*)/);
+
+    return { body: result.body, refreshToken: match[1] };
+  }
+
+  async logOut(refreshToken: string, statusCode: number) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.logoutEndpoint}`)
+      .set('Cookie', `refreshToken=${refreshToken}`)
+      .expect(statusCode);
     return result.body;
   }
 

@@ -34,4 +34,14 @@ export class DataBase {
       .find(filter)
       .toArray();
   }
+
+  async findAndUpdate<T, D>(
+    collection: string,
+    filter: D,
+    data: T,
+  ): Promise<AnyObject> {
+    return this.databaseConnection
+      .collection(collection)
+      .findOneAndUpdate(filter, { $set: data }, { returnDocument: 'after' });
+  }
 }
