@@ -32,4 +32,8 @@ export const apiPrefixSettings = {
     new_password: 'new-password',
     refresh_token: 'refresh-token',
   },
+  SECURITY_DEVICES: {
+    security: 'security',
+    devices: 'devices',
+  },
 };

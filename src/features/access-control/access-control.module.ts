@@ -25,6 +25,11 @@ import {
 } from './auth/domain/auth-session.entity';
 import { LogoutHandler } from './auth/application/command/logout.command';
 import { UpdatePairTokenHandler } from './auth/application/command/update-new-pair-token.command';
+import { SecurityDevicesQueryRepository } from './security-devices/infrastructure/security-devices-query-repositories';
+import { SecurityDevicesController } from './security-devices/api/security-devices.contriller';
+import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/security-devices-output.model';
+import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
+import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -47,7 +52,7 @@ export const UUIDProvider = {
       },
     ]),
   ],
-  controllers: [AuthController],
+  controllers: [AuthController, SecurityDevicesController],
   providers: [
     AuthService,
     RecoveryPasswordSessionRepositories,
@@ -62,7 +67,11 @@ export const UUIDProvider = {
     CreateAuthSessionHandler,
     LogoutHandler,
     UpdatePairTokenHandler,
+    SecurityDevicesQueryRepository,
+    SecurityDeviceOutputModelMapper,
+    DeleteAllDevicesExcludeCurrentHandler,
+    DeleteDeviceByDeviceIdHandler,
   ],
-  exports: [AuthService, MongooseModule],
+  exports: [AuthService, AuthSessionRepositories, MongooseModule],
 })
 export class AccessControlModule {}

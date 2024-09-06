@@ -17,6 +17,14 @@ import {
   Like,
   LikeModelType,
 } from '../../blog-platform/like/domain/like.entity';
+import {
+  AuthSession,
+  AuthSessionModelType,
+} from '../../access-control/auth/domain/auth-session.entity';
+import {
+  RecoveryPasswordSession,
+  RecoveryPasswordSessionModelType,
+} from '../../access-control/auth/domain/recovery-session.entity';
 @Injectable()
 export class TestingRepositories {
   constructor(
@@ -25,6 +33,10 @@ export class TestingRepositories {
     @InjectModel(Post.name) private readonly postModel: PostModelType,
     @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
     @InjectModel(Like.name) private readonly likeModel: LikeModelType,
+    @InjectModel(AuthSession.name)
+    private readonly authSession: AuthSessionModelType,
+    @InjectModel(RecoveryPasswordSession.name)
+    private readonly recoveryPasswordSession: RecoveryPasswordSessionModelType,
   ) {}
 
   async clearDb(): Promise<void> {
@@ -34,6 +46,8 @@ export class TestingRepositories {
       this.postModel.deleteMany(),
       this.commentModel.deleteMany(),
       this.likeModel.deleteMany(),
+      this.recoveryPasswordSession.deleteMany(),
+      this.authSession.deleteMany(),
     ]);
   }
 }

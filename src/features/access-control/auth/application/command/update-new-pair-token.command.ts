@@ -12,9 +12,7 @@ import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
 
 export class UpdatePairTokenCommand {
-  constructor(
-    public user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
-  ) {}
+  constructor(public user: JWTRefreshTokenPayloadType) {}
 }
 
 @CommandHandler(UpdatePairTokenCommand)
@@ -33,15 +31,11 @@ export class UpdatePairTokenHandler
   async execute(
     command: UpdatePairTokenCommand,
   ): Promise<AppResultType<AuthorizationUserResponseType>> {
-    const { userId, iat, deviceId } = command.user;
+    const { userId, deviceId } = command.user;
     const session: AppResultType<AuthSessionDocumentType | null> =
       await this.authService.authSessionIsExistByDeviceId(deviceId);
 
     if (session.appResult !== AppResult.Success)
-      return this.applicationObjectResult.unauthorized();
-    if (session.data.issueAt != new Date(iat * 1000).toISOString())
-      return this.applicationObjectResult.unauthorized();
-    if (session.data.userId !== userId)
       return this.applicationObjectResult.unauthorized();
 
     const payloadAccessToken: JWTAccessTokenPayloadType = {

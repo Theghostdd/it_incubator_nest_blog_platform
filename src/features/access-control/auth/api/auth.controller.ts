@@ -196,7 +196,7 @@ export class AuthController {
   @HttpCode(204)
   async logout(
     @CurrentUser()
-    user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
+    user: JWTRefreshTokenPayloadType,
     @Res({ passthrough: true }) response: Response,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
@@ -218,7 +218,7 @@ export class AuthController {
   @HttpCode(200)
   async updatePairTokens(
     @CurrentUser()
-    user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
+    user: JWTRefreshTokenPayloadType,
     @Res({ passthrough: true }) response: Response,
   ) {
     const result: AppResultType<AuthorizationUserResponseType> =

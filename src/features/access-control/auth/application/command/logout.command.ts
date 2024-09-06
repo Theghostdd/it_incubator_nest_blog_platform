@@ -10,9 +10,7 @@ import { AuthService } from '../auth-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class LogoutCommand {
-  constructor(
-    public user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
-  ) {}
+  constructor(public user: JWTRefreshTokenPayloadType) {}
 }
 
 @CommandHandler(LogoutCommand)
@@ -25,15 +23,11 @@ export class LogoutHandler
     private readonly authService: AuthService,
   ) {}
   async execute(command: LogoutCommand): Promise<AppResultType> {
-    const { userId, deviceId, iat } = command.user;
+    const { deviceId } = command.user;
     const session: AppResultType<AuthSessionDocumentType | null> =
       await this.authService.authSessionIsExistByDeviceId(deviceId);
 
     if (session.appResult !== AppResult.Success)
-      return this.applicationObjectResult.unauthorized();
-    if (session.data.issueAt != new Date(iat * 1000).toISOString())
-      return this.applicationObjectResult.unauthorized();
-    if (session.data.userId !== userId)
       return this.applicationObjectResult.unauthorized();
 
     await this.authSessionRepositories.delete(session.data);

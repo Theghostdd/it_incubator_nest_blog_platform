@@ -14,6 +14,7 @@ import { AuthTestManager } from '../utils/request-test-manager/auth-test-manager
 import { ConfigurationType } from '../../src/settings/configuration/configuration';
 import { ConfigService } from '@nestjs/config';
 import { LikeTestModel } from '../models/like/likes.model';
+import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
 
 export interface ITestSettings {
   app: INestApplication;
@@ -39,4 +40,5 @@ export interface ITestManger {
   postTestManager: PostTestManager;
   commentTestManager: CommentTestManager;
   authTestManager: AuthTestManager;
+  securityDevicesTestManager: SecurityDevicesTestManager;
 }

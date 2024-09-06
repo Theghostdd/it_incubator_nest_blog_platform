@@ -23,6 +23,7 @@ import { ConfigurationType } from '../../src/settings/configuration/configuratio
 import { LikeTestModel } from '../models/like/likes.model';
 import { ThrottlerMock } from '../mock/throttler-mock';
 import { ThrottlerGuard } from '@nestjs/throttler';
+import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -85,6 +86,8 @@ const getTestManagers = (app: INestApplication): ITestManger => {
   const postTestManager: PostTestManager = new PostTestManager(app);
   const commentTestManager: CommentTestManager = new CommentTestManager(app);
   const authTestManager: AuthTestManager = new AuthTestManager(app);
+  const securityDevicesTestManager: SecurityDevicesTestManager =
+    new SecurityDevicesTestManager(app);
 
   return {
     userTestManager: userTestManager,
@@ -92,6 +95,7 @@ const getTestManagers = (app: INestApplication): ITestManger => {
     postTestManager: postTestManager,
     commentTestManager: commentTestManager,
     authTestManager: authTestManager,
+    securityDevicesTestManager: securityDevicesTestManager,
   };
 };
 
