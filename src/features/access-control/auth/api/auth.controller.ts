@@ -63,6 +63,7 @@ export class AuthController {
   }
 
   @Post(`/${apiPrefixSettings.AUTH.login}`)
+  @UseGuards(ThrottlerGuard)
   @HttpCode(200)
   async login(
     @Body() inputLoginModel: LoginInputModel,
