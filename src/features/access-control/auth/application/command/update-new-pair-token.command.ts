@@ -50,7 +50,7 @@ export class UpdatePairTokenHandler
     const accessToken =
       await this.authService.generateAccessToken(payloadAccessToken);
     const refreshToken =
-      await this.authService.generateAccessToken(payloadRefreshToken);
+      await this.authService.generateRefreshToken(payloadRefreshToken);
 
     const {
       iat: iatNewDate,
