@@ -21,6 +21,7 @@ export class AuthTestManager {
   private readonly changePasswordEndpoint: string;
   private readonly currentUserEndpoint: string;
   private readonly logoutEndpoint: string;
+  private readonly refreshTokenEndpoint: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
@@ -33,6 +34,7 @@ export class AuthTestManager {
     this.changePasswordEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.new_password}`;
     this.currentUserEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.me}`;
     this.logoutEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.logout}`;
+    this.refreshTokenEndpoint = `${this.authEndpoint}/${apiPrefixSettings.AUTH.refresh_token}`;
   }
   async registration(
     registrationModel: IUserRegistrationTestModel,
@@ -144,6 +146,36 @@ export class AuthTestManager {
       .set('Cookie', `refreshToken=${refreshToken}`)
       .expect(statusCode);
     return result.body;
+  }
+
+  async updateNewPairTokens(refreshToken: string, statusCode: number) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.refreshTokenEndpoint}`)
+      .set('Cookie', `refreshToken=${refreshToken}`)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async updateNewPairTokensAndReturnRefreshToken(
+    refreshToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .post(`${this.refreshTokenEndpoint}`)
+      .set('Cookie', `refreshToken=${refreshToken}`)
+      .expect(statusCode);
+
+    const cookies = result.headers['set-cookie'];
+    expect(cookies).toBeDefined();
+    const cookiesArray = Array.isArray(cookies) ? cookies : [cookies];
+    const refreshTokenCookie = cookiesArray.find((cookie) =>
+      cookie.startsWith('refreshToken='),
+    );
+    expect(refreshTokenCookie).toBeDefined();
+
+    const match = refreshTokenCookie.match(/refreshToken=([^;]*)/);
+
+    return { body: result.body, refreshToken: match[1] };
   }
 
   async getCurrentUser(authorizationToken: string, statusCode: number) {

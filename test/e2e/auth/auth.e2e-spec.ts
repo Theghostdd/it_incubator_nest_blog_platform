@@ -13,6 +13,7 @@ import { addDays, subDays } from 'date-fns';
 import { NodeMailerMockService } from '../../mock/nodemailer-mock';
 import { NodeMailerService } from '../../../src/features/nodemailer/application/nodemailer-application';
 import { IAuthRecoveryPasswordSessionInsertModel } from '../../models/auth/interfaces';
+import { delay } from '../../utils/delay/delay';
 
 describe('Auth e2e', () => {
   let testSettings: ITestSettings;
@@ -274,6 +275,126 @@ describe('Auth e2e', () => {
         { userId: '123456' },
       );
       await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not logout user, session was update', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+      await delay(1000);
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login.refreshToken,
+        200,
+      );
+
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
+  });
+
+  describe('Refresh token', () => {
+    it('should return new tokens pair', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.testManager.authTestManager.updateNewPairTokensAndReturnRefreshToken(
+        login.refreshToken,
+        200,
+      );
+    });
+
+    it('should not return new tokens pair, refresh token is not correct', async () => {
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        'token',
+        401,
+      );
+    });
+
+    it('should not return new tokens pair, session not found', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+      await testSettings.dataBase.clearDatabase();
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not return new tokens pair, session is not correct', async () => {
+      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+      await delay(1000);
+      await testSettings.testManager.authTestManager.updateNewPairTokensAndReturnRefreshToken(
+        login.refreshToken,
+        200,
+      );
+
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not return new tokens pair, session is not found', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.findAndUpdate(
+        'authsessions',
+        { userId: userId.toString() },
+        { dId: 'did' },
+      );
+
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not return new tokens pair, user not found', async () => {
+      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
+        'users',
+        userInsertModel,
+      );
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.findAndUpdate(
+        'authsessions',
+        { userId: userId.toString() },
+        { userId: '123456' },
+      );
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
         login.refreshToken,
         401,
       );

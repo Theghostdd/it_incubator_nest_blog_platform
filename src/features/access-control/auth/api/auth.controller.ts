@@ -45,6 +45,7 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { ClientInfo } from '../../../../core/decorators/client-info';
 import { LogoutCommand } from '../application/command/logout.command';
 import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
+import { UpdatePairTokenCommand } from '../application/command/update-new-pair-token.command';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
@@ -191,7 +192,6 @@ export class AuthController {
   }
 
   @Post(apiPrefixSettings.AUTH.logout)
-  @UseGuards(ThrottlerGuard)
   @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(204)
   async logout(
@@ -206,6 +206,32 @@ export class AuthController {
       case AppResult.Success:
         response.clearCookie('refreshToken');
         return;
+      case AppResult.Unauthorized:
+        throw new UnauthorizedException();
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @Post(apiPrefixSettings.AUTH.refresh_token)
+  @UseGuards(RefreshJWTAccessGuard)
+  @HttpCode(200)
+  async updatePairTokens(
+    @CurrentUser()
+    user: JWTRefreshTokenPayloadType & { iat: number; exp: number },
+    @Res({ passthrough: true }) response: Response,
+  ) {
+    const result: AppResultType<AuthorizationUserResponseType> =
+      await this.commandBus.execute(new UpdatePairTokenCommand(user));
+    switch (result.appResult) {
+      case AppResult.Success:
+        const { refreshToken, ...data } = result.data;
+        response.cookie('refreshToken', refreshToken, {
+          httpOnly: true,
+          secure: true,
+          maxAge: 24 * 60 * 60 * 1000,
+        });
+        return data;
       case AppResult.Unauthorized:
         throw new UnauthorizedException();
       default:

@@ -33,6 +33,11 @@ export class AuthSession {
     session.issueAt = issueAt;
     return session;
   }
+
+  updateAuthSession(iat: string, exp: string) {
+    this.issueAt = iat;
+    this.expAt = exp;
+  }
 }
 
 export const AuthSessionSchema = SchemaFactory.createForClass(AuthSession);

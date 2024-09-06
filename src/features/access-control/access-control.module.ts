@@ -1,9 +1,6 @@
 import { forwardRef, Module } from '@nestjs/common';
 import { AuthService } from './auth/application/auth-application';
-import {
-  LoginCommand,
-  LoginHandler,
-} from './auth/application/command/login.command';
+import { LoginHandler } from './auth/application/command/login.command';
 import { ConfirmUserEmailHandler } from './auth/application/command/confirm-user-email.command';
 import { ChangeUserPasswordHandler } from './auth/application/command/change-user-password.command';
 import { ResendConfirmationCodeHandler } from './auth/application/command/resend-confirmation-code.command';
@@ -27,6 +24,7 @@ import {
   AuthSessionSchema,
 } from './auth/domain/auth-session.entity';
 import { LogoutHandler } from './auth/application/command/logout.command';
+import { UpdatePairTokenHandler } from './auth/application/command/update-new-pair-token.command';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -63,6 +61,7 @@ export const UUIDProvider = {
     RegistrationHandler,
     CreateAuthSessionHandler,
     LogoutHandler,
+    UpdatePairTokenHandler,
   ],
   exports: [AuthService, MongooseModule],
 })
