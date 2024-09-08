@@ -16,10 +16,10 @@ import { CoreModule } from './core/core.module';
 @Module({
   imports: [
     CoreModule,
+    configModule,
     ApplicationObjectResultModule,
     BaseSortingModule,
     BasePaginationModule,
-    configModule,
     MongooseModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
         const envSettings = configService.get('environmentSettings', {

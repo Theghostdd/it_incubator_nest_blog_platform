@@ -40,7 +40,7 @@ export class UserService {
     return this.applicationObjectResult.success(null);
   }
 
-  async userIsExistById(
+  async getUserById(
     id: string,
   ): Promise<AppResultType<UserDocumentType | null>> {
     const user: UserDocumentType | null =
@@ -50,7 +50,7 @@ export class UserService {
     return this.applicationObjectResult.success(user);
   }
 
-  async userIsExistByLoginOrEmail(
+  async getUseByLoginOrEmail(
     loginOrEmail: string,
   ): Promise<AppResultType<UserDocumentType | null>> {
     const user: UserDocumentType | null =
@@ -64,7 +64,7 @@ export class UserService {
     return this.applicationObjectResult.success(user);
   }
 
-  async userIsExistByConfirmationCode(
+  async getUserByConfirmationCode(
     code: string,
   ): Promise<AppResultType<UserDocumentType | null>> {
     const user: UserDocumentType | null =
@@ -74,7 +74,7 @@ export class UserService {
     return this.applicationObjectResult.success(user);
   }
 
-  async userIsExistByEmail(
+  async getUserByEmail(
     email: string,
   ): Promise<AppResultType<UserDocumentType | null>> {
     const user: UserDocumentType | null =

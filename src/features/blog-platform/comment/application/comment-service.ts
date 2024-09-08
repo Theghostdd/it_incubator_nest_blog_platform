@@ -11,7 +11,7 @@ export class CommentService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async commentIsExistById(
+  async getCommentById(
     id: string,
   ): Promise<AppResultType<CommentDocumentType>> {
     const comment: CommentDocumentType | null =

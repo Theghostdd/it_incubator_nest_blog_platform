@@ -33,7 +33,7 @@ export class UpdatePairTokenHandler
   ): Promise<AppResultType<AuthorizationUserResponseType>> {
     const { userId, deviceId } = command.user;
     const session: AppResultType<AuthSessionDocumentType | null> =
-      await this.authService.authSessionIsExistByDeviceId(deviceId);
+      await this.authService.getAuthSessionByDeviceId(deviceId);
 
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();

@@ -27,7 +27,7 @@ export class UpdateCommentHandler
   async execute(command: UpdateCommentCommand): Promise<AppResultType> {
     const { id, userId } = command;
     const comment: AppResultType<CommentDocumentType> =
-      await this.commentService.commentIsExistById(id);
+      await this.commentService.getCommentById(id);
     if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 

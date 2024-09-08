@@ -25,7 +25,7 @@ export class DeleteCommentHandler
   async execute(command: DeleteCommentCommand): Promise<AppResultType> {
     const { id, userId } = command;
     const comment: AppResultType<CommentDocumentType> =
-      await this.commentService.commentIsExistById(id);
+      await this.commentService.getCommentById(id);
     if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
     if (comment.data.commentatorInfo.userId !== userId)

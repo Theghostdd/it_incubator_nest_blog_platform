@@ -52,7 +52,7 @@ export class ResendConfirmationCodeHandler
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { email } = command.inputResendConfirmCodeModel;
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistByEmail(email);
+      await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
         message: 'Email is not found',

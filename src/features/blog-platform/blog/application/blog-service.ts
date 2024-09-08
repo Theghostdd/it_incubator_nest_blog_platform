@@ -11,7 +11,7 @@ export class BlogService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async blogIsExistsById(
+  async getBlogById(
     id: string,
   ): Promise<AppResultType<BlogDocumentType | null>> {
     const blog: BlogDocumentType | null =

@@ -1,11 +1,8 @@
 import { Inject, Injectable } from '@nestjs/common';
-import bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
 import { RecoveryPasswordSessionDocumentType } from '../domain/recovery-session.entity';
 import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
 import { ConfigService } from '@nestjs/config';
-import { StaticOptions } from '../../../../settings/app-static-settings';
-import { EnvSettings } from '../../../../settings/env-settings';
 import { APISettings } from '../../../../settings/api-settings';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
@@ -20,8 +17,6 @@ import { AuthSessionRepositories } from '../infrastructure/auth-session-reposito
 
 @Injectable()
 export class AuthService {
-  private readonly staticOptions: StaticOptions;
-  private readonly envSettings: EnvSettings;
   private readonly apiSettings: APISettings;
   constructor(
     private readonly configService: ConfigService<ConfigurationType, true>,
@@ -31,21 +26,7 @@ export class AuthService {
     private readonly authSessionRepositories: AuthSessionRepositories,
     @Inject('UUID') private readonly uuidv4: () => string,
   ) {
-    this.envSettings = this.configService.get('environmentSettings', {
-      infer: true,
-    });
     this.apiSettings = this.configService.get('apiSettings', { infer: true });
-  }
-
-  async generatePasswordHashAndSalt(password: string): Promise<string> {
-    return await bcrypt.hash(password, this.envSettings.PASSWORD_HASH_ROUNDS);
-  }
-
-  async comparePasswordHashAndSalt(
-    password: string,
-    existingPassword: string,
-  ): Promise<boolean> {
-    return await bcrypt.compare(password, existingPassword);
   }
 
   generateUuidCode(prefix: string, key: string): string {
@@ -77,7 +58,7 @@ export class AuthService {
     return await this.jwtService.decode(token);
   }
 
-  async recoveryPasswordSessionIsExistByCode(
+  async getRecoveryPasswordSessionByCode(
     code: string,
   ): Promise<AppResultType<RecoveryPasswordSessionDocumentType | null>> {
     const recoveryPasswordSession: RecoveryPasswordSessionDocumentType | null =
@@ -89,7 +70,7 @@ export class AuthService {
     return this.applicationObjectResult.success(recoveryPasswordSession);
   }
 
-  async authSessionIsExistByDeviceId(
+  async getAuthSessionByDeviceId(
     deviceId: string,
   ): Promise<AppResultType<AuthSessionDocumentType | null>> {
     const authSession: AuthSessionDocumentType | null =

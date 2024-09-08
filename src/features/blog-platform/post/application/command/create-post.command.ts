@@ -29,7 +29,7 @@ export class CreatePostHandler
   ) {}
   async execute(command: CreatePostCommand): Promise<AppResultType<string>> {
     const blog: AppResultType<BlogDocumentType | null> =
-      await this.blogService.blogIsExistsById(command.postInputModel.blogId);
+      await this.blogService.getBlogById(command.postInputModel.blogId);
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 

@@ -36,7 +36,7 @@ export class ConfirmUserEmailHandler
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { code } = command.inputConfirmUserByEmailModel;
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistByConfirmationCode(code);
+      await this.userService.getUserByConfirmationCode(code);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
         message: 'Code not found',

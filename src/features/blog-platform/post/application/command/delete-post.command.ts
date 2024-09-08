@@ -21,7 +21,7 @@ export class DeletePostByIdHandler
   ) {}
   async execute(command: DeletePostByIdCommand): Promise<AppResultType> {
     const post: AppResultType<PostDocumentType | null> =
-      await this.postService.postIsExistById(command.id);
+      await this.postService.getPostById(command.id);
     if (post.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 

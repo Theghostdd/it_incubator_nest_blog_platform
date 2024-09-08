@@ -14,6 +14,7 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { CreateAuthSessionCommand } from './create-auth-session.command';
+import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 
 export class LoginCommand {
   constructor(
@@ -38,6 +39,7 @@ export class LoginHandler
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly commandBus: CommandBus,
+    private readonly bcryptService: BcryptService,
   ) {}
 
   async execute(
@@ -50,12 +52,12 @@ export class LoginHandler
     if (!ip) return this.applicationObjectResult.unauthorized();
 
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistByLoginOrEmail(loginOrEmail);
+      await this.userService.getUseByLoginOrEmail(loginOrEmail);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();
 
     if (
-      !(await this.authService.comparePasswordHashAndSalt(
+      !(await this.bcryptService.comparePasswordHashAndSalt(
         password,
         user.data.password,
       ))

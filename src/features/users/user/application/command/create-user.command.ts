@@ -14,7 +14,7 @@ import { UserService } from '../user-service';
 import { InjectModel } from '@nestjs/mongoose';
 import { UserRepositories } from '../../infrastructure/user-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AuthService } from '../../../../access-control/auth/application/auth-application';
+import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 
 export class CreateUserCommand {
   constructor(public userInputModel: UserInputModel) {}
@@ -30,10 +30,10 @@ export class CreateUserCommandHandler
 {
   constructor(
     private readonly userService: UserService,
-    private readonly authService: AuthService,
     private readonly userRepositories: UserRepositories,
     @InjectModel(User.name) private readonly userModel: UserModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
+    private readonly bcryptService: BcryptService,
   ) {}
   async execute(
     command: CreateUserCommand,
@@ -47,7 +47,7 @@ export class CreateUserCommandHandler
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(user.errorField);
 
-    const hash: string = await this.authService.generatePasswordHashAndSalt(
+    const hash: string = await this.bcryptService.generatePasswordHashAndSalt(
       command.userInputModel.password,
     );
     const newUser: UserDocumentType = this.userModel.createUserInstance(

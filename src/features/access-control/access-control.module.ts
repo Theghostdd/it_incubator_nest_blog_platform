@@ -1,4 +1,4 @@
-import { forwardRef, Module } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthService } from './auth/application/auth-application';
 import { LoginHandler } from './auth/application/command/login.command';
 import { ConfirmUserEmailHandler } from './auth/application/command/confirm-user-email.command';
@@ -30,6 +30,7 @@ import { SecurityDevicesController } from './security-devices/api/security-devic
 import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/security-devices-output.model';
 import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
 import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
+import { BcryptModule } from '../bcrypt/bcrypt.module';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -39,8 +40,9 @@ export const UUIDProvider = {
 @Module({
   imports: [
     NodeMailerModule,
-    forwardRef(() => UsersModule),
+    UsersModule,
     MailTemplateModule,
+    BcryptModule,
     MongooseModule.forFeature([
       {
         name: RecoveryPasswordSession.name,

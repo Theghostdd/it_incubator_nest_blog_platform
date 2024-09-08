@@ -21,7 +21,7 @@ export class DeleteBlogByIdHandler
   ) {}
   async execute(command: DeleteBlogByIdCommand): Promise<AppResultType> {
     const blog: AppResultType<BlogDocumentType | null> =
-      await this.blogService.blogIsExistsById(command.id);
+      await this.blogService.getBlogById(command.id);
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 

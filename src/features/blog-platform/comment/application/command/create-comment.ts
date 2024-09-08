@@ -37,12 +37,12 @@ export class CreateCommentByPostIdHandler
   ): Promise<AppResultType<string>> {
     const { userId, postId } = command;
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistById(userId);
+      await this.userService.getUserById(userId);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
     const post: AppResultType<PostDocumentType | null> =
-      await this.postService.postIsExistById(postId);
+      await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 

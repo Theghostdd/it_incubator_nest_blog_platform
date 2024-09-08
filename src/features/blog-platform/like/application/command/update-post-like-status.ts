@@ -16,6 +16,7 @@ import { LikeStatusEnum } from '../../domain/type';
 import { LikeRepositories } from '../../infrastructure/like-repositories';
 import { PostRepository } from '../../../post/infrastructure/post-repositories';
 import { LikeChangeCount } from '../../domain/models';
+import { CalculateLike } from '../../domain/calculate-like';
 
 export class UpdatePostLikeStatusCommand {
   constructor(
@@ -36,17 +37,18 @@ export class UpdatePostLikeStatusHandler
     private readonly postRepositories: PostRepository,
     @InjectModel(Like.name) private readonly likeModel: LikeModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
+    private readonly calculateLike: CalculateLike,
   ) {}
 
   async execute(command: UpdatePostLikeStatusCommand): Promise<AppResultType> {
     const { postId, userId } = command;
     const post: AppResultType<PostDocumentType | null> =
-      await this.postService.postIsExistById(postId);
+      await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
     const like: AppResultType<LikeDocumentType | null> =
-      await this.likeService.likeIsExistByUserIdAndParentId(userId, postId);
+      await this.likeService.getLikeByUserIdAndParentId(userId, postId);
     if (like.appResult !== AppResult.Success) {
       const newLike: LikeDocumentType = this.likeModel.createLikeInstance(
         command.likeInputModel,
@@ -68,7 +70,7 @@ export class UpdatePostLikeStatusHandler
       return this.applicationObjectResult.success(null);
     }
 
-    const changeCountLike: LikeChangeCount = like.data.changeCountLike(
+    const changeCountLike: LikeChangeCount = this.calculateLike.calculate(
       command.likeInputModel.likeStatus as LikeStatusEnum,
       like.data.status,
     );

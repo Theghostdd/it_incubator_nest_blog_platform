@@ -20,7 +20,7 @@ export class FindBlogConstraint implements ValidatorConstraintInterface {
   async validate(blogId: string, args: ValidationArguments) {
     if (!blogId || !Types.ObjectId.isValid(blogId)) return false;
     const blog: AppResultType<BlogDocumentType | null> =
-      await this.blogService.blogIsExistsById(blogId);
+      await this.blogService.getBlogById(blogId);
     return blog.appResult === AppResult.Success;
   }
 

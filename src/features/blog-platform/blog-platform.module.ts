@@ -35,6 +35,7 @@ import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
 import { FindBlogConstraint } from '../../core/decorators/find-blog';
+import { CalculateLike } from './like/domain/calculate-like';
 
 @Module({
   imports: [
@@ -75,6 +76,7 @@ import { FindBlogConstraint } from '../../core/decorators/find-blog';
     LikeService,
     LikeRepositories,
     FindBlogConstraint,
+    CalculateLike,
   ],
   exports: [MongooseModule],
 })

@@ -100,10 +100,10 @@ const getTestManagers = (app: INestApplication): ITestManger => {
 };
 
 const setGlobalMock = (testingModule: TestingModuleBuilder) => {
-  const nodemailerMockService = new NodeMailerMockService();
+  // const nodemailerMockService = new NodeMailerMockService();
   testingModule
     .overrideProvider(NodeMailerService)
-    .useValue(nodemailerMockService)
+    .useClass(NodeMailerMockService)
     .overrideGuard(ThrottlerGuard)
     .useClass(ThrottlerMock);
 };

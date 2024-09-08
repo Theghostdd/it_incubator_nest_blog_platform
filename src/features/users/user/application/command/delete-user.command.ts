@@ -22,7 +22,7 @@ export class DeleteUserByIdHandler
 
   async execute(command: DeleteUserByIdCommand): Promise<AppResultType> {
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistById(command.id);
+      await this.userService.getUserById(command.id);
     if (user.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 

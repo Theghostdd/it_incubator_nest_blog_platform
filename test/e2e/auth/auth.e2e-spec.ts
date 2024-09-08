@@ -404,7 +404,6 @@ describe('Auth e2e', () => {
   describe('Registration', () => {
     it('should registration user', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
-
       await authTestManager.registration(userRegistrationModel, 204);
 
       expect(sendMailSpy).toHaveBeenCalled();

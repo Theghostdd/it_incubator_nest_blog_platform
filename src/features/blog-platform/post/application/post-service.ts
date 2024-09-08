@@ -11,7 +11,7 @@ export class PostService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async postIsExistById(
+  async getPostById(
     id: string,
   ): Promise<AppResultType<PostDocumentType | null>> {
     const post: PostDocumentType = await this.postRepository.getPostById(id);

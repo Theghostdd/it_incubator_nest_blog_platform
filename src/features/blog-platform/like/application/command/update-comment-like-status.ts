@@ -16,6 +16,7 @@ import { CommentDocumentType } from '../../../comment/domain/comment.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { LikeStatusEnum } from '../../domain/type';
 import { LikeChangeCount } from '../../domain/models';
+import { CalculateLike } from '../../domain/calculate-like';
 
 export class UpdateCommentLikeStatusCommand {
   constructor(
@@ -36,6 +37,7 @@ export class UpdateCommentLikeStatusHandler
     private readonly commentRepositories: CommentRepositories,
     @InjectModel(Like.name) private readonly likeModel: LikeModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
+    private readonly calculateLike: CalculateLike,
   ) {}
 
   async execute(
@@ -43,12 +45,12 @@ export class UpdateCommentLikeStatusHandler
   ): Promise<AppResultType> {
     const { commentId, userId } = command;
     const comment: AppResultType<CommentDocumentType> =
-      await this.commentService.commentIsExistById(commentId);
+      await this.commentService.getCommentById(commentId);
     if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
     const like: AppResultType<LikeDocumentType | null> =
-      await this.likeService.likeIsExistByUserIdAndParentId(userId, commentId);
+      await this.likeService.getLikeByUserIdAndParentId(userId, commentId);
 
     if (like.appResult !== AppResult.Success) {
       const newLike: LikeDocumentType = this.likeModel.createLikeInstance(
@@ -71,7 +73,7 @@ export class UpdateCommentLikeStatusHandler
       return this.applicationObjectResult.success(null);
     }
 
-    const changeCountLike: LikeChangeCount = like.data.changeCountLike(
+    const changeCountLike: LikeChangeCount = this.calculateLike.calculate(
       command.likeInputModel.likeStatus as LikeStatusEnum,
       like.data.status,
     );

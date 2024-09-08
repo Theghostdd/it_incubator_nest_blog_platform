@@ -22,6 +22,7 @@ import {
   UserModelType,
 } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}
@@ -44,6 +45,7 @@ export class RegistrationHandler
     private readonly userRepositories: UserRepositories,
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
+    private readonly bcryptService: BcryptService,
     @InjectModel(User.name) private readonly userModel: UserModelType,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
@@ -62,7 +64,7 @@ export class RegistrationHandler
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(user.errorField);
 
-    const hash: string = await this.authService.generatePasswordHashAndSalt(
+    const hash: string = await this.bcryptService.generatePasswordHashAndSalt(
       command.registrationInputModel.password,
     );
 

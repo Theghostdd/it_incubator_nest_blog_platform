@@ -11,7 +11,7 @@ export class LikeService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async likeIsExistByUserIdAndParentId(
+  async getLikeByUserIdAndParentId(
     userId: string,
     parentId: string,
   ): Promise<AppResultType<LikeDocumentType | null>> {

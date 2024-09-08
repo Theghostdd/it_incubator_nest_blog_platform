@@ -50,7 +50,7 @@ export class PasswordRecoveryHandler
   async execute(command: PasswordRecoveryCommand): Promise<AppResultType> {
     const { email } = command.inputPasswordRecoveryModel;
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistByEmail(email);
+      await this.userService.getUserByEmail(email);
 
     const confirmationCode: string = this.authService.generateUuidCode(
       this.staticOptions.uuidOptions.recoveryPasswordSessionCode.prefix,

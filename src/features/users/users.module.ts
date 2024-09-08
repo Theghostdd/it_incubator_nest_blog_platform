@@ -9,11 +9,11 @@ import { UserSortingQuery } from './user/api/models/input/user-input.model';
 import { DeleteUserByIdHandler } from './user/application/command/delete-user.command';
 import { CreateUserCommandHandler } from './user/application/command/create-user.command';
 import { UserController } from './user/api/user-controller';
-import { AccessControlModule } from '../access-control/access-control.module';
+import { BcryptModule } from '../bcrypt/bcrypt.module';
 
 @Module({
   imports: [
-    AccessControlModule,
+    BcryptModule,
     MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
   ],
   controllers: [UserController],

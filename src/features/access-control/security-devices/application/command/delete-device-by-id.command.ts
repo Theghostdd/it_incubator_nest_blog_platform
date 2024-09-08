@@ -32,7 +32,7 @@ export class DeleteDeviceByDeviceIdHandler
     const { deviceId } = command;
 
     const session: AppResultType<AuthSessionDocumentType | null> =
-      await this.authService.authSessionIsExistByDeviceId(deviceId);
+      await this.authService.getAuthSessionByDeviceId(deviceId);
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
     if (session.data.userId !== userId)

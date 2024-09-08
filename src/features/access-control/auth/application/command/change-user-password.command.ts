@@ -13,6 +13,7 @@ import { ApplicationObjectResult } from '../../../../../base/application-object-
 import { UserService } from '../../../../users/user/application/user-service';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { UserDocumentType } from '../../../../users/user/domain/user.entity';
+import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 
 export class ChangeUserPasswordCommand {
   constructor(public inputChangePasswordModel: ChangePasswordInputModel) {}
@@ -32,13 +33,14 @@ export class ChangeUserPasswordHandler
     private readonly userService: UserService,
     private readonly userRepositories: UserRepositories,
     private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
+    private readonly bcryptService: BcryptService,
   ) {}
   async execute(
     command: ChangeUserPasswordCommand,
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { recoveryCode, newPassword } = command.inputChangePasswordModel;
     const recoverySession: AppResultType<RecoveryPasswordSessionDocumentType | null> =
-      await this.authService.recoveryPasswordSessionIsExistByCode(recoveryCode);
+      await this.authService.getRecoveryPasswordSessionByCode(recoveryCode);
     if (recoverySession.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
         message: 'Bad code',
@@ -54,12 +56,12 @@ export class ChangeUserPasswordHandler
       });
 
     const user: AppResultType<UserDocumentType | null> =
-      await this.userService.userIsExistByEmail(email);
+      await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(null);
 
     const hash =
-      await this.authService.generatePasswordHashAndSalt(newPassword);
+      await this.bcryptService.generatePasswordHashAndSalt(newPassword);
 
     user.data.changePassword(hash);
     await this.userRepositories.save(user.data);
