@@ -1,11 +1,11 @@
-import { UserDocumentType } from '../../../domain/user.entity';
+import { UserType } from '../../../domain/user.entity';
 
 export class UserOutputModel {
   constructor(
     public id: string,
     public login: string,
     public email: string,
-    public createdAt: string,
+    public createdAt: Date,
   ) {}
 }
 
@@ -17,31 +17,30 @@ export class UserMeOutputModel {
 
 export class UserMapperOutputModel {
   constructor() {}
-  userModel(user: UserDocumentType): UserOutputModel {
+  userModel(user: UserType): UserOutputModel {
     return {
-      id: user._id.toString(),
+      id: user.id.toString(),
       login: user.login,
       email: user.email,
       createdAt: user.createdAt,
     };
   }
 
-  usersModel(users: UserDocumentType[]): UserOutputModel[] {
-    return users.map((user: UserDocumentType) => {
+  usersModel(users: UserType[]): UserOutputModel[] {
+    return users.map((user: UserType) => {
       return {
-        id: user._id.toString(),
+        id: user.id.toString(),
         login: user.login,
         email: user.email,
         createdAt: user.createdAt,
       };
     });
   }
-
-  currentUserModel(user: UserDocumentType): UserMeOutputModel {
+  currentUserModel(user: UserType): UserMeOutputModel {
     return {
       login: user.login,
       email: user.email,
-      userId: user._id.toString(),
+      userId: user.id.toString(),
     };
   }
 }

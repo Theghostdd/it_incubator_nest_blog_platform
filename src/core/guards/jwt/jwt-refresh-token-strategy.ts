@@ -5,9 +5,8 @@ import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { JWTRefreshTokenPayloadType } from '../../../base/types/types';
 import { Request } from 'express';
-import { AppResult } from '../../../base/enum/app-result.enum';
 import { AuthSessionRepositories } from '../../../features/access-control/auth/infrastructure/auth-session-repositories';
-import { AuthSessionDocumentType } from '../../../features/access-control/auth/domain/auth-session.entity';
+import { AuthSessionType } from '../../../features/access-control/auth/domain/auth-session.entity';
 
 @Injectable()
 export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
@@ -37,11 +36,15 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   async validate(
     payload: JWTRefreshTokenPayloadType & { iat: number; exp: number },
   ): Promise<JWTRefreshTokenPayloadType & { iat: number; exp: number }> {
-    const session: AuthSessionDocumentType | null =
+    const session: AuthSessionType | null =
       await this.authSessionRepositories.getSessionByDeviceId(payload.deviceId);
     if (!session) return null;
-    if (session.issueAt != new Date(payload.iat * 1000).toISOString())
+    if (
+      session.issueAt.toISOString() !==
+      new Date(payload.iat * 1000).toISOString()
+    )
       return null;
+
     if (session.userId !== payload.userId) return null;
 
     return {

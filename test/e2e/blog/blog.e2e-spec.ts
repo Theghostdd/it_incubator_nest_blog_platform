@@ -4,29 +4,22 @@ import { ITestSettings } from '../../settings/interfaces';
 import { BlogOutputModel } from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
 import {
   IBlogCreateModel,
-  IBlogInsertModel,
   IBlogPostCreateModel,
   IBlogUpdateModel,
 } from '../../models/blog/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
-import { BlogSortingQuery } from '../../../src/features/blog-platform/blog/api/models/input/blog-input.model';
 import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
-import { IPostInsertModel } from '../../models/post/interfaces';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
-import { Types } from 'mongoose';
 import { APISettings } from '../../../src/settings/api-settings';
+import { BlogSortingQuery } from '../../../src/features/blog-platform/blog/api/models/input/blog-input.model';
 
 describe('Blog e2e', () => {
   let blogTestManager: BlogTestManager;
   let testSettings: ITestSettings;
   let blogCreateModel: IBlogCreateModel;
-  let blogInsertModel: IBlogInsertModel;
   let blogUpdateModel: IBlogUpdateModel;
-  let blogInsertModels: IBlogInsertModel[];
-  let postInsertModel: IPostInsertModel;
   let blogPostCreateModel: IBlogPostCreateModel;
-  let postInsertModels: IPostInsertModel[];
   let apiSettings: APISettings;
   let login: string;
   let password: string;
@@ -37,6 +30,7 @@ describe('Blog e2e', () => {
     apiSettings = testSettings.configService.get('apiSettings', {
       infer: true,
     });
+
     login = apiSettings.SUPER_ADMIN_AUTH.login;
     password = apiSettings.SUPER_ADMIN_AUTH.password;
     adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
@@ -52,27 +46,21 @@ describe('Blog e2e', () => {
     blogTestManager = testSettings.testManager.blogTestManager;
     blogCreateModel =
       testSettings.testModels.blogTestModel.getBlogCreateModel();
-    blogInsertModel =
-      testSettings.testModels.blogTestModel.getBlogInsertModel();
     blogUpdateModel =
       testSettings.testModels.blogTestModel.getBlogUpdateModel();
-    blogInsertModels =
-      testSettings.testModels.blogTestModel.getBlogInsertManyModel();
-    postInsertModel =
-      testSettings.testModels.postTestModel.getPostInsertModel();
-    postInsertModel = {
-      ...postInsertModel,
-      blogId: '66bf39c8f855a5438d02adbf',
-    };
     blogPostCreateModel =
       testSettings.testModels.blogTestModel.getBlogPostCreateModel();
-    postInsertModels =
-      testSettings.testModels.postTestModel.getPostInsertModels();
   });
 
-  describe('Get blogs by blog id', () => {
-    it('should get blogs by blog id without query', async () => {
-      await testSettings.dataBase.dbInsertMany('blogs', blogInsertModels);
+  describe('Get blogs', () => {
+    it('should get blogs id without query', async () => {
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs({}, 200);
@@ -81,14 +69,19 @@ describe('Blog e2e', () => {
         pagesCount: 2,
         page: 1,
         pageSize: 10,
-        totalCount: blogInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get blogs with pagination, page size: 11', async () => {
-      await testSettings.dataBase.dbInsertMany('blogs', blogInsertModels);
-
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs(
           {
@@ -101,14 +94,19 @@ describe('Blog e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 11,
-        totalCount: blogInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get blog with pagination, page number: 2', async () => {
-      await testSettings.dataBase.dbInsertMany('blogs', blogInsertModels);
-
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs(
           {
@@ -121,18 +119,24 @@ describe('Blog e2e', () => {
         pagesCount: 2,
         page: 2,
         pageSize: 10,
-        totalCount: blogInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get blog with pagination, search name term', async () => {
-      await testSettings.dataBase.dbInsertMany('blogs', blogInsertModels);
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs(
           {
-            searchNameTerm: blogInsertModels[4].name.slice(0, 1),
+            searchNameTerm: 'nameBlog1',
           } as BlogSortingQuery,
           200,
         );
@@ -145,17 +149,17 @@ describe('Blog e2e', () => {
         items: [
           {
             id: expect.any(String),
-            name: blogInsertModels[4].name,
-            description: blogInsertModels[4].description,
-            websiteUrl: blogInsertModels[4].websiteUrl,
+            name: 'nameBlog1',
+            description: blogCreateModel.description,
+            websiteUrl: blogCreateModel.websiteUrl,
             createdAt: expect.any(String),
             isMembership: false,
           },
           {
             id: expect.any(String),
-            name: blogInsertModels[7].name,
-            description: blogInsertModels[7].description,
-            websiteUrl: blogInsertModels[7].websiteUrl,
+            name: 'nameBlog10',
+            description: blogCreateModel.description,
+            websiteUrl: blogCreateModel.websiteUrl,
             createdAt: expect.any(String),
             isMembership: false,
           },
@@ -166,20 +170,29 @@ describe('Blog e2e', () => {
     it('should get empty blogs array', async () => {
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs({}, 200);
-
+      expect(result.items).toHaveLength(0);
       expect(result).toEqual({
         pagesCount: 0,
         page: 1,
         pageSize: 10,
         totalCount: 0,
-        items: expect.any(Array),
+        items: [],
       });
-
-      expect(result.items).toHaveLength(0);
     });
 
     it('should get blogs with sorting by name, asc', async () => {
-      await testSettings.dataBase.dbInsertMany('blogs', blogInsertModels);
+      const createdBlogArray = [];
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + (i - 1) },
+          adminAuthToken,
+          201,
+        );
+        createdBlogArray.push({
+          ...blogCreateModel,
+          name: 'nameBlog' + (i - 1),
+        });
+      }
 
       const result: BasePagination<BlogOutputModel[] | []> =
         await blogTestManager.getBlogs(
@@ -199,7 +212,7 @@ describe('Blog e2e', () => {
         };
       });
 
-      const mapInsertModelAndSortByAsc = blogInsertModels
+      const mapInsertModelAndSortByAsc = createdBlogArray
         .map((item) => {
           return {
             name: item.name,
@@ -215,21 +228,22 @@ describe('Blog e2e', () => {
 
   describe('Get blog', () => {
     it('should get blog by id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const result: BlogOutputModel = await blogTestManager.getBlog(
-        blogId.toString(),
+        blogId,
         200,
       );
 
       expect(result).toEqual({
         id: expect.any(String),
-        name: blogInsertModel.name,
-        description: blogInsertModel.description,
-        websiteUrl: blogInsertModel.websiteUrl,
+        name: blogCreateModel.name,
+        description: blogCreateModel.description,
+        websiteUrl: blogCreateModel.websiteUrl,
         createdAt: expect.any(String),
         isMembership: false,
       });
@@ -341,12 +355,13 @@ describe('Blog e2e', () => {
 
   describe('Delete blog', () => {
     it('should delete blog by id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
 
-      await blogTestManager.deleteBlog(blogId.toString(), adminAuthToken, 204);
+      await blogTestManager.deleteBlog(blogId, adminAuthToken, 204);
     });
 
     it('should not delete blog by id, blog not found', async () => {
@@ -356,36 +371,50 @@ describe('Blog e2e', () => {
         404,
       );
     });
+
+    it('should delete blog by id, and should not delete again, not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.deleteBlog(blogId, adminAuthToken, 204);
+      await blogTestManager.deleteBlog(blogId, adminAuthToken, 404);
+    });
   });
 
   describe('Update blog', () => {
     it('should update blog by id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
 
       await blogTestManager.updateBlog(
-        blogId.toString(),
+        blogId,
         blogUpdateModel,
         adminAuthToken,
         204,
       );
 
       const result: BlogOutputModel = await blogTestManager.getBlog(
-        blogId.toString(),
+        blogId,
         200,
       );
-      expect(result.name).not.toBe(blogInsertModel.name);
-      expect(result.description).not.toBe(blogInsertModel.description);
-      expect(result.websiteUrl).not.toBe(blogInsertModel.websiteUrl);
+      expect(result.name).not.toBe(blogCreateModel.name);
+      expect(result.description).not.toBe(blogCreateModel.description);
+      expect(result.websiteUrl).not.toBe(blogCreateModel.websiteUrl);
     });
 
     it('should not update blog, bad input data', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const result: APIErrorsMessageType = await blogTestManager.updateBlog(
         blogId.toString(),
         { name: '', description: '', websiteUrl: '' },
@@ -472,9 +501,9 @@ describe('Blog e2e', () => {
         blogId.toString(),
         200,
       );
-      expect(blog.name).toBe(blogInsertModel.name);
-      expect(blog.description).toBe(blogInsertModel.description);
-      expect(blog.websiteUrl).toBe(blogInsertModel.websiteUrl);
+      expect(blog.name).toBe(blogCreateModel.name);
+      expect(blog.description).toBe(blogCreateModel.description);
+      expect(blog.websiteUrl).toBe(blogCreateModel.websiteUrl);
     });
 
     it('should not update blog by id, blog not found', async () => {
@@ -489,12 +518,14 @@ describe('Blog e2e', () => {
 
   describe('Create post by blog id', () => {
     it('should create post by blog id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const result: PostOutputModel = await blogTestManager.createPostByBlogId(
-        blogId.toString(),
+        blogId,
         blogPostCreateModel,
         adminAuthToken,
         201,
@@ -506,7 +537,7 @@ describe('Blog e2e', () => {
         shortDescription: blogPostCreateModel.shortDescription,
         content: blogPostCreateModel.content,
         blogId: blogId.toString(),
-        blogName: blogInsertModel.name,
+        blogName: blogCreateModel.name,
         createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
@@ -615,38 +646,50 @@ describe('Blog e2e', () => {
 
   describe('Get posts by blog id', () => {
     it('should get posts by blog id without query', async () => {
-      await testSettings.dataBase.dbInsertOne('blogs', {
-        ...blogInsertModel,
-        _id: new Types.ObjectId(postInsertModels[0].blogId),
-      });
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createPostByBlogId(
+          blogId,
+          blogPostCreateModel,
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
-        await blogTestManager.getPostByBlogId(
-          postInsertModels[0].blogId,
-          {},
-          200,
-        );
+        await blogTestManager.getPostByBlogId(blogId, {}, 200);
 
       expect(result).toEqual({
         pagesCount: 2,
         page: 1,
         pageSize: 10,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get posts by blog id with pagination, page size: 11', async () => {
-      await testSettings.dataBase.dbInsertOne('blogs', {
-        ...blogInsertModel,
-        _id: new Types.ObjectId(postInsertModels[0].blogId),
-      });
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
-
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createPostByBlogId(
+          blogId,
+          blogPostCreateModel,
+          adminAuthToken,
+          201,
+        );
+      }
       const result: BasePagination<PostOutputModel[] | []> =
         await blogTestManager.getPostByBlogId(
-          postInsertModels[0].blogId,
+          blogId,
           {
             pageSize: 11,
           } as BaseSorting,
@@ -657,21 +700,29 @@ describe('Blog e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 11,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get posts by blog id with pagination, page number: 2', async () => {
-      await testSettings.dataBase.dbInsertOne('blogs', {
-        ...blogInsertModel,
-        _id: new Types.ObjectId(postInsertModels[0].blogId),
-      });
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createPostByBlogId(
+          blogId,
+          blogPostCreateModel,
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await blogTestManager.getPostByBlogId(
-          postInsertModels[0].blogId,
+          blogId,
           {
             pageNumber: 2,
           } as BaseSorting,
@@ -682,44 +733,54 @@ describe('Blog e2e', () => {
         pagesCount: 2,
         page: 2,
         pageSize: 10,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get empty posts array by blog id', async () => {
-      await testSettings.dataBase.dbInsertOne('blogs', {
-        ...blogInsertModel,
-        _id: new Types.ObjectId(postInsertModels[0].blogId),
-      });
-      const result: BasePagination<PostOutputModel[] | []> =
-        await blogTestManager.getPostByBlogId(
-          postInsertModels[0].blogId,
-          {},
-          200,
-        );
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
 
+      const result: BasePagination<PostOutputModel[] | []> =
+        await blogTestManager.getPostByBlogId(blogId, {}, 200);
+
+      expect(result.items).toHaveLength(0);
       expect(result).toEqual({
         pagesCount: 0,
         page: 1,
         pageSize: 10,
         totalCount: 0,
-        items: expect.any(Array),
+        items: [],
       });
-
-      expect(result.items).toHaveLength(0);
     });
 
     it('should get posts by blog id with sorting by name, asc', async () => {
-      await testSettings.dataBase.dbInsertOne('blogs', {
-        ...blogInsertModel,
-        _id: new Types.ObjectId(postInsertModels[0].blogId),
-      });
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const createdPostsArray = [];
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createPostByBlogId(
+          blogId,
+          { ...blogPostCreateModel, title: 'titleE' + (i - 1) },
+          adminAuthToken,
+          201,
+        );
+        createdPostsArray.push({
+          ...blogPostCreateModel,
+          title: 'titleE' + (i - 1),
+        });
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await blogTestManager.getPostByBlogId(
-          postInsertModels[0].blogId,
+          blogId,
           {
             sortBy: 'title',
             sortDirection: 'asc',
@@ -736,7 +797,7 @@ describe('Blog e2e', () => {
         };
       });
 
-      const mapInsertModelAndSortByAsc = postInsertModels
+      const mapInsertModelAndSortByAsc = createdPostsArray
         .map((item) => {
           return {
             title: item.title,

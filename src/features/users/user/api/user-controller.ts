@@ -7,7 +7,6 @@ import {
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
-  Param,
   Post,
   Query,
   UseGuards,
@@ -29,6 +28,7 @@ import { BasicGuard } from '../../../../core/guards/basic/basic.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserCommand } from '../application/command/create-user.command';
 import { DeleteUserByIdCommand } from '../application/command/delete-user.command';
+import { EntityId } from '../../../../core/decorators/entityId';
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
 export class UserController {
@@ -47,7 +47,7 @@ export class UserController {
   async createUser(
     @Body() userInputModel: UserInputModel,
   ): Promise<UserOutputModel> {
-    const result: AppResultType<string, APIErrorsMessageType> =
+    const result: AppResultType<number, APIErrorsMessageType> =
       await this.commandBus.execute(new CreateUserCommand(userInputModel));
     switch (result.appResult) {
       case AppResult.Success:
@@ -61,7 +61,7 @@ export class UserController {
 
   @Delete(':id')
   @HttpCode(204)
-  async deleteUser(@Param('id') id: string): Promise<void> {
+  async deleteUser(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
       new DeleteUserByIdCommand(id),
     );

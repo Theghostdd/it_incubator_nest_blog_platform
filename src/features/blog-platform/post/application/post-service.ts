@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PostDocumentType } from '../domain/post.entity';
+import { PostType } from '../domain/post.entity';
 import { AppResultType } from '../../../../base/types/types';
 import { PostRepository } from '../infrastructure/post-repositories';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
@@ -11,10 +11,8 @@ export class PostService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async getPostById(
-    id: string,
-  ): Promise<AppResultType<PostDocumentType | null>> {
-    const post: PostDocumentType = await this.postRepository.getPostById(id);
+  async getPostById(id: number): Promise<AppResultType<PostType | null>> {
+    const post: PostType = await this.postRepository.getPostById(id);
     if (!post) return this.applicationObjectResult.notFound();
 
     return this.applicationObjectResult.success(post);

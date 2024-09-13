@@ -1,5 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { configModule } from './settings/configuration/config.module';
 import { ConfigService } from '@nestjs/config';
@@ -12,6 +11,7 @@ import { AccessControlModule } from './features/access-control/access-control.mo
 import { TestingModule } from './features/testing/testing.module';
 import { UsersModule } from './features/users/users.module';
 import { CoreModule } from './core/core.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 @Module({
   imports: [
@@ -20,15 +20,25 @@ import { CoreModule } from './core/core.module';
     ApplicationObjectResultModule,
     BaseSortingModule,
     BasePaginationModule,
-    MongooseModule.forRootAsync({
+    TypeOrmModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
         const envSettings = configService.get('environmentSettings', {
           infer: true,
         });
-        return { uri: envSettings.MONGO_CONNECTION_URI };
+        return {
+          type: 'postgres',
+          host: envSettings.POSTGRES_CONNECTION_URI,
+          port: envSettings.POSTGRES_PORT,
+          username: envSettings.POSTGRES_USER,
+          password: envSettings.POSTGRES_USER_PASSWORD,
+          database: envSettings.DATABASE_NAME,
+          autoLoadEntities: false,
+          synchronize: false,
+        };
       },
       inject: [ConfigService],
     }),
+
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
         const apiSettings = configService.get('apiSettings', { infer: true });

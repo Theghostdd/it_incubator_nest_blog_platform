@@ -25,28 +25,19 @@ import { UpdateCommentLikeStatusHandler } from './like/application/command/updat
 import { UpdatePostLikeStatusHandler } from './like/application/command/update-post-like-status';
 import { LikeService } from './like/application/like-service';
 import { LikeRepositories } from './like/infrastructure/like-repositories';
-import { MongooseModule } from '@nestjs/mongoose';
-import { Post, PostSchema } from './post/domain/post.entity';
-import { Blog, BlogSchema } from './blog/domain/blog.entity';
-import { Comment, CommentSchema } from './comment/domain/comment.entity';
-import { Like, LikeSchema } from './like/domain/like.entity';
 import { UsersModule } from '../users/users.module';
 import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
 import { FindBlogConstraint } from '../../core/decorators/find-blog';
 import { CalculateLike } from './like/domain/calculate-like';
+import { BlogFactory } from './blog/domain/blog.entity';
+import { PostFactory } from './post/domain/post.entity';
+import { CommentFactory } from './comment/domain/comment.entity';
+import { LikeFactory } from './like/domain/like.entity';
 
 @Module({
-  imports: [
-    UsersModule,
-    MongooseModule.forFeature([
-      { name: Post.name, schema: PostSchema },
-      { name: Blog.name, schema: BlogSchema },
-      { name: Comment.name, schema: CommentSchema },
-      { name: Like.name, schema: LikeSchema },
-    ]),
-  ],
+  imports: [UsersModule],
   controllers: [BlogController, PostController, CommentController],
   providers: [
     BlogRepository,
@@ -77,7 +68,11 @@ import { CalculateLike } from './like/domain/calculate-like';
     LikeRepositories,
     FindBlogConstraint,
     CalculateLike,
+    BlogFactory,
+    PostFactory,
+    CommentFactory,
+    LikeFactory,
   ],
-  exports: [MongooseModule],
+  exports: [],
 })
 export class BlogPlatformModule {}

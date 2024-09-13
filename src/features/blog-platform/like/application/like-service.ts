@@ -1,8 +1,9 @@
 import { LikeRepositories } from '../infrastructure/like-repositories';
 import { AppResultType } from '../../../../base/types/types';
-import { LikeDocumentType } from '../domain/like.entity';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
 import { Injectable } from '@nestjs/common';
+import { LikeType } from '../domain/like.entity';
+import { EntityTypeEnum } from '../domain/type';
 
 @Injectable()
 export class LikeService {
@@ -12,11 +13,16 @@ export class LikeService {
   ) {}
 
   async getLikeByUserIdAndParentId(
-    userId: string,
-    parentId: string,
-  ): Promise<AppResultType<LikeDocumentType | null>> {
-    const like: LikeDocumentType | null =
-      await this.likeRepositories.getLikeByUserAndParentId(userId, parentId);
+    userId: number,
+    parentId: number,
+    entityType: EntityTypeEnum,
+  ): Promise<AppResultType<LikeType | null>> {
+    const like: LikeType | null =
+      await this.likeRepositories.getLikeByUserAndParentId(
+        userId,
+        parentId,
+        entityType,
+      );
     if (!like) return this.applicationObjectResult.notFound();
     return this.applicationObjectResult.success(like);
   }

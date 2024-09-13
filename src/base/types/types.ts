@@ -21,11 +21,11 @@ export type AuthorizationUserResponseType = {
 };
 
 export type JWTAccessTokenPayloadType = {
-  userId: string;
+  userId: number;
 };
 
 export type JWTRefreshTokenPayloadType = {
-  userId: string;
+  userId: number;
   deviceId: string;
 };
 

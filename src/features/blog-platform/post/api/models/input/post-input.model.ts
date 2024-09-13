@@ -7,12 +7,12 @@ export class PostInputModel extends PostInputModelValidationRules {
   public title: string;
   public shortDescription: string;
   public content: string;
-  public blogId: string;
+  public blogId: number;
 }
 
 export class PostUpdateModel extends PostUpdateModelValidationRules {
   public title: string;
   public shortDescription: string;
   public content: string;
-  public blogId: string;
+  public blogId: number;
 }

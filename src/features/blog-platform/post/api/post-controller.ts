@@ -7,7 +7,6 @@ import {
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
-  Param,
   Post,
   Put,
   Query,
@@ -40,6 +39,7 @@ import { LikeInputModel } from '../../like/api/models/input/like-input-model';
 import { UpdatePostLikeStatusCommand } from '../../like/application/command/update-post-like-status';
 import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
 import { CreatePostCommand } from '../application/command/create-post.command';
+import { EntityId } from '../../../../core/decorators/entityId';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {
@@ -52,7 +52,7 @@ export class PostController {
   @Get(`:id/${apiPrefixSettings.POST.comments}`)
   @UseGuards(VerifyUserGuard)
   async getCommentsByPostId(
-    @Param('id') id: string,
+    @EntityId() id: string,
     @Query() query: BaseSorting,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<CommentOutputModel[] | []>> {
@@ -66,7 +66,7 @@ export class PostController {
   @Get(':id')
   @UseGuards(VerifyUserGuard)
   async getPostById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<PostOutputModel> {
     return await this.postQueryRepository.getPostById(id, user?.userId || null);
@@ -90,7 +90,7 @@ export class PostController {
   async createPost(
     @Body() inputModel: PostInputModel,
   ): Promise<PostOutputModel> {
-    const result: AppResultType<string> = await this.commandBus.execute(
+    const result: AppResultType<number> = await this.commandBus.execute(
       new CreatePostCommand(inputModel),
     );
     switch (result.appResult) {
@@ -106,7 +106,7 @@ export class PostController {
   @Delete(':id')
   @UseGuards(BasicGuard)
   @HttpCode(204)
-  async deletePostById(@Param('id') id: string): Promise<void> {
+  async deletePostById(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
       new DeletePostByIdCommand(id),
     );
@@ -124,7 +124,7 @@ export class PostController {
   @UseGuards(BasicGuard)
   @HttpCode(204)
   async updatePostById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() updateModel: PostUpdateModel,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
@@ -143,11 +143,11 @@ export class PostController {
   @Post(`:id/${apiPrefixSettings.POST.comments}`)
   @UseGuards(AuthJWTAccessGuard)
   async createCommentByPostId(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() inputCommentModel: CommentInputModel,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<CommentOutputModel> {
-    const result: AppResultType<string> = await this.commandBus.execute(
+    const result: AppResultType<number> = await this.commandBus.execute(
       new CreateCommentByPostIdCommand(inputCommentModel, id, user.userId),
     );
 
@@ -165,7 +165,7 @@ export class PostController {
   @UseGuards(AuthJWTAccessGuard)
   @HttpCode(204)
   async updateLikeStatusForPost(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() likeInputModel: LikeInputModel,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ) {

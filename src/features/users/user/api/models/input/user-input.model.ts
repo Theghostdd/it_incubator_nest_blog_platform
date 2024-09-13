@@ -32,14 +32,12 @@ export class UserSortingQuery extends BaseSorting {
       ? {
           ...this.createBaseQuery(query),
           searchLoginTerm: query.searchLoginTerm ? query.searchLoginTerm : '',
-          searchEmailTerm: query.searchEmailTerm
-            ? query.searchEmailTerm
-            : 'searchEmailTerm',
+          searchEmailTerm: query.searchEmailTerm ? query.searchEmailTerm : '',
         }
       : {
           ...this.createBaseQuery(query),
           searchLoginTerm: '',
-          searchEmailTerm: 'searchEmailTerm',
+          searchEmailTerm: '',
         };
   }
 }

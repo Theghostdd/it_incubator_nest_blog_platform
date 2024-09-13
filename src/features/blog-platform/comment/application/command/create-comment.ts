@@ -2,58 +2,56 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentInputModel } from '../../api/model/input/comment-input.model';
 import { UserService } from '../../../../users/user/application/user-service';
 import { AppResultType } from '../../../../../base/types/types';
-import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { PostService } from '../../../post/application/post-service';
-import { PostDocumentType } from '../../../post/domain/post.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { Comment, CommentModelType } from '../../domain/comment.entity';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
+import { CommentFactory } from '../../domain/comment.entity';
+import { UserType } from '../../../../users/user/domain/user.entity';
+import { PostType } from '../../../post/domain/post.entity';
 
 export class CreateCommentByPostIdCommand {
   constructor(
     public inputCommentModel: CommentInputModel,
-    public postId: string,
-    public userId: string,
+    public postId: number,
+    public userId: number,
   ) {}
 }
 
 @CommandHandler(CreateCommentByPostIdCommand)
 export class CreateCommentByPostIdHandler
   implements
-    ICommandHandler<CreateCommentByPostIdCommand, AppResultType<string>>
+    ICommandHandler<CreateCommentByPostIdCommand, AppResultType<number>>
 {
   constructor(
     private readonly userService: UserService,
     private readonly postService: PostService,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly commentRepositories: CommentRepositories,
-    @InjectModel(Comment.name) private readonly commentModel: CommentModelType,
+    private readonly commentFactory: CommentFactory,
   ) {}
 
   async execute(
     command: CreateCommentByPostIdCommand,
-  ): Promise<AppResultType<string>> {
+  ): Promise<AppResultType<number>> {
     const { userId, postId } = command;
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUserById(userId);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    const post: AppResultType<PostDocumentType | null> =
+    const post: AppResultType<PostType | null> =
       await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
-
-    const comment = this.commentModel.createComment(
+    const comment = this.commentFactory.create(
       command.inputCommentModel,
       userId,
       user.data.login,
       postId,
       post.data.blogId,
     );
-    await this.commentRepositories.save(comment);
-    return this.applicationObjectResult.success(comment._id.toString());
+    const result: number = await this.commentRepositories.save(comment);
+    return this.applicationObjectResult.success(result);
   }
 }

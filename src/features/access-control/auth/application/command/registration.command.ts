@@ -3,7 +3,6 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { addDays } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
 import {
   APIErrorsMessageType,
   AppResultType,
@@ -16,13 +15,13 @@ import { ConfigurationType } from '../../../../../settings/configuration/configu
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import {
-  User,
-  UserDocumentType,
-  UserModelType,
-} from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
+import {
+  User,
+  UserFactory,
+  UserType,
+} from '../../../../users/user/domain/user.entity';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}
@@ -46,7 +45,7 @@ export class RegistrationHandler
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
     private readonly bcryptService: BcryptService,
-    @InjectModel(User.name) private readonly userModel: UserModelType,
+    private readonly userFactory: UserFactory,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -55,7 +54,7 @@ export class RegistrationHandler
   async execute(
     command: RegistrationCommand,
   ): Promise<AppResultType<null, APIErrorsMessageType>> {
-    const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
+    const user: AppResultType<UserType, APIErrorsMessageType> =
       await this.userService.checkUniqLoginAndEmail(
         command.registrationInputModel.email,
         command.registrationInputModel.login,
@@ -72,9 +71,9 @@ export class RegistrationHandler
       this.staticOptions.uuidOptions.confirmationEmail.prefix,
       this.staticOptions.uuidOptions.confirmationEmail.key,
     );
-    const dateExpired: string = addDays(new Date(), 1).toISOString();
+    const dateExpired: Date = addDays(new Date(), 1);
 
-    const newUser: UserDocumentType = this.userModel.registrationUserInstance(
+    const newUser: User = this.userFactory.createRegistration(
       command.registrationInputModel,
       hash,
       confirmationCode,

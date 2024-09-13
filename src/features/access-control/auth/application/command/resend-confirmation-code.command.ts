@@ -15,8 +15,8 @@ import { ConfigurationType } from '../../../../../settings/configuration/configu
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { UserType } from '../../../../users/user/domain/user.entity';
 
 export class ResendConfirmationCodeCommand {
   constructor(
@@ -51,7 +51,7 @@ export class ResendConfirmationCodeHandler
     command: ResendConfirmationCodeCommand,
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { email } = command.inputResendConfirmCodeModel;
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
@@ -71,8 +71,11 @@ export class ResendConfirmationCodeHandler
     );
     const dateExpired: string = addDays(new Date(), 1).toISOString();
 
-    user.data.updateConfirmationCode(confirmationCode, dateExpired);
-    await this.userRepositories.save(user.data);
+    await this.userRepositories.updateConfirmationCodeByUserId(
+      confirmationCode,
+      dateExpired,
+      user.data.id,
+    );
 
     const template: MailTemplateType =
       await this.mailTemplateService.getConfirmationTemplate(confirmationCode);

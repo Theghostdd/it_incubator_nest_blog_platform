@@ -4,17 +4,12 @@ import {
   APIErrorsMessageType,
   AppResultType,
 } from '../../../../../base/types/types';
-import {
-  User,
-  UserDocumentType,
-  UserModelType,
-} from '../../domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { UserService } from '../user-service';
-import { InjectModel } from '@nestjs/mongoose';
 import { UserRepositories } from '../../infrastructure/user-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
+import { User, UserFactory, UserType } from '../../domain/user.entity';
 
 export class CreateUserCommand {
   constructor(public userInputModel: UserInputModel) {}
@@ -25,37 +20,32 @@ export class CreateUserCommandHandler
   implements
     ICommandHandler<
       CreateUserCommand,
-      AppResultType<string, APIErrorsMessageType>
+      AppResultType<number, APIErrorsMessageType>
     >
 {
   constructor(
     private readonly userService: UserService,
     private readonly userRepositories: UserRepositories,
-    @InjectModel(User.name) private readonly userModel: UserModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly bcryptService: BcryptService,
+    private readonly userFactory: UserFactory,
   ) {}
   async execute(
     command: CreateUserCommand,
-  ): Promise<AppResultType<string, APIErrorsMessageType>> {
-    const user: AppResultType<UserDocumentType, APIErrorsMessageType> =
-      await this.userService.checkUniqLoginAndEmail(
-        command.userInputModel.email,
-        command.userInputModel.login,
-      );
+  ): Promise<AppResultType<number, APIErrorsMessageType>> {
+    const { email, login, password } = command.userInputModel;
+    const user: AppResultType<UserType, APIErrorsMessageType> =
+      await this.userService.checkUniqLoginAndEmail(email, login);
 
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(user.errorField);
 
-    const hash: string = await this.bcryptService.generatePasswordHashAndSalt(
-      command.userInputModel.password,
-    );
-    const newUser: UserDocumentType = this.userModel.createUserInstance(
-      command.userInputModel,
-      hash,
-    );
+    const hash: string =
+      await this.bcryptService.generatePasswordHashAndSalt(password);
 
-    await this.userRepositories.save(newUser);
-    return this.applicationObjectResult.success(newUser._id.toString());
+    const newUser: User = this.userFactory.create(command.userInputModel, hash);
+
+    const result: number = await this.userRepositories.save(newUser);
+    return this.applicationObjectResult.success(result);
   }
 }

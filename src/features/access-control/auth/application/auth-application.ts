@@ -1,6 +1,5 @@
 import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
-import { RecoveryPasswordSessionDocumentType } from '../domain/recovery-session.entity';
 import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
 import { ConfigService } from '@nestjs/config';
 import { APISettings } from '../../../../settings/api-settings';
@@ -12,8 +11,9 @@ import {
   JWTRefreshTokenPayloadType,
 } from '../../../../base/types/types';
 import { format } from 'date-fns';
-import { AuthSessionDocumentType } from '../domain/auth-session.entity';
+import { AuthSessionType } from '../domain/auth-session.entity';
 import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
+import { RecoveryPasswordSessionType } from '../domain/recovery-session.entity';
 
 @Injectable()
 export class AuthService {
@@ -33,7 +33,7 @@ export class AuthService {
     return `${prefix}-${this.uuidv4()}-${key}`;
   }
 
-  generateDeviceId(userId: string): string {
+  generateDeviceId(userId: number): string {
     return (
       this.uuidv4().slice(0, 20) +
       `${format(new Date(), '-dd-MM-yyyy-HH-mm-ss')}-${this.uuidv4().slice(0, 10)}-${userId}`
@@ -60,8 +60,8 @@ export class AuthService {
 
   async getRecoveryPasswordSessionByCode(
     code: string,
-  ): Promise<AppResultType<RecoveryPasswordSessionDocumentType | null>> {
-    const recoveryPasswordSession: RecoveryPasswordSessionDocumentType | null =
+  ): Promise<AppResultType<RecoveryPasswordSessionType | null>> {
+    const recoveryPasswordSession: RecoveryPasswordSessionType | null =
       await this.recoveryPasswordSessionRepositories.getSessionByCode(code);
 
     if (!recoveryPasswordSession)
@@ -72,8 +72,8 @@ export class AuthService {
 
   async getAuthSessionByDeviceId(
     deviceId: string,
-  ): Promise<AppResultType<AuthSessionDocumentType | null>> {
-    const authSession: AuthSessionDocumentType | null =
+  ): Promise<AppResultType<AuthSessionType | null>> {
+    const authSession: AuthSessionType | null =
       await this.authSessionRepositories.getSessionByDeviceId(deviceId);
 
     if (!authSession) return this.applicationObjectResult.notFound();

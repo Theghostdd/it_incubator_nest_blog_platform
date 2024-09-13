@@ -3,13 +3,13 @@ import { AppResultType } from '../../../../../base/types/types';
 import { CommentService } from '../comment-service';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { CommentDocumentType } from '../../domain/comment.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { CommentType } from '../../domain/comment.entity';
 
 export class DeleteCommentCommand {
   constructor(
-    public id: string,
-    public userId: string,
+    public id: number,
+    public userId: number,
   ) {}
 }
 
@@ -24,14 +24,14 @@ export class DeleteCommentHandler
   ) {}
   async execute(command: DeleteCommentCommand): Promise<AppResultType> {
     const { id, userId } = command;
-    const comment: AppResultType<CommentDocumentType> =
+    const comment: AppResultType<CommentType> =
       await this.commentService.getCommentById(id);
     if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
-    if (comment.data.commentatorInfo.userId !== userId)
+    if (comment.data.userId !== userId)
       return this.applicationObjectResult.forbidden();
 
-    await this.commentRepositories.delete(comment.data);
+    await this.commentRepositories.delete(comment.data.id);
     return this.applicationObjectResult.success(null);
   }
 }

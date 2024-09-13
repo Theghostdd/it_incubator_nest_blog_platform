@@ -1,21 +1,35 @@
 import { ITestSettings } from '../../settings/interfaces';
 import {
-  IUserInsertTestModel,
+  IUserCreateTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { initSettings } from '../../settings/test-settings';
 import { delay } from '../../utils/delay/delay';
+import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import { APISettings } from '../../../src/settings/api-settings';
 import { AuthService } from '../../../src/features/access-control/auth/application/auth-application';
+import { tablesName } from '../../../src/core/utils/tables/tables';
 
 describe('Security devices e2e', () => {
   let testSettings: ITestSettings;
-  let userInsertModel: IUserInsertTestModel;
   let uesrLoginModel: IUserLoginTestModel;
+  let userTestManager: UserTestManager;
+  let userCreateModel: IUserCreateTestModel;
+  let apiSettings: APISettings;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
   let authService: AuthService;
 
   beforeAll(async () => {
     testSettings = await initSettings();
-    authService = testSettings.testingAppModule.get<AuthService>(AuthService);
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+    authService = testSettings.app.get(AuthService);
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {
@@ -25,15 +39,16 @@ describe('Security devices e2e', () => {
 
   beforeEach(async () => {
     await testSettings.dataBase.clearDatabase();
-    userInsertModel =
-      testSettings.testModels.userTestModel.getUserInsertModel();
     testSettings.testModels.userTestModel.getUserChangePasswordModel();
     uesrLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
+    userTestManager = testSettings.testManager.userTestManager;
+    userCreateModel =
+      testSettings.testModels.userTestModel.getUserCreateModel();
   });
 
   describe('Get all security devices', () => {
     it('should get all security devices', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -74,7 +89,7 @@ describe('Security devices e2e', () => {
 
   describe('Delete device by deviceId', () => {
     it('should delete device by device id', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -95,7 +110,7 @@ describe('Security devices e2e', () => {
         uesrLoginModel,
         200,
       );
-      spy.mockRestore();
+
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
         '12345',
@@ -108,10 +123,11 @@ describe('Security devices e2e', () => {
           200,
         );
       expect(getDevices).toHaveLength(2);
+      spy.mockRestore();
     });
 
     it('should not delete device by device id, session not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -144,7 +160,13 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, user id is not correct', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      await userTestManager.createUser(
+        { ...userCreateModel, email: 'email2@mail.ru', login: 'login2' },
+        adminAuthToken,
+        201,
+      );
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -165,11 +187,10 @@ describe('Security devices e2e', () => {
         200,
       );
       spy.mockRestore();
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { dId: '12345' },
-        { userId: '12345' },
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.AUTH_SESSIONS} SET "userId" = '2' WHERE "deviceId" = '12345'`,
       );
+
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
         '12345',
@@ -193,7 +214,7 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, session not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -208,21 +229,17 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, session is not correct', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
           200,
         );
-
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { issueAt: '2023-09-05T12:34:56Z' },
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.AUTH_SESSIONS} SET "issueAt"='2023-09-05T12:34:56Z'`,
       );
+
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
         '12345',
@@ -231,20 +248,19 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, user not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
           200,
         );
 
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { userId: '123456' },
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
+      );
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.AUTH_SESSIONS} SET "deviceId" = '12345'`,
       );
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
@@ -254,7 +270,7 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, session was update', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -276,7 +292,7 @@ describe('Security devices e2e', () => {
 
   describe('Delete all devices exclude current', () => {
     it('should delete all devices exclude current', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -314,51 +330,8 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete all devices exclude current, session is not correct', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-      const login =
-        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
-          uesrLoginModel,
-          200,
-        );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { issueAt: '2023-09-05T12:34:56Z' },
-      );
-      await testSettings.testManager.securityDevicesTestManager.deleteAllDevicesExcludeCurrent(
-        login.refreshToken,
-        401,
-      );
-    });
-
-    it('should not delete all devices exclude current, user not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-      const login =
-        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
-          uesrLoginModel,
-          200,
-        );
-
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { userId: '123456' },
-      );
-      await testSettings.testManager.securityDevicesTestManager.deleteAllDevicesExcludeCurrent(
-        login.refreshToken,
-        401,
-      );
-    });
-
-    it('should not delete all devices exclude current, session was update', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -369,7 +342,24 @@ describe('Security devices e2e', () => {
         login.refreshToken,
         200,
       );
+      await testSettings.testManager.securityDevicesTestManager.deleteAllDevicesExcludeCurrent(
+        login.refreshToken,
+        401,
+      );
+    });
 
+    it('should not delete all devices exclude current, user not found', async () => {
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
+      );
       await testSettings.testManager.securityDevicesTestManager.deleteAllDevicesExcludeCurrent(
         login.refreshToken,
         401,

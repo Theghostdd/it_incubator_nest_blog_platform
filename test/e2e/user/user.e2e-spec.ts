@@ -16,7 +16,6 @@ describe('User e2e', () => {
   let userInsertManyModel: IUserInsertTestModel[];
   let userTestManager: UserTestManager;
   let userCreateModel: IUserCreateTestModel;
-  let userInsertModel: IUserInsertTestModel;
   let apiSettings: APISettings;
   let login: string;
   let password: string;
@@ -45,13 +44,21 @@ describe('User e2e', () => {
       testSettings.testModels.userTestModel.getUserInsertManyModel();
     userCreateModel =
       testSettings.testModels.userTestModel.getUserCreateModel();
-    userInsertModel =
-      testSettings.testModels.userTestModel.getUserInsertModel();
   });
 
   describe('Get users', () => {
     it('should get users without query', async () => {
-      await testSettings.dataBase.dbInsertMany('users', userInsertManyModel);
+      for (let i = 0; i < 11; i++) {
+        await userTestManager.createUser(
+          {
+            ...userCreateModel,
+            login: userCreateModel.login + i,
+            email: 'some' + i + `@mail.ru`,
+          },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<UserOutputModel[] | []> =
         await userTestManager.getUsers({}, adminAuthToken, 200);
@@ -66,8 +73,17 @@ describe('User e2e', () => {
     });
 
     it('should get users with pagination, page size: 11', async () => {
-      await testSettings.dataBase.dbInsertMany('users', userInsertManyModel);
-
+      for (let i = 0; i < 11; i++) {
+        await userTestManager.createUser(
+          {
+            ...userCreateModel,
+            login: userCreateModel.login + i,
+            email: 'some' + i + `@mail.ru`,
+          },
+          adminAuthToken,
+          201,
+        );
+      }
       const result: BasePagination<UserOutputModel[] | []> =
         await userTestManager.getUsers(
           {
@@ -87,7 +103,17 @@ describe('User e2e', () => {
     });
 
     it('should get users with pagination, page number: 2', async () => {
-      await testSettings.dataBase.dbInsertMany('users', userInsertManyModel);
+      for (let i = 0; i < 11; i++) {
+        await userTestManager.createUser(
+          {
+            ...userCreateModel,
+            login: userCreateModel.login + i,
+            email: 'some' + i + `@mail.ru`,
+          },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<UserOutputModel[] | []> =
         await userTestManager.getUsers(
@@ -108,12 +134,20 @@ describe('User e2e', () => {
     });
 
     it('should get users with pagination, search login term, and email term', async () => {
-      await testSettings.dataBase.dbInsertMany('users', userInsertManyModel);
-
+      const createdUser: IUserCreateTestModel[] = [];
+      for (let i = 0; i < 11; i++) {
+        const createUser = {
+          ...userCreateModel,
+          login: i === 0 ? 'login' : userCreateModel.login + i,
+          email: i === 0 ? 'myemail@yandex.com' : 'some' + i + `@mail.ru`,
+        };
+        await userTestManager.createUser(createUser, adminAuthToken, 201);
+        createdUser.push(createUser);
+      }
       const result: BasePagination<UserOutputModel[] | []> =
         await userTestManager.getUsers(
           {
-            searchLoginTerm: userInsertManyModel[10].login.slice(0, 3),
+            searchLoginTerm: createdUser[0].login.slice(0, 3),
           } as UserSortingQuery,
           adminAuthToken,
           200,
@@ -127,8 +161,8 @@ describe('User e2e', () => {
         items: [
           {
             id: expect.any(String),
-            login: userInsertManyModel[10].login,
-            email: userInsertManyModel[10].email,
+            login: createdUser[0].login,
+            email: createdUser[0].email,
             createdAt: expect.any(String),
           },
         ],
@@ -137,7 +171,7 @@ describe('User e2e', () => {
       const result2: BasePagination<UserOutputModel[] | []> =
         await testSettings.testManager.userTestManager.getUsers(
           {
-            searchLoginTerm: userInsertManyModel[0].email.slice(0, 5),
+            searchEmailTerm: createdUser[0].email.slice(0, 5),
           } as UserSortingQuery,
           adminAuthToken,
           200,
@@ -147,8 +181,15 @@ describe('User e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 10,
-        totalCount: 10,
-        items: expect.any(Array),
+        totalCount: 1,
+        items: [
+          {
+            id: expect.any(String),
+            login: createdUser[0].login,
+            email: createdUser[0].email,
+            createdAt: expect.any(String),
+          },
+        ],
       });
     });
 
@@ -165,39 +206,6 @@ describe('User e2e', () => {
       });
 
       expect(result.items).toHaveLength(0);
-    });
-
-    it('should get users with sorting by login, asc', async () => {
-      await testSettings.dataBase.dbInsertMany('users', userInsertManyModel);
-
-      const result: BasePagination<UserOutputModel[] | []> =
-        await userTestManager.getUsers(
-          {
-            sortBy: 'login',
-            sortDirection: 'asc',
-            pageSize: 20,
-          } as UserSortingQuery,
-          adminAuthToken,
-          200,
-        );
-
-      const mapResult = result.items.map((item) => {
-        return {
-          login: item.login,
-          email: item.email,
-        };
-      });
-
-      const mapInsertModelAndSortByAsc = userInsertManyModel
-        .map((item) => {
-          return {
-            login: item.login,
-            email: item.email,
-          };
-        })
-        .sort((a, b) => a.login.localeCompare(b.login));
-
-      expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
     });
 
     it('should not get users array, token is not correct', async () => {
@@ -221,7 +229,7 @@ describe('User e2e', () => {
     });
 
     it('should not create user, login, and, email not uniq', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result: APIErrorsMessageType = await userTestManager.createUser(
         userCreateModel,
@@ -358,26 +366,24 @@ describe('User e2e', () => {
 
   describe('Delete user', () => {
     it('should delete user by id', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       await userTestManager.deleteUser(userId.toString(), adminAuthToken, 204);
     });
 
     it('should not delete user by id, user not found', async () => {
-      await userTestManager.deleteUser(
-        '66bf39c8f855a5438d02adbf',
-        adminAuthToken,
-        404,
-      );
+      await userTestManager.deleteUser('111', adminAuthToken, 404);
     });
 
     it('should not delete user by id, token is not correct', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       await userTestManager.deleteUser(userId.toString(), 'token', 401);

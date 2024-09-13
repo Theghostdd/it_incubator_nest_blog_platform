@@ -1,6 +1,5 @@
 import { ChangePasswordInputModel } from '../../api/models/input/auth-input.models';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { RecoveryPasswordSessionDocumentType } from '../../domain/recovery-session.entity';
 import { compareAsc } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
@@ -12,8 +11,9 @@ import {
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
+import { UserType } from '../../../../users/user/domain/user.entity';
+import { RecoveryPasswordSessionType } from '../../domain/recovery-session.entity';
 
 export class ChangeUserPasswordCommand {
   constructor(public inputChangePasswordModel: ChangePasswordInputModel) {}
@@ -39,7 +39,7 @@ export class ChangeUserPasswordHandler
     command: ChangeUserPasswordCommand,
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { recoveryCode, newPassword } = command.inputChangePasswordModel;
-    const recoverySession: AppResultType<RecoveryPasswordSessionDocumentType | null> =
+    const recoverySession: AppResultType<RecoveryPasswordSessionType | null> =
       await this.authService.getRecoveryPasswordSessionByCode(recoveryCode);
     if (recoverySession.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
@@ -55,7 +55,7 @@ export class ChangeUserPasswordHandler
         field: 'recoveryCode',
       });
 
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(null);
@@ -63,9 +63,10 @@ export class ChangeUserPasswordHandler
     const hash =
       await this.bcryptService.generatePasswordHashAndSalt(newPassword);
 
-    user.data.changePassword(hash);
-    await this.userRepositories.save(user.data);
-    await this.recoveryPasswordSessionRepositories.delete(recoverySession.data);
+    await this.userRepositories.updateUserPasswordByUserId(user.data.id, hash);
+    await this.recoveryPasswordSessionRepositories.delete(
+      recoverySession.data.id,
+    );
     return this.applicationObjectResult.success(null);
   }
 }

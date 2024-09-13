@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { BlogRepository } from '../infrastructure/blog-repositories';
 import { AppResultType } from '../../../../base/types/types';
-import { BlogDocumentType } from '../domain/blog.entity';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
+import { BlogType } from '../domain/blog.entity';
 
 @Injectable()
 export class BlogService {
@@ -11,14 +11,9 @@ export class BlogService {
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
 
-  async getBlogById(
-    id: string,
-  ): Promise<AppResultType<BlogDocumentType | null>> {
-    const blog: BlogDocumentType | null =
-      await this.blogRepository.getBlogById(id);
-
+  async getBlogById(id: number): Promise<AppResultType<BlogType | null>> {
+    const blog: BlogType | null = await this.blogRepository.getBlogById(id);
     if (!blog) return this.applicationObjectResult.notFound();
-
     return this.applicationObjectResult.success(blog);
   }
 }

@@ -1,4 +1,4 @@
-import { BlogDocumentType } from '../../../domain/blog.entity';
+import { BlogType } from '../../../domain/blog.entity';
 
 export class BlogOutputModel {
   constructor(
@@ -13,25 +13,25 @@ export class BlogOutputModel {
 
 export class BlogMapperOutputModel {
   constructor() {}
-  blogModel(blog: BlogDocumentType): BlogOutputModel {
+  blogModel(blog: BlogType): BlogOutputModel {
     return {
-      id: blog._id.toString(),
+      id: blog.id.toString(),
       name: blog.name,
       description: blog.description,
       websiteUrl: blog.websiteUrl,
-      createdAt: blog.createdAt,
+      createdAt: blog.createdAt.toISOString(),
       isMembership: blog.isMembership,
     };
   }
 
-  blogsModel(blogs: BlogDocumentType[]): BlogOutputModel[] {
-    return blogs.map((blog: BlogDocumentType) => {
+  blogsModel(blogs: BlogType[]): BlogOutputModel[] {
+    return blogs.map((blog: BlogType) => {
       return {
-        id: blog._id.toString(),
+        id: blog.id.toString(),
         name: blog.name,
         description: blog.description,
         websiteUrl: blog.websiteUrl,
-        createdAt: blog.createdAt,
+        createdAt: blog.createdAt.toISOString(),
         isMembership: blog.isMembership,
       };
     });

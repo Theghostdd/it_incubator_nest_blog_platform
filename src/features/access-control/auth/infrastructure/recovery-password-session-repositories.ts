@@ -1,29 +1,46 @@
 import { Injectable } from '@nestjs/common';
-import { InjectModel } from '@nestjs/mongoose';
 import {
   RecoveryPasswordSession,
-  RecoveryPasswordSessionDocumentType,
-  RecoveryPasswordSessionModelType,
+  RecoveryPasswordSessionType,
 } from '../domain/recovery-session.entity';
+import { DataSource } from 'typeorm';
+import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()
 export class RecoveryPasswordSessionRepositories {
-  constructor(
-    @InjectModel(RecoveryPasswordSession.name)
-    private readonly recoveryPasswordSession: RecoveryPasswordSessionModelType,
-  ) {}
+  constructor(private readonly dataSource: DataSource) {}
 
-  async save(session: RecoveryPasswordSessionDocumentType): Promise<void> {
-    await session.save();
+  async save(session: RecoveryPasswordSession): Promise<void> {
+    const query = `
+      INSERT INTO ${tablesName.RECOVERY_PASSWORD_SESSIONS}
+        ("email", "code", "expAt")
+        VALUES ($1, $2, $3)
+    `;
+    await this.dataSource.query(query, [
+      session.email,
+      session.code,
+      session.expAt,
+    ]);
   }
 
-  async delete(session: RecoveryPasswordSessionDocumentType): Promise<void> {
-    await session.deleteOne();
+  async delete(sessionId: number): Promise<void> {
+    const query = `
+      DELETE FROM ${tablesName.RECOVERY_PASSWORD_SESSIONS}
+        WHERE "id" = $1
+    `;
+    await this.dataSource.query(query, [sessionId]);
   }
 
   async getSessionByCode(
     code: string,
-  ): Promise<RecoveryPasswordSessionDocumentType | null> {
-    return this.recoveryPasswordSession.findOne({ code: code });
+  ): Promise<RecoveryPasswordSessionType | null> {
+    const query = `
+      SELECT "email", "code", "expAt"
+      FROM ${tablesName.RECOVERY_PASSWORD_SESSIONS}
+      WHERE "code" = $1
+    `;
+    const result: RecoveryPasswordSessionType[] | [] =
+      await this.dataSource.query(query, [code]);
+    return result.length > 0 ? result[0] : null;
   }
 }

@@ -1,47 +1,30 @@
-import { AnyObject, Connection, InsertManyResult } from 'mongoose';
-import { IInsertResult } from './interfaces';
+import { DataSource } from 'typeorm';
 
 export class DataBase {
-  constructor(private readonly databaseConnection: Connection) {
-    this.databaseConnection = databaseConnection;
+  constructor(private readonly dataSource: DataSource) {
+    this.dataSource = dataSource;
   }
   async clearDatabase(): Promise<void> {
-    await Promise.all([this.databaseConnection.dropDatabase()]);
+    const query = `
+    DO
+    $$
+    DECLARE
+        r RECORD;
+    BEGIN
+        FOR r IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public') LOOP
+            EXECUTE 'TRUNCATE TABLE ' || quote_ident(r.tablename) || ' RESTART IDENTITY CASCADE';
+        END LOOP;
+    END
+    $$;
+`;
+    await this.dataSource.query(query);
   }
 
   async dbConnectionClose(): Promise<void> {
-    await this.databaseConnection.close();
+    await this.dataSource.destroy();
   }
 
-  async dbInsertOne<T>(collection: string, data: T): Promise<IInsertResult> {
-    return this.databaseConnection.collection(collection).insertOne(data);
-  }
-
-  async dbInsertMany<T>(
-    collection: string,
-    data: T[],
-  ): Promise<InsertManyResult<any>> {
-    return this.databaseConnection.collection(collection).insertMany(data);
-  }
-
-  async dbFindOne<T>(collection: string, filter: T): Promise<AnyObject> {
-    return this.databaseConnection.collection(collection).findOne(filter);
-  }
-
-  async dbFindAll<T>(collection: string, filter?: T): Promise<AnyObject> {
-    return this.databaseConnection
-      .collection(collection)
-      .find(filter)
-      .toArray();
-  }
-
-  async findAndUpdate<T, D>(
-    collection: string,
-    filter: D,
-    data: T,
-  ): Promise<AnyObject> {
-    return this.databaseConnection
-      .collection(collection)
-      .findOneAndUpdate(filter, { $set: data }, { returnDocument: 'after' });
+  async queryDataSource(query: string): Promise<any> {
+    return await this.dataSource.query(query);
   }
 }

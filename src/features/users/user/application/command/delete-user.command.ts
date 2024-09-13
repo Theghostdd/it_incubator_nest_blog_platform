@@ -1,13 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AppResultType } from '../../../../../base/types/types';
 import { UserRepositories } from '../../infrastructure/user-repositories';
-import { UserDocumentType } from '../../domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../user-service';
+import { UserType } from '../../domain/user.entity';
 
 export class DeleteUserByIdCommand {
-  constructor(public id: string) {}
+  constructor(public id: number) {}
 }
 
 @CommandHandler(DeleteUserByIdCommand)
@@ -21,12 +21,12 @@ export class DeleteUserByIdHandler
   ) {}
 
   async execute(command: DeleteUserByIdCommand): Promise<AppResultType> {
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUserById(command.id);
     if (user.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 
-    await this.userRepositories.delete(user.data);
+    await this.userRepositories.delete(user.data.id);
     return this.applicationObjectResult.success(null);
   }
 }

@@ -3,13 +3,13 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { BlogService } from '../blog-service';
 import { BlogRepository } from '../../infrastructure/blog-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { BlogDocumentType } from '../../domain/blog.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BlogUpdateModel } from '../../api/models/input/blog-input.model';
+import { BlogType } from '../../domain/blog.entity';
 
 export class UpdateBlogByIdCommand {
   constructor(
-    public id: string,
+    public id: number,
     public blogUpdateModel: BlogUpdateModel,
   ) {}
 }
@@ -24,13 +24,15 @@ export class UpdateBlogByIdHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
   async execute(command: UpdateBlogByIdCommand): Promise<AppResultType> {
-    const blog: AppResultType<BlogDocumentType | null> =
+    const blog: AppResultType<BlogType | null> =
       await this.blogService.getBlogById(command.id);
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 
-    blog.data.updateBlogInstance(command.blogUpdateModel);
-    await this.blogRepository.save(blog.data);
+    await this.blogRepository.updateBlogById(
+      command.id,
+      command.blogUpdateModel,
+    );
     return this.applicationObjectResult.success(null);
   }
 }

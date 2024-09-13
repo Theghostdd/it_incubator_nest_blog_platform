@@ -1,14 +1,8 @@
 import { PasswordRecoveryInputModel } from '../../api/models/input/auth-input.models';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { addMinutes } from 'date-fns';
-import {
-  RecoveryPasswordSession,
-  RecoveryPasswordSessionDocumentType,
-  RecoveryPasswordSessionModelType,
-} from '../../domain/recovery-session.entity';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
-import { InjectModel } from '@nestjs/mongoose';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
 import {
   AppResultType,
@@ -20,8 +14,12 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import {
+  RecoveryPasswordSession,
+  RecoveryPasswordSessionFactory,
+} from '../../domain/recovery-session.entity';
+import { UserType } from '../../../../users/user/domain/user.entity';
 
 export class PasswordRecoveryCommand {
   constructor(public inputPasswordRecoveryModel: PasswordRecoveryInputModel) {}
@@ -37,11 +35,10 @@ export class PasswordRecoveryHandler
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
-    @InjectModel(RecoveryPasswordSession.name)
-    private readonly recoveryPasswordSession: RecoveryPasswordSessionModelType,
     private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
+    private readonly recoveryPasswordSessionFactory: RecoveryPasswordSessionFactory,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -49,7 +46,7 @@ export class PasswordRecoveryHandler
   }
   async execute(command: PasswordRecoveryCommand): Promise<AppResultType> {
     const { email } = command.inputPasswordRecoveryModel;
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUserByEmail(email);
 
     const confirmationCode: string = this.authService.generateUuidCode(
@@ -60,9 +57,9 @@ export class PasswordRecoveryHandler
     if (user.appResult === AppResult.Success) {
       const dateExpired: string = addMinutes(new Date(), 20).toISOString();
 
-      const recoverySession: RecoveryPasswordSessionDocumentType =
-        this.recoveryPasswordSession.createSessionInstance(
-          command.inputPasswordRecoveryModel,
+      const recoverySession: RecoveryPasswordSession =
+        this.recoveryPasswordSessionFactory.create(
+          command.inputPasswordRecoveryModel.email,
           confirmationCode,
           dateExpired,
         );

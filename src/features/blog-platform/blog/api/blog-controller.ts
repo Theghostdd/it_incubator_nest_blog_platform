@@ -6,7 +6,6 @@ import {
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
-  Param,
   Post,
   Put,
   Query,
@@ -39,6 +38,7 @@ import { UpdateBlogByIdCommand } from '../application/command/update-blog.comman
 import { BasicGuard } from '../../../../core/guards/basic/basic.guard';
 import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
 import { CurrentUser } from '../../../../core/decorators/current-user';
+import { EntityId } from '../../../../core/decorators/entityId';
 
 @Controller(apiPrefixSettings.BLOG.blogs)
 export class BlogController {
@@ -52,14 +52,14 @@ export class BlogController {
   @UseGuards(VerifyUserGuard)
   async getPostByBlogId(
     @Query() query: BaseSorting,
-    @Param('id') id: string,
+    @EntityId() id: number,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<PostOutputModel[] | []>> {
     return await this.postQueryRepository.getPosts(query, id, user.userId);
   }
 
   @Get(':id')
-  async getBlogById(@Param('id') id: string): Promise<BlogOutputModel> {
+  async getBlogById(@EntityId() id: number): Promise<BlogOutputModel> {
     return await this.blogQueryRepository.getBlogById(id);
   }
 
@@ -73,11 +73,11 @@ export class BlogController {
   @Post(`:id/${apiPrefixSettings.BLOG.posts}`)
   @UseGuards(BasicGuard)
   async createPostByBlogId(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() inputModel: PostBlogInputModel,
   ): Promise<PostOutputModel> {
     const postInputModel: PostInputModel = { ...inputModel, blogId: id };
-    const result: AppResultType<string> = await this.commandBus.execute(
+    const result: AppResultType<number> = await this.commandBus.execute(
       new CreatePostCommand(postInputModel),
     );
     switch (result.appResult) {
@@ -95,7 +95,7 @@ export class BlogController {
   async createBlog(
     @Body() inputModel: BlogInputModel,
   ): Promise<BlogOutputModel> {
-    const result: AppResultType<string> = await this.commandBus.execute(
+    const result: AppResultType<number> = await this.commandBus.execute(
       new CreateBlogCommand(inputModel),
     );
     switch (result.appResult) {
@@ -109,7 +109,7 @@ export class BlogController {
   @Delete(':id')
   @UseGuards(BasicGuard)
   @HttpCode(204)
-  async deleteBlogById(@Param('id') id: string): Promise<void> {
+  async deleteBlogById(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
       new DeleteBlogByIdCommand(id),
     );
@@ -127,7 +127,7 @@ export class BlogController {
   @UseGuards(BasicGuard)
   @HttpCode(204)
   async updateBlogById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() updateModel: BlogUpdateModel,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(

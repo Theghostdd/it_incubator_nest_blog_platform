@@ -1,7 +1,7 @@
 import {
   IsEnum,
-  IsMongoId,
   IsNotEmpty,
+  IsNumber,
   IsString,
   Length,
   Matches,
@@ -92,9 +92,9 @@ export class PostInputModelValidationRules {
   public content: string;
   @Trim()
   @IsNotEmpty()
-  @IsMongoId()
+  @IsNumber()
   @FindBlog()
-  public blogId: string;
+  public blogId: number;
 }
 
 export class PostUpdateModelValidationRules {
@@ -121,9 +121,9 @@ export class PostUpdateModelValidationRules {
   public content: string;
   @Trim()
   @IsNotEmpty()
-  @IsMongoId()
+  @IsNumber()
   @FindBlog()
-  public blogId: string;
+  public blogId: number;
 }
 
 export class PostBlogInputModelValidationRules {
@@ -298,6 +298,8 @@ export class CommentUpdateModelValidationRules {
 }
 
 export class LikeInputModelValidationRules {
+  @Trim()
+  @IsNotEmpty()
   @IsEnum(LikeStatusEnum)
   public likeStatus: string;
 }

@@ -3,3 +3,8 @@ export enum LikeStatusEnum {
   'Like' = 'Like',
   'Dislike' = 'Dislike',
 }
+
+export enum EntityTypeEnum {
+  'Post' = 'Post',
+  'Comment' = 'Comment',
+}

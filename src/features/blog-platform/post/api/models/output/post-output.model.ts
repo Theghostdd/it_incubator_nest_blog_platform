@@ -1,6 +1,9 @@
-import { PostDocumentType } from '../../../domain/post.entity';
 import { LikeStatusEnum } from '../../../../like/domain/type';
-import { LikeDocumentType } from '../../../../like/domain/like.entity';
+import {
+  LastPostLikeJoinType,
+  LastPostsLikeJoinType,
+  PostLikeJoinType,
+} from '../../../domain/post.entity';
 
 export class NewestLikesModel {
   constructor(
@@ -35,61 +38,60 @@ export class PostOutputModel {
 export class PostMapperOutputModel {
   constructor() {}
   postModel(
-    post: PostDocumentType,
-    userLike: LikeDocumentType | null,
-    newestLikesArray: NewestLikesModel[] | [],
+    post: PostLikeJoinType,
+    lastLikes: LastPostLikeJoinType[] | [],
   ): PostOutputModel {
     return {
-      id: post._id.toString(),
+      id: post.id.toString(),
       title: post.title,
       shortDescription: post.shortDescription,
       content: post.content,
-      blogId: post.blogId,
+      blogId: post.blogId.toString(),
       blogName: post.blogName,
-      createdAt: post.createdAt,
+      createdAt: post.createdAt.toISOString(),
       extendedLikesInfo: {
-        likesCount: post.extendedLikesInfo.likesCount,
-        dislikesCount: post.extendedLikesInfo.dislikesCount,
-        myStatus: !userLike ? LikeStatusEnum.None : userLike.status,
-        newestLikes: newestLikesArray,
+        likesCount: post.likesCount,
+        dislikesCount: post.dislikesCount,
+        myStatus: post.status,
+        newestLikes: lastLikes.map((lastLike: LastPostLikeJoinType) => {
+          return {
+            addedAt: lastLike.lastUpdateAt.toISOString(),
+            userId: lastLike.userId.toString(),
+            login: lastLike.userLogin,
+          };
+        }),
       },
     };
   }
 
   postsModel(
-    posts: PostDocumentType[],
-    likes: LikeDocumentType[] | [],
-    newestLikesArray: MapPostsType,
+    posts: PostLikeJoinType[] | [],
+    lastLikes: LastPostsLikeJoinType[] | [],
   ): PostOutputModel[] {
-    return posts.map((post: PostDocumentType) => {
-      const foundLike: LikeDocumentType = likes.find(
-        (like: LikeDocumentType) => like.parentId === post._id.toString(),
-      );
-      const userStatus: LikeStatusEnum = foundLike
-        ? foundLike.status
-        : LikeStatusEnum.None;
-
+    return posts.map((post: PostLikeJoinType) => {
       return {
-        id: post._id.toString(),
+        id: post.id.toString(),
         title: post.title,
         shortDescription: post.shortDescription,
         content: post.content,
-        blogId: post.blogId,
+        blogId: post.blogId.toString(),
         blogName: post.blogName,
-        createdAt: post.createdAt,
+        createdAt: post.createdAt.toISOString(),
         extendedLikesInfo: {
-          likesCount: post.extendedLikesInfo.likesCount,
-          dislikesCount: post.extendedLikesInfo.dislikesCount,
-          myStatus: userStatus,
-          newestLikes: newestLikesArray[post._id.toString()]
-            ? newestLikesArray[post._id.toString()]
-            : [],
+          likesCount: post.likesCount,
+          dislikesCount: post.dislikesCount,
+          myStatus: post.status,
+          newestLikes: lastLikes
+            .filter(
+              (lastLike: LastPostsLikeJoinType) => lastLike.postId === post.id,
+            )
+            .map((lastLike: LastPostsLikeJoinType) => ({
+              addedAt: lastLike.lastUpdateAt.toISOString(),
+              userId: lastLike.userId.toString(),
+              login: lastLike.userLogin,
+            })),
         },
       };
     });
   }
 }
-
-export type MapPostsType = {
-  [key: string]: NewestLikesModel[];
-};

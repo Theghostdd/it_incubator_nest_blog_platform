@@ -7,7 +7,7 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { BlogDocumentType } from '../../features/blog-platform/blog/domain/blog.entity';
+import { BlogType } from '../../features/blog-platform/blog/domain/blog.entity';
 import { AppResultType } from '../../base/types/types';
 import { AppResult } from '../../base/enum/app-result.enum';
 import { Types } from 'mongoose';
@@ -17,9 +17,9 @@ import { Types } from 'mongoose';
 export class FindBlogConstraint implements ValidatorConstraintInterface {
   constructor(private readonly blogService: BlogService) {}
 
-  async validate(blogId: string, args: ValidationArguments) {
+  async validate(blogId: number, args: ValidationArguments) {
     if (!blogId || !Types.ObjectId.isValid(blogId)) return false;
-    const blog: AppResultType<BlogDocumentType | null> =
+    const blog: AppResultType<BlogType | null> =
       await this.blogService.getBlogById(blogId);
     return blog.appResult === AppResult.Success;
   }

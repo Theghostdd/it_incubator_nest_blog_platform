@@ -1,6 +1,5 @@
-import { CommentDocumentType } from '../../../domain/comment.entity';
 import { LikeStatusEnum } from '../../../../like/domain/type';
-import { LikeDocumentType } from '../../../../like/domain/like.entity';
+import { CommentLikeJoinType } from '../../../domain/comment.entity';
 
 export class CommentatorInfoViewModel {
   constructor(
@@ -29,50 +28,38 @@ export class CommentOutputModel {
 
 export class CommentMapperOutputModel {
   constructor() {}
-  commentModel(
-    comment: CommentDocumentType,
-    userLikeStatus: LikeDocumentType,
-  ): CommentOutputModel {
+  commentModel(comment: CommentLikeJoinType): CommentOutputModel {
     return {
-      id: comment._id.toString(),
+      id: comment.id.toString(),
       content: comment.content,
       commentatorInfo: {
-        userId: comment.commentatorInfo.userId,
-        userLogin: comment.commentatorInfo.userLogin,
+        userId: comment.userId.toString(),
+        userLogin: comment.userLogin,
       },
       likesInfo: {
-        likesCount: comment.likesInfo.likesCount,
-        dislikesCount: comment.likesInfo.dislikesCount,
-        myStatus: !userLikeStatus ? LikeStatusEnum.None : userLikeStatus.status,
+        likesCount: comment.likesCount,
+        dislikesCount: comment.dislikesCount,
+        myStatus: comment.status,
       },
-      createdAt: comment.createdAt,
+      createdAt: comment.createdAt.toISOString(),
     };
   }
 
-  commentsModel(
-    comments: CommentDocumentType[],
-    likes: LikeDocumentType[],
-  ): CommentOutputModel[] {
-    return comments.map((comment: CommentDocumentType) => {
-      const foundLike: LikeDocumentType = likes.find(
-        (like: LikeDocumentType) => like.parentId === comment._id.toString(),
-      );
-      const userStatus: LikeStatusEnum = foundLike
-        ? foundLike.status
-        : LikeStatusEnum.None;
+  commentsModel(comments: CommentLikeJoinType[]): CommentOutputModel[] {
+    return comments.map((comment: CommentLikeJoinType) => {
       return {
-        id: comment._id.toString(),
+        id: comment.id.toString(),
         content: comment.content,
         commentatorInfo: {
-          userId: comment.commentatorInfo.userId,
-          userLogin: comment.commentatorInfo.userLogin,
+          userId: comment.userId.toString(),
+          userLogin: comment.userLogin,
         },
         likesInfo: {
-          likesCount: comment.likesInfo.likesCount,
-          dislikesCount: comment.likesInfo.dislikesCount,
-          myStatus: userStatus,
+          likesCount: comment.likesCount,
+          dislikesCount: comment.dislikesCount,
+          myStatus: comment.status,
         },
-        createdAt: comment.createdAt,
+        createdAt: comment.createdAt.toISOString(),
       };
     });
   }

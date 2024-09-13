@@ -1,59 +1,34 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model } from 'mongoose';
+import { Injectable } from '@nestjs/common';
 
-@Schema()
 export class AuthSession {
-  @Prop({ type: String, required: true, unique: true })
-  dId: string;
-  @Prop({ type: String, required: true })
+  deviceId: string;
   ip: string;
-  @Prop({ type: String, required: true })
   deviceName: string;
-  @Prop({ type: String, required: true })
-  userId: string;
-  @Prop({ type: String, required: true })
-  issueAt: string;
-  @Prop({ type: String, required: true })
-  expAt: string;
+  userId: number;
+  issueAt: Date;
+  expAt: Date;
+}
 
-  static createSessionInstance(
-    dId: string,
+export type AuthSessionType = AuthSession & { id: number };
+
+@Injectable()
+export class AuthSessionFactory {
+  constructor() {}
+  create(
+    deviceId: string,
     ip: string,
     deviceName: string,
-    userId: string,
-    issueAt: string,
-    expAt: string,
-  ) {
-    const session = new this();
-    session.dId = dId;
+    userId: number,
+    iatDate: Date,
+    expDate: Date,
+  ): AuthSession {
+    const session = new AuthSession();
+    session.deviceId = deviceId;
     session.ip = ip;
     session.deviceName = deviceName;
     session.userId = userId;
-    session.expAt = expAt;
-    session.issueAt = issueAt;
+    session.issueAt = iatDate;
+    session.expAt = expDate;
     return session;
   }
-
-  updateAuthSession(iat: string, exp: string) {
-    this.issueAt = iat;
-    this.expAt = exp;
-  }
 }
-
-export const AuthSessionSchema = SchemaFactory.createForClass(AuthSession);
-AuthSessionSchema.loadClass(AuthSession);
-
-export type AuthSessionDocumentType = HydratedDocument<AuthSession>;
-
-type AuthSessionStaticType = {
-  createSessionInstance: (
-    dId: string,
-    ip: string,
-    deviceName: string,
-    userId: string,
-    issueAt: string,
-    expAt: string,
-  ) => AuthSessionDocumentType;
-};
-export type AuthSessionModelType = Model<AuthSessionDocumentType> &
-  AuthSessionStaticType;

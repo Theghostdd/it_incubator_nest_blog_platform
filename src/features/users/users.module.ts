@@ -1,6 +1,4 @@
 import { Module } from '@nestjs/common';
-import { MongooseModule } from '@nestjs/mongoose';
-import { User, UserSchema } from './user/domain/user.entity';
 import { UserRepositories } from './user/infrastructure/user-repositories';
 import { UserQueryRepositories } from './user/infrastructure/user-query-repositories';
 import { UserService } from './user/application/user-service';
@@ -10,14 +8,13 @@ import { DeleteUserByIdHandler } from './user/application/command/delete-user.co
 import { CreateUserCommandHandler } from './user/application/command/create-user.command';
 import { UserController } from './user/api/user-controller';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
+import { UserFactory } from './user/domain/user.entity';
 
 @Module({
-  imports: [
-    BcryptModule,
-    MongooseModule.forFeature([{ name: User.name, schema: UserSchema }]),
-  ],
+  imports: [BcryptModule],
   controllers: [UserController],
   providers: [
+    UserFactory,
     UserRepositories,
     UserQueryRepositories,
     UserService,
@@ -26,11 +23,6 @@ import { BcryptModule } from '../bcrypt/bcrypt.module';
     DeleteUserByIdHandler,
     CreateUserCommandHandler,
   ],
-  exports: [
-    UserRepositories,
-    UserQueryRepositories,
-    UserService,
-    MongooseModule,
-  ],
+  exports: [UserRepositories, UserQueryRepositories, UserService, UserFactory],
 })
 export class UsersModule {}

@@ -1,100 +1,79 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
 import { UserInputModel } from '../api/models/input/user-input.model';
-import { RegistrationInputModel } from '../../../access-control/auth/api/models/input/auth-input.models';
+import { Injectable } from '@nestjs/common';
 
-@Schema()
 export class User {
-  @Prop({ type: String, required: true, min: 3, max: 10, unique: true })
-  login: string;
-  @Prop({ type: String, required: true, min: 3, unique: true })
-  email: string;
-  @Prop({ type: String, required: true, min: 6, max: 20 })
-  password: string;
-  @Prop({ type: String, required: true, default: new Date().toISOString() })
-  createdAt: string;
-  @Prop({
-    type: {
-      isConfirm: { type: Boolean, required: true, default: false },
-      confirmationCode: { type: String, required: true },
-      dataExpire: { type: String, required: true },
-    },
-    required: true,
-    _id: false,
-  })
-  userConfirm: {
-    isConfirm: boolean;
-    confirmationCode: string;
-    dataExpire: string;
-  };
+  public login: string;
+  public email: string;
+  public password: string;
+  public isActive: boolean;
+  public createdAt: Date;
+  public userConfirm: UserConfirmationModel;
+}
 
-  static createUserInstance(inputModel: UserInputModel, hashPass: string) {
-    const { login, email } = inputModel;
-    const user = new this();
+class UserConfirmationModel {
+  public isConfirm: boolean;
+  public confirmationCode: string;
+  public dataExpire: Date;
+}
+
+export type UserTableType = User & { id: number };
+
+export type UserType = {
+  login: string;
+  email: string;
+  password: string;
+  createdAt: Date;
+  userConfirm: UserConfirmationModel;
+} & { id: number };
+
+export type UserJoinType = {
+  login: string;
+  email: string;
+  password: string;
+  isActive: boolean;
+  createdAt: Date;
+  isConfirm: boolean;
+  confirmationCode: string;
+  dataExpire: Date;
+} & { id: number };
+
+@Injectable()
+export class UserFactory {
+  constructor() {}
+  create(userInputModel: UserInputModel, hash: string): User {
+    const user = new User();
+    const { login, email } = userInputModel;
     user.login = login;
     user.email = email;
-    user.password = hashPass;
-    user.createdAt = new Date().toISOString();
+    user.password = hash;
+    user.createdAt = new Date();
+    user.isActive = true;
     user.userConfirm = {
       isConfirm: true,
       confirmationCode: 'none',
-      dataExpire: '0',
+      dataExpire: new Date(),
     };
     return user;
   }
 
-  static registrationUserInstance(
-    inputModel: RegistrationInputModel,
-    hashPass: string,
-    confirmCode: string,
-    dateExpireConfirmCode: string,
-  ) {
-    const { login, email } = inputModel;
-    const user = new this();
+  createRegistration(
+    userInputModel: UserInputModel,
+    hash: string,
+    confirmationCode: string,
+    dataExpire: Date,
+  ): User {
+    const user = new User();
+    const { login, email } = userInputModel;
     user.login = login;
     user.email = email;
-    user.password = hashPass;
-    user.createdAt = new Date().toISOString();
+    user.password = hash;
+    user.createdAt = new Date();
+    user.isActive = true;
     user.userConfirm = {
       isConfirm: false,
-      confirmationCode: confirmCode,
-      dataExpire: dateExpireConfirmCode,
+      confirmationCode: confirmationCode,
+      dataExpire: dataExpire,
     };
     return user;
   }
-
-  confirmEmail(): void {
-    this.userConfirm.isConfirm = true;
-  }
-
-  updateConfirmationCode(newCode: string, dateExpireConfirmCode: string): void {
-    this.userConfirm.confirmationCode = newCode;
-    this.userConfirm.dataExpire = dateExpireConfirmCode;
-  }
-
-  changePassword(newPassword: string): void {
-    this.password = newPassword;
-  }
 }
-
-export const UserSchema: MongooseSchema<User> =
-  SchemaFactory.createForClass(User);
-UserSchema.loadClass(User);
-
-export type UserDocumentType = HydratedDocument<User>;
-
-type UserModelStaticType = {
-  createUserInstance: (
-    inputModel: UserInputModel,
-    hashPass: string,
-  ) => UserDocumentType;
-
-  registrationUserInstance: (
-    inputModel: UserInputModel,
-    hashPass: string,
-    confirmCode: string,
-    dateExpireConfirmCode: string,
-  ) => UserDocumentType;
-};
-
-export type UserModelType = Model<UserDocumentType> & UserModelStaticType;

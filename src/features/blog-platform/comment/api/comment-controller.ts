@@ -8,7 +8,6 @@ import {
   HttpCode,
   InternalServerErrorException,
   NotFoundException,
-  Param,
   Put,
   UseGuards,
 } from '@nestjs/common';
@@ -28,6 +27,7 @@ import { DeleteCommentCommand } from '../application/command/delete-comment';
 import { LikeInputModel } from '../../like/api/models/input/like-input-model';
 import { UpdateCommentLikeStatusCommand } from '../../like/application/command/update-comment-like-status';
 import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
+import { EntityId } from '../../../../core/decorators/entityId';
 
 @Controller(apiPrefixSettings.COMMENT.comments)
 export class CommentController {
@@ -39,7 +39,7 @@ export class CommentController {
   @Get(':id')
   @UseGuards(VerifyUserGuard)
   async getCommentById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<CommentOutputModel> {
     return await this.commentQueryRepository.getCommentById(id, user.userId);
@@ -49,7 +49,7 @@ export class CommentController {
   @UseGuards(AuthJWTAccessGuard)
   @HttpCode(204)
   async updateCommentById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @CurrentUser() user: JWTAccessTokenPayloadType,
     @Body() commentUpdateModel: CommentUpdateModel,
   ) {
@@ -73,7 +73,7 @@ export class CommentController {
   @UseGuards(AuthJWTAccessGuard)
   @HttpCode(204)
   async deleteCommentById(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ) {
     const result: AppResultType = await this.commandBus.execute(
@@ -96,7 +96,7 @@ export class CommentController {
   @HttpCode(204)
   @UseGuards(AuthJWTAccessGuard)
   async updateCommentLikeStatusByCommentId(
-    @Param('id') id: string,
+    @EntityId() id: number,
     @Body() likeInputModel: LikeInputModel,
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ) {

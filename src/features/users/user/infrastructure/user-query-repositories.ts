@@ -4,24 +4,31 @@ import {
   UserMeOutputModel,
   UserOutputModel,
 } from '../api/models/output/user-output.model';
-import { InjectModel } from '@nestjs/mongoose';
-import { User, UserDocumentType, UserModelType } from '../domain/user.entity';
+import { UserType } from '../domain/user.entity';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
-import { SortOrder } from 'mongoose';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource } from 'typeorm';
+import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()
 export class UserQueryRepositories {
   constructor(
     private readonly userMapperOutputModel: UserMapperOutputModel,
     private readonly userSortingQuery: UserSortingQuery,
-    @InjectModel(User.name) private readonly userModel: UserModelType,
+    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
-  async getUserById(id: string): Promise<UserOutputModel> {
-    const result: UserDocumentType | null = await this.userModel.findById(id);
-    if (result) {
-      return this.userMapperOutputModel.userModel(result);
+  async getUserById(id: number): Promise<UserOutputModel> {
+    const query = `
+    SELECT 
+      "id", "login", "email", "createdAt"
+    FROM "${tablesName.USERS}"
+    WHERE "id" = $1 AND "isActive" = true
+    `;
+    const result: UserType[] | [] = await this.dataSource.query(query, [id]);
+    if (result.length > 0) {
+      return this.userMapperOutputModel.userModel(result[0]);
     }
     throw new NotFoundException('User not found');
   }
@@ -38,28 +45,41 @@ export class UserQueryRepositories {
       pageNumber,
     } = this.userSortingQuery.createUserQuery(query);
 
-    const sort: { [key: string]: SortOrder } = {
-      [sortBy]: sortDirection as SortOrder,
-    };
-
-    const filter = {
-      $or: [
-        { login: { $regex: searchLoginTerm, $options: 'i' } },
-        { email: { $regex: searchEmailTerm, $options: 'i' } },
-      ],
-    };
-
-    const getTotalDocument: number =
-      await this.userModel.countDocuments(filter);
-    const totalCount: number = getTotalDocument;
+    const getTotalDocument: { count: number }[] = await this.dataSource.query(
+      `SELECT COUNT(*) 
+             FROM "${tablesName.USERS}"
+                WHERE
+                    ("login" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
+                AND 
+                    ("email" ILIKE '%' || $2 || '%' OR $2 IS NULL) 
+                AND "isActive" = true
+    `,
+      [searchLoginTerm, searchEmailTerm],
+    );
+    const totalCount: number = getTotalDocument[0].count;
     const pagesCount: number = Math.ceil(totalCount / pageSize);
     const skip: number = (pageNumber - 1) * pageSize;
 
-    const users: UserDocumentType[] | [] = await this.userModel
-      .find(filter)
-      .sort(sort)
-      .skip(skip)
-      .limit(pageSize!);
+    const queryR = `
+      SELECT "id", "login", "email", "createdAt"
+      FROM ${tablesName.USERS}
+      WHERE 
+          ("login" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
+          AND 
+          ("email" ILIKE '%' || $2 || '%' OR $2 IS NULL) 
+          AND "isActive" = true
+      ORDER BY $3 || $4
+      LIMIT $5 OFFSET $6;
+    `;
+
+    const users: UserType[] | [] = await this.dataSource.query(queryR, [
+      searchLoginTerm,
+      searchEmailTerm,
+      sortBy,
+      sortDirection,
+      pageSize,
+      skip,
+    ]);
 
     return {
       pagesCount: +pagesCount,
@@ -71,12 +91,14 @@ export class UserQueryRepositories {
     };
   }
 
-  async getUserByIdAuthMe(id: string): Promise<UserMeOutputModel> {
-    const user: UserDocumentType | null = await this.userModel.findOne({
-      _id: id,
-    });
-    if (!user) throw new NotFoundException();
-
-    return this.userMapperOutputModel.currentUserModel(user);
+  async getUserByIdAuthMe(id: number): Promise<UserMeOutputModel> {
+    const query = `
+        SELECT "id", "login", "email"
+        FROM ${tablesName.USERS}
+        WHERE "id" = $1 AND "isActive" = true
+    `;
+    const user: UserType[] | [] = await this.dataSource.query(query, [id]);
+    if (user.length <= 0) throw new NotFoundException();
+    return this.userMapperOutputModel.currentUserModel(user[0]);
   }
 }

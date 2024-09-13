@@ -6,8 +6,8 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AuthService } from '../../../auth/application/auth-application';
 import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
-import { AuthSessionDocumentType } from '../../../auth/domain/auth-session.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
 
 export class DeleteDevicesByDeviceIdCommand {
   constructor(
@@ -31,14 +31,14 @@ export class DeleteDeviceByDeviceIdHandler
     const { userId } = command.user;
     const { deviceId } = command;
 
-    const session: AppResultType<AuthSessionDocumentType | null> =
+    const session: AppResultType<AuthSessionType | null> =
       await this.authService.getAuthSessionByDeviceId(deviceId);
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
     if (session.data.userId !== userId)
       return this.applicationObjectResult.forbidden();
 
-    await this.authSessionRepositories.delete(session.data);
+    await this.authSessionRepositories.delete(session.data.id);
     return this.applicationObjectResult.success(null);
   }
 }

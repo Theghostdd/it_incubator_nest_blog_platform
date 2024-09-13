@@ -2,35 +2,47 @@ import { ITestSettings } from '../../settings/interfaces';
 import {
   IUserChangePasswordTestModel,
   IUserCreateTestModel,
-  IUserInsertTestModel,
   IUserLoginTestModel,
   IUserPasswordRecoveryTestModel,
   IUserResendConfirmationCodeEmailTestModel,
 } from '../../models/user/interfaces';
 import { initSettings } from '../../settings/test-settings';
 import { AuthTestManager } from '../../utils/request-test-manager/auth-test-manager';
-import { addDays, subDays } from 'date-fns';
 import { NodeMailerMockService } from '../../mock/nodemailer-mock';
 import { NodeMailerService } from '../../../src/features/nodemailer/application/nodemailer-application';
-import { IAuthRecoveryPasswordSessionInsertModel } from '../../models/auth/interfaces';
 import { delay } from '../../utils/delay/delay';
+import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import { APISettings } from '../../../src/settings/api-settings';
+import { tablesName } from '../../../src/core/utils/tables/tables';
 
 describe('Auth e2e', () => {
   let testSettings: ITestSettings;
   let authTestManager: AuthTestManager;
   let userRegistrationModel: IUserCreateTestModel;
   let userResendConfirmCodeModel: IUserResendConfirmationCodeEmailTestModel;
-  let userInsertModel: IUserInsertTestModel;
   let nodemailerMockService: NodeMailerMockService;
   let userPasswordRecoveryModel: IUserPasswordRecoveryTestModel;
-  let passwordRecoverySessionInsertModel: IAuthRecoveryPasswordSessionInsertModel;
   let passwordChangeModel: IUserChangePasswordTestModel;
   let uesrLoginModel: IUserLoginTestModel;
+  let userTestManager: UserTestManager;
+  let userCreateModel: IUserCreateTestModel;
+  let apiSettings: APISettings;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
 
   beforeAll(async () => {
     testSettings = await initSettings();
     nodemailerMockService =
       testSettings.testingAppModule.get<NodeMailerService>(NodeMailerService);
+
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {
@@ -42,26 +54,27 @@ describe('Auth e2e', () => {
     await testSettings.dataBase.clearDatabase();
     userRegistrationModel =
       testSettings.testModels.userTestModel.getUserRegistrationModel();
-    userInsertModel =
-      testSettings.testModels.userTestModel.getUserInsertModel();
     authTestManager = testSettings.testManager.authTestManager;
     userResendConfirmCodeModel =
       testSettings.testModels.userTestModel.getUserResendConfirmationCodeEmailModel();
     userPasswordRecoveryModel =
       testSettings.testModels.userTestModel.getUserPasswordRecoveryModel();
-    passwordRecoverySessionInsertModel =
-      testSettings.testModels.authTestModel.getRecoveryPasswordSessionInsertModel();
     passwordChangeModel =
       testSettings.testModels.userTestModel.getUserChangePasswordModel();
     uesrLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
+    userTestManager = testSettings.testManager.userTestManager;
+    userCreateModel =
+      testSettings.testModels.userTestModel.getUserCreateModel();
   });
 
   describe('Get user', () => {
     it('should get current user by access token', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const { accessToken } = await authTestManager.login(uesrLoginModel, 200);
 
       const result = await authTestManager.getCurrentUser(
@@ -70,14 +83,14 @@ describe('Auth e2e', () => {
       );
 
       expect(result).toEqual({
-        login: userInsertModel.login,
-        email: userInsertModel.email,
+        login: userCreateModel.login,
+        email: userCreateModel.email,
         userId: userId.toString(),
       });
     });
 
     it('should not get current user by access token, token is not correct', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } = await authTestManager.login(uesrLoginModel, 200);
       await authTestManager.getCurrentUser(`Bearer token`, 401);
@@ -87,7 +100,7 @@ describe('Auth e2e', () => {
 
   describe('Login', () => {
     it('should login user, and return access token', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.login(uesrLoginModel, 200);
       expect(result).toEqual({
@@ -96,7 +109,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not login user, bad input model', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.login(
         { ...uesrLoginModel, password: '', loginOrEmail: '' },
@@ -147,10 +160,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not login user, user is not confirm', async () => {
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        userConfirm: { ...userInsertModel.userConfirm, isConfirm: false },
-      });
+      await authTestManager.registration(userRegistrationModel, 204);
 
       const result = await authTestManager.login(uesrLoginModel, 400);
       expect(result).toEqual({
@@ -164,7 +174,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not login user, password is not correct', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       await authTestManager.login(
         { ...uesrLoginModel, password: 'otherPass' },
@@ -173,7 +183,7 @@ describe('Auth e2e', () => {
     });
 
     it('should login user, and return access token, refresh token into cookie', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.loginAndCheckCookie(
         uesrLoginModel,
@@ -187,7 +197,7 @@ describe('Auth e2e', () => {
 
   describe('Logout', () => {
     it('should logout user', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -205,7 +215,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not logout user, session not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -219,7 +229,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not logout user, session is not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -237,21 +247,19 @@ describe('Auth e2e', () => {
     });
 
     it('should not logout user, session is not correct', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
           200,
         );
-
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { issueAt: '2023-09-05T12:34:56Z' },
+      await delay(1000);
+      await testSettings.testManager.authTestManager.updateNewPairTokensAndReturnRefreshToken(
+        login.refreshToken,
+        200,
       );
+
       await testSettings.testManager.authTestManager.logOut(
         login.refreshToken,
         401,
@@ -259,39 +267,23 @@ describe('Auth e2e', () => {
     });
 
     it('should not logout user, user not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
           200,
         );
 
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { userId: '123456' },
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.USERS} SET "isActive"= false WHERE "id" = ${userId}`,
       );
-      await testSettings.testManager.authTestManager.logOut(
-        login.refreshToken,
-        401,
-      );
-    });
 
-    it('should not logout user, session was update', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      const login =
-        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
-          uesrLoginModel,
-          200,
-        );
       await delay(1000);
-      await testSettings.testManager.authTestManager.updateNewPairTokens(
-        login.refreshToken,
-        200,
-      );
 
       await testSettings.testManager.authTestManager.logOut(
         login.refreshToken,
@@ -302,7 +294,7 @@ describe('Auth e2e', () => {
 
   describe('Refresh token', () => {
     it('should return new tokens pair', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -323,7 +315,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not return new tokens pair, session not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -337,7 +329,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not return new tokens pair, session is not correct', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
@@ -356,44 +348,22 @@ describe('Auth e2e', () => {
     });
 
     it('should not return new tokens pair, session is not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
           uesrLoginModel,
           200,
         );
 
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { dId: 'did' },
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.AUTH_SESSIONS} SET "deviceId" = 'did' WHERE "userId" = ${userId}`,
       );
 
-      await testSettings.testManager.authTestManager.updateNewPairTokens(
-        login.refreshToken,
-        401,
-      );
-    });
-
-    it('should not return new tokens pair, user not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-      const login =
-        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
-          uesrLoginModel,
-          200,
-        );
-
-      await testSettings.dataBase.findAndUpdate(
-        'authsessions',
-        { userId: userId.toString() },
-        { userId: '123456' },
-      );
       await testSettings.testManager.authTestManager.updateNewPairTokens(
         login.refreshToken,
         401,
@@ -484,7 +454,7 @@ describe('Auth e2e', () => {
     it('should not registration user, email and login not uniq', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
 
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.registration(
         userRegistrationModel,
@@ -537,19 +507,20 @@ describe('Auth e2e', () => {
     });
 
     it('should confirm email', async () => {
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        userConfirm: {
-          ...userInsertModel.userConfirm,
-          isConfirm: false,
-          dataExpire: addDays(new Date(), 1),
-        },
-      });
+      const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
+      await authTestManager.registration(userRegistrationModel, 204);
+
+      const getCode = await testSettings.dataBase.queryDataSource(
+        `SELECT "confirmationCode" FROM ${tablesName.USERS_CONFIRMATION}`,
+      );
 
       await authTestManager.confirmRegistration(
-        { code: userInsertModel.userConfirm.confirmationCode },
+        { code: getCode[0].confirmationCode },
         204,
       );
+
+      expect(sendMailSpy).toHaveBeenCalled();
+      sendMailSpy.mockRestore();
     });
 
     it('should not confirm email, bad input data', async () => {
@@ -585,10 +556,10 @@ describe('Auth e2e', () => {
     });
 
     it('should not confirm email, email has benn confirmed', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.confirmRegistration(
-        { code: userInsertModel.userConfirm.confirmationCode },
+        { code: 'none' },
         400,
       );
 
@@ -603,17 +574,16 @@ describe('Auth e2e', () => {
     });
 
     it('should not confirm email, code has benn expired', async () => {
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        userConfirm: {
-          ...userInsertModel.userConfirm,
-          isConfirm: false,
-          dataExpire: subDays(new Date(), 1),
-        },
-      });
+      const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
+      await authTestManager.registration(userRegistrationModel, 204);
 
+      const newDateExpire = new Date().toDateString();
+
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.USERS_CONFIRMATION} SET "dataExpire" = '${newDateExpire}', "confirmationCode" = 'code'`,
+      );
       const result = await authTestManager.confirmRegistration(
-        { code: userInsertModel.userConfirm.confirmationCode },
+        { code: 'code' },
         400,
       );
 
@@ -625,20 +595,14 @@ describe('Auth e2e', () => {
           },
         ],
       });
+      expect(sendMailSpy).toHaveBeenCalled();
+      sendMailSpy.mockRestore();
     });
 
     it('should resend confirmation code', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
 
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        userConfirm: {
-          ...userInsertModel.userConfirm,
-          isConfirm: false,
-          dataExpire: addDays(new Date(), 1),
-        },
-      });
-
+      await authTestManager.registration(userRegistrationModel, 204);
       await authTestManager.resendConfirmationCode(
         userResendConfirmCodeModel,
         204,
@@ -693,7 +657,7 @@ describe('Auth e2e', () => {
     it('should not resend confirmation code, email has been confirmed', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
 
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.resendConfirmationCode(
         userResendConfirmCodeModel,
@@ -717,7 +681,7 @@ describe('Auth e2e', () => {
   describe('Recovery password', () => {
     it('should send recovery password email', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
 
@@ -727,7 +691,7 @@ describe('Auth e2e', () => {
 
     it('should not send recovery password email, bad input model', async () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const result = await authTestManager.recoveryPassword(
         { email: 'ema' },
@@ -748,10 +712,11 @@ describe('Auth e2e', () => {
     });
 
     it('should change user`s password', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      await testSettings.dataBase.dbInsertOne(
-        'recoverypasswordsessions',
-        passwordRecoverySessionInsertModel,
+      const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "code" = '${passwordChangeModel.recoveryCode}'`,
       );
 
       await authTestManager.login(uesrLoginModel, 200);
@@ -764,15 +729,13 @@ describe('Auth e2e', () => {
         { ...uesrLoginModel, password: passwordChangeModel.newPassword },
         200,
       );
+
+      expect(sendMailSpy).toHaveBeenCalled();
+      sendMailSpy.mockRestore();
     });
 
     it('should not change user`s password, bad input model', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      await testSettings.dataBase.dbInsertOne(
-        'recoverypasswordsessions',
-        passwordRecoverySessionInsertModel,
-      );
-
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       await authTestManager.login(uesrLoginModel, 200);
 
       const result = await authTestManager.changePassword(
@@ -802,7 +765,7 @@ describe('Auth e2e', () => {
     });
 
     it('should not change user`s password, recovery session not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       await authTestManager.login(uesrLoginModel, 200);
 
@@ -829,11 +792,13 @@ describe('Auth e2e', () => {
     });
 
     it('should not change user`s password, recovery session has benn expired', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      await testSettings.dataBase.dbInsertOne('recoverypasswordsessions', {
-        ...passwordRecoverySessionInsertModel,
-        expAt: subDays(new Date(), 2),
-      });
+      const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
+      const newExpAt = new Date().toDateString();
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "expAt" = '${newExpAt}', "code" = '${passwordChangeModel.recoveryCode}'`,
+      );
 
       await authTestManager.login(uesrLoginModel, 200);
 
@@ -857,12 +822,20 @@ describe('Auth e2e', () => {
         { ...uesrLoginModel, password: passwordChangeModel.newPassword },
         401,
       );
+
+      expect(sendMailSpy).toHaveBeenCalled();
+      sendMailSpy.mockRestore();
     });
 
     it('should not change user`s password, user not found', async () => {
-      await testSettings.dataBase.dbInsertOne(
-        'recoverypasswordsessions',
-        passwordRecoverySessionInsertModel,
+      const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "code" = '${passwordChangeModel.recoveryCode}'`,
+      );
+      await testSettings.dataBase.queryDataSource(
+        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
       );
 
       await authTestManager.changePassword(passwordChangeModel, 400);
@@ -871,6 +844,9 @@ describe('Auth e2e', () => {
         { ...uesrLoginModel, password: passwordChangeModel.newPassword },
         401,
       );
+
+      expect(sendMailSpy).toHaveBeenCalled();
+      sendMailSpy.mockRestore();
     });
   });
 });

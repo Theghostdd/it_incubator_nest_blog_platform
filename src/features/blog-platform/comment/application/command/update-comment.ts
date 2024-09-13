@@ -1,16 +1,16 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { CommentDocumentType } from '../../domain/comment.entity';
 import { CommentService } from '../comment-service';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { CommentUpdateModel } from '../../api/model/input/comment-input.model';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
+import { CommentType } from '../../domain/comment.entity';
 
 export class UpdateCommentCommand {
   constructor(
-    public id: string,
-    public userId: string,
+    public id: number,
+    public userId: number,
     public commentUpdateModel: CommentUpdateModel,
   ) {}
 }
@@ -26,16 +26,18 @@ export class UpdateCommentHandler
   ) {}
   async execute(command: UpdateCommentCommand): Promise<AppResultType> {
     const { id, userId } = command;
-    const comment: AppResultType<CommentDocumentType> =
+    const comment: AppResultType<CommentType> =
       await this.commentService.getCommentById(id);
     if (comment.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    if (comment.data.commentatorInfo.userId !== userId)
+    if (comment.data.userId !== userId)
       return this.applicationObjectResult.forbidden();
 
-    comment.data.updateComment(command.commentUpdateModel);
-    await this.commentRepositories.save(comment.data);
+    await this.commentRepositories.updateCommentById(
+      id,
+      command.commentUpdateModel,
+    );
 
     return this.applicationObjectResult.success(null);
   }

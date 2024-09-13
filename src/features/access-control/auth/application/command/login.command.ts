@@ -11,10 +11,10 @@ import {
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
-import { UserDocumentType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { CreateAuthSessionCommand } from './create-auth-session.command';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
+import { UserType } from '../../../../users/user/domain/user.entity';
 
 export class LoginCommand {
   constructor(
@@ -51,7 +51,7 @@ export class LoginHandler
     const { ip, userAgent } = command.clientInfo;
     if (!ip) return this.applicationObjectResult.unauthorized();
 
-    const user: AppResultType<UserDocumentType | null> =
+    const user: AppResultType<UserType | null> =
       await this.userService.getUseByLoginOrEmail(loginOrEmail);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();
@@ -69,16 +69,14 @@ export class LoginHandler
         field: 'code',
       });
 
-    const dId: string = this.authService.generateDeviceId(
-      user.data._id.toString(),
-    );
+    const dId: string = this.authService.generateDeviceId(user.data.id);
 
     const payloadAccessToken: JWTAccessTokenPayloadType = {
-      userId: user.data._id.toString(),
+      userId: user.data.id,
     };
 
     const payloadRefreshToken: JWTRefreshTokenPayloadType = {
-      userId: user.data._id.toString(),
+      userId: user.data.id,
       deviceId: dId,
     };
 

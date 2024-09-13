@@ -1,8 +1,6 @@
 import { Test, TestingModule, TestingModuleBuilder } from '@nestjs/testing';
 import { AppModule } from '../../src/app.module';
 import { applyAppSettings } from '../../src/settings/apply-app-settings';
-import { Connection } from 'mongoose';
-import { getConnectionToken } from '@nestjs/mongoose';
 import { UserTestManager } from '../utils/request-test-manager/user-test-manager';
 import { INestApplication } from '@nestjs/common';
 import { UserTestModel } from '../models/user/user.model';
@@ -24,6 +22,7 @@ import { LikeTestModel } from '../models/like/likes.model';
 import { ThrottlerMock } from '../mock/throttler-mock';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
+import { DataSource } from 'typeorm';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -36,10 +35,9 @@ export const initSettings = async (): Promise<ITestSettings> => {
   const app: INestApplication = testingAppModule.createNestApplication();
   applyAppSettings(app);
   await app.init();
-  //
-  const databaseConnection: Connection =
-    app.get<Connection>(getConnectionToken());
-  const dataBase: DataBase = new DataBase(databaseConnection);
+
+  const dataSource: DataSource = app.get(DataSource);
+  const dataBase: DataBase = new DataBase(dataSource);
 
   const testManager: ITestManger = getTestManagers(app);
 
@@ -100,7 +98,6 @@ const getTestManagers = (app: INestApplication): ITestManger => {
 };
 
 const setGlobalMock = (testingModule: TestingModuleBuilder) => {
-  // const nodemailerMockService = new NodeMailerMockService();
   testingModule
     .overrideProvider(NodeMailerService)
     .useClass(NodeMailerMockService)

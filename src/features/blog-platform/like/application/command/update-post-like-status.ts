@@ -1,27 +1,22 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AppResultType } from '../../../../../base/types/types';
-import { PostDocumentType } from '../../../post/domain/post.entity';
 import { PostService } from '../../../post/application/post-service';
 import { LikeInputModel } from '../../api/models/input/like-input-model';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { LikeService } from '../like-service';
-import {
-  Like,
-  LikeDocumentType,
-  LikeModelType,
-} from '../../domain/like.entity';
-import { InjectModel } from '@nestjs/mongoose';
-import { LikeStatusEnum } from '../../domain/type';
+import { EntityTypeEnum, LikeStatusEnum } from '../../domain/type';
 import { LikeRepositories } from '../../infrastructure/like-repositories';
 import { PostRepository } from '../../../post/infrastructure/post-repositories';
 import { LikeChangeCount } from '../../domain/models';
 import { CalculateLike } from '../../domain/calculate-like';
+import { PostType } from '../../../post/domain/post.entity';
+import { Like, LikeFactory, LikeType } from '../../domain/like.entity';
 
 export class UpdatePostLikeStatusCommand {
   constructor(
-    public postId: string,
-    public userId: string,
+    public postId: number,
+    public userId: number,
     public likeInputModel: LikeInputModel,
   ) {}
 }
@@ -35,36 +30,50 @@ export class UpdatePostLikeStatusHandler
     private readonly likeService: LikeService,
     private readonly likeRepositories: LikeRepositories,
     private readonly postRepositories: PostRepository,
-    @InjectModel(Like.name) private readonly likeModel: LikeModelType,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly calculateLike: CalculateLike,
+    private readonly likeFactory: LikeFactory,
   ) {}
 
   async execute(command: UpdatePostLikeStatusCommand): Promise<AppResultType> {
     const { postId, userId } = command;
-    const post: AppResultType<PostDocumentType | null> =
+    const post: AppResultType<PostType | null> =
       await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    const like: AppResultType<LikeDocumentType | null> =
-      await this.likeService.getLikeByUserIdAndParentId(userId, postId);
+    const like: AppResultType<LikeType | null> =
+      await this.likeService.getLikeByUserIdAndParentId(
+        userId,
+        postId,
+        EntityTypeEnum.Post,
+      );
     if (like.appResult !== AppResult.Success) {
-      const newLike: LikeDocumentType = this.likeModel.createLikeInstance(
+      const newLike: Like = this.likeFactory.create(
         command.likeInputModel,
         postId,
         userId,
+        EntityTypeEnum.Post,
       );
 
-      post.data.updateLikesCount(
-        0,
-        0,
-        command.likeInputModel.likeStatus as LikeStatusEnum,
-      );
+      let likeCount = 0;
+      let dislikeCount = 0;
+      switch (command.likeInputModel.likeStatus) {
+        case LikeStatusEnum.Like:
+          likeCount = 1;
+          break;
+        case LikeStatusEnum.Dislike:
+          dislikeCount = 1;
+          break;
+      }
 
       await Promise.all([
         this.likeRepositories.save(newLike),
-        this.postRepositories.save(post.data),
+        this.postRepositories.updatePostLikeById(
+          post.data.id,
+          likeCount,
+          dislikeCount,
+        ),
       ]);
 
       return this.applicationObjectResult.success(null);
@@ -74,15 +83,19 @@ export class UpdatePostLikeStatusHandler
       command.likeInputModel.likeStatus as LikeStatusEnum,
       like.data.status,
     );
-    like.data.updateLikeStatus(changeCountLike.newStatus);
-    post.data.updateLikesCount(
-      changeCountLike.newLikesCount,
-      changeCountLike.newDislikesCount,
-    );
 
     await Promise.all([
-      this.likeRepositories.save(like.data),
-      this.postRepositories.save(post.data),
+      this.likeRepositories.updateLikeById(
+        like.data.id,
+        postId,
+        EntityTypeEnum.Post,
+        changeCountLike.newStatus,
+      ),
+      this.postRepositories.updatePostLikeById(
+        postId,
+        changeCountLike.newLikesCount,
+        changeCountLike.newDislikesCount,
+      ),
     ]);
 
     return this.applicationObjectResult.success(null);

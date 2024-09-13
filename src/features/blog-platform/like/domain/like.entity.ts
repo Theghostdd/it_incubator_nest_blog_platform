@@ -1,51 +1,34 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { HydratedDocument, Model, Schema as MongooseSchema } from 'mongoose';
-import { LikeStatusEnum } from './type';
+import { EntityTypeEnum, LikeStatusEnum } from './type';
 import { LikeInputModel } from '../api/models/input/like-input-model';
+import { Injectable } from '@nestjs/common';
 
-@Schema()
 export class Like {
-  @Prop({ type: String, required: true })
-  userId: string;
-  @Prop({ type: String, required: true })
-  parentId: string;
-  @Prop({ type: String, required: true, enum: Object.values(LikeStatusEnum) })
+  userId: number;
+  parentId: number;
+  entityType: EntityTypeEnum;
   status: LikeStatusEnum;
-  @Prop({ type: String, required: true, default: new Date().toISOString() })
-  createdAt: string;
-  @Prop({ type: String, required: true, default: new Date().toISOString() })
-  lastUpdateAt: string;
-
-  static createLikeInstance(
-    likeInputModel: LikeInputModel,
-    parentId: string,
-    userId: string,
-  ) {
-    const like = new this();
-    like.parentId = parentId;
-    like.userId = userId;
-    like.status = likeInputModel.likeStatus as LikeStatusEnum;
-    like.createdAt = new Date().toISOString();
-    like.lastUpdateAt = new Date().toISOString();
-    return like;
-  }
-
-  updateLikeStatus(likeStatus: LikeStatusEnum) {
-    this.status = likeStatus;
-  }
+  createdAt: Date;
+  lastUpdateAt: Date;
 }
 
-export const LikeSchema: MongooseSchema<Like> =
-  SchemaFactory.createForClass(Like);
-LikeSchema.loadClass(Like);
-export type LikeDocumentType = HydratedDocument<Like>;
+export type LikeType = Like & { id: number };
 
-type LikeModelStaticType = {
-  createLikeInstance: (
+@Injectable()
+export class LikeFactory {
+  constructor() {}
+  create(
     likeInputModel: LikeInputModel,
-    parentId: string,
-    userId: string,
-  ) => LikeDocumentType;
-};
-
-export type LikeModelType = Model<LikeDocumentType> & LikeModelStaticType;
+    parentId: number,
+    userId: number,
+    entityType: EntityTypeEnum,
+  ): Like {
+    const like = new Like();
+    like.userId = userId;
+    like.parentId = parentId;
+    like.entityType = entityType;
+    like.status = likeInputModel.likeStatus;
+    like.createdAt = new Date();
+    like.lastUpdateAt = new Date();
+    return like;
+  }
+}

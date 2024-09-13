@@ -7,11 +7,6 @@ import { ResendConfirmationCodeHandler } from './auth/application/command/resend
 import { PasswordRecoveryHandler } from './auth/application/command/password-recovery.command';
 import { RegistrationHandler } from './auth/application/command/registration.command';
 import { AuthController } from './auth/api/auth.controller';
-import { MongooseModule } from '@nestjs/mongoose';
-import {
-  RecoveryPasswordSession,
-  RecoveryPasswordSessionSchema,
-} from './auth/domain/recovery-session.entity';
 import { v4 as uuidv4 } from 'uuid';
 import { RecoveryPasswordSessionRepositories } from './auth/infrastructure/recovery-password-session-repositories';
 import { UsersModule } from '../users/users.module';
@@ -19,10 +14,6 @@ import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
 import { AuthSessionRepositories } from './auth/infrastructure/auth-session-repositories';
 import { CreateAuthSessionHandler } from './auth/application/command/create-auth-session.command';
-import {
-  AuthSession,
-  AuthSessionSchema,
-} from './auth/domain/auth-session.entity';
 import { LogoutHandler } from './auth/application/command/logout.command';
 import { UpdatePairTokenHandler } from './auth/application/command/update-new-pair-token.command';
 import { SecurityDevicesQueryRepository } from './security-devices/infrastructure/security-devices-query-repositories';
@@ -31,6 +22,8 @@ import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/s
 import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
 import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
+import { AuthSessionFactory } from './auth/domain/auth-session.entity';
+import { RecoveryPasswordSessionFactory } from './auth/domain/recovery-session.entity';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -38,22 +31,7 @@ export const UUIDProvider = {
 };
 
 @Module({
-  imports: [
-    NodeMailerModule,
-    UsersModule,
-    MailTemplateModule,
-    BcryptModule,
-    MongooseModule.forFeature([
-      {
-        name: RecoveryPasswordSession.name,
-        schema: RecoveryPasswordSessionSchema,
-      },
-      {
-        name: AuthSession.name,
-        schema: AuthSessionSchema,
-      },
-    ]),
-  ],
+  imports: [NodeMailerModule, UsersModule, MailTemplateModule, BcryptModule],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
     AuthService,
@@ -73,7 +51,9 @@ export const UUIDProvider = {
     SecurityDeviceOutputModelMapper,
     DeleteAllDevicesExcludeCurrentHandler,
     DeleteDeviceByDeviceIdHandler,
+    AuthSessionFactory,
+    RecoveryPasswordSessionFactory,
   ],
-  exports: [AuthService, AuthSessionRepositories, MongooseModule],
+  exports: [AuthService, AuthSessionRepositories],
 })
 export class AccessControlModule {}
