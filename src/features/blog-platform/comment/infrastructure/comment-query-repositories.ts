@@ -70,32 +70,25 @@ export class CommentQueryRepositories {
     `,
       [postId],
     );
-    const totalCount: number = getTotalDocument[0].count;
+    const totalCount: number = +getTotalDocument[0].count;
     const pagesCount: number = Math.ceil(totalCount / pageSize);
     const skip: number = (+pageNumber - 1) * pageSize;
 
-    const queryComments = `SELECT "c".*, COALESCE("l"."status", 'None') as "status"
-      FROM comments as "c"
-      LEFT JOIN likes as "l"
-      ON ("l"."userId" = $1 OR "l"."userId" IS NULL)
-      AND "l"."parentId" = "c"."id" 
-      AND "l"."entityType" = $2 
-      AND "l"."isActive" = true
-      WHERE "c"."postId" = $3 AND "c"."isActive" = true
-      ORDER BY $4 || $5
-      LIMIT $6 OFFSET $7 
+    const queryComments = `
+        SELECT "c"."id", "c"."content", "c"."userId", "c"."userLogin", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", COALESCE("l"."status", 'None') as "status"
+        FROM ${tablesName.COMMENTS} as "c"
+        LEFT JOIN ${tablesName.LIKES} as "l"
+        ON ("l"."userId" = $1 OR $1 IS NULL)
+        AND "l"."parentId" = "c"."id" 
+        AND "l"."entityType" = $2 
+        AND "l"."isActive" = true
+        WHERE "c"."postId" = $3 AND "c"."isActive" = true
+        ORDER BY $4 ${sortDirection}
+        LIMIT $5 OFFSET $6 
     `;
     const comments: CommentLikeJoinType[] | [] = await this.dataSource.query(
       queryComments,
-      [
-        userId || null,
-        EntityTypeEnum.Comment,
-        postId,
-        sortBy,
-        sortDirection,
-        pagesCount,
-        skip,
-      ],
+      [userId || null, EntityTypeEnum.Comment, postId, sortBy, pageSize, skip],
     );
 
     return {

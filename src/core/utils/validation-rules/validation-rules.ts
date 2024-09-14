@@ -2,6 +2,7 @@ import {
   IsEnum,
   IsNotEmpty,
   IsNumber,
+  IsNumberString,
   IsString,
   Length,
   Matches,
@@ -10,6 +11,7 @@ import { Trim } from '../../decorators/transform/trim';
 import { LoginOrEmail } from '../../decorators/transform/loginOrEmail';
 import { LikeStatusEnum } from '../../../features/blog-platform/like/domain/type';
 import { FindBlog } from '../../decorators/find-blog';
+import { TransformNumber } from '../../decorators/transform/number';
 
 type ValidationOptions = {
   MIN_LENGTH: number | null;
@@ -92,6 +94,7 @@ export class PostInputModelValidationRules {
   public content: string;
   @Trim()
   @IsNotEmpty()
+  @TransformNumber()
   @IsNumber()
   @FindBlog()
   public blogId: number;
@@ -121,6 +124,7 @@ export class PostUpdateModelValidationRules {
   public content: string;
   @Trim()
   @IsNotEmpty()
+  @TransformNumber()
   @IsNumber()
   @FindBlog()
   public blogId: number;

@@ -54,7 +54,7 @@ export class PostRepository {
   ): Promise<void> {
     const query = `
         UPDATE ${tablesName.POSTS}
-        SET "title" = $1. "shortDescription" = $2, "content" = $3 
+        SET "title" = $1, "shortDescription" = $2, "content" = $3 
         WHERE "id" = $4 AND "isActive" = true
     `;
     await this.dataSource.query(query, [

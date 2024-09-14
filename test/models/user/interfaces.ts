@@ -31,14 +31,3 @@ export interface IUserResendConfirmationCodeEmailTestModel {
 export interface IUserPasswordRecoveryTestModel {
   email: string;
 }
-
-export interface IUserInsertTestModel {
-  login: string;
-  password: string;
-  email: string;
-  userConfirm: {
-    isConfirm: boolean;
-    confirmationCode: string;
-    dataExpire: string;
-  };
-}

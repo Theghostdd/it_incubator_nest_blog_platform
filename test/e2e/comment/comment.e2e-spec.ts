@@ -1,29 +1,51 @@
 import { ITestSettings } from '../../settings/interfaces';
 import {
-  ICommentInsertModel,
+  ICommentCreateModel,
   ICommentUpdateModel,
 } from '../../models/comments/interfaces';
 import { initSettings } from '../../settings/test-settings';
 import { CommentTestManager } from '../../utils/request-test-manager/comment-test-manager';
 import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 import {
-  IUserInsertTestModel,
+  IUserCreateTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
+import { APISettings } from '../../../src/settings/api-settings';
+import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import { BlogTestManager } from '../../utils/request-test-manager/blog-test-manager';
+import { IBlogCreateModel } from '../../models/blog/interfaces';
+import { IPostCreateModel } from '../../models/post/interfaces';
+import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
 
 describe('Comment e2e', () => {
   let commentTestManager: CommentTestManager;
   let testSettings: ITestSettings;
-  let commentInsertModel: ICommentInsertModel;
   let commentUpdateModel: ICommentUpdateModel;
-  let userInsertModel: IUserInsertTestModel;
   let userLoginModel: IUserLoginTestModel;
+  let apiSettings: APISettings;
+  let userCreateModel: IUserCreateTestModel;
+  let login: string;
+  let password: string;
+  let adminAuthToken: string;
   let likeUpdateModel: ILikeUpdateModel;
+  let userTestManager: UserTestManager;
+  let blogTestManager: BlogTestManager;
+  let blogCreateModel: IBlogCreateModel;
+  let postCreateModel: IPostCreateModel;
+  let postTestManager: PostTestManager;
+  let commentCreateModel: ICommentCreateModel;
+
   beforeAll(async () => {
     testSettings = await initSettings();
+    apiSettings = testSettings.configService.get('apiSettings', {
+      infer: true,
+    });
+    login = apiSettings.SUPER_ADMIN_AUTH.login;
+    password = apiSettings.SUPER_ADMIN_AUTH.password;
+    adminAuthToken = `Basic ${Buffer.from(`${login}:${password}`).toString('base64')}`;
   });
 
   afterAll(async () => {
@@ -33,44 +55,68 @@ describe('Comment e2e', () => {
 
   beforeEach(async () => {
     await testSettings.dataBase.clearDatabase();
-    commentInsertModel =
-      testSettings.testModels.commentsTestModel.getCommentInsertModel();
+    postTestManager = testSettings.testManager.postTestManager;
     commentTestManager = testSettings.testManager.commentTestManager;
     commentUpdateModel =
       testSettings.testModels.commentsTestModel.getCommentUpdateModel();
-    userInsertModel =
-      testSettings.testModels.userTestModel.getUserInsertModel();
     userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
     likeUpdateModel =
       testSettings.testModels.likeTestModel.getLikeUpdateModel();
-    commentInsertModel.postInfo = {
-      ...commentInsertModel.postInfo,
-      postId: '64f2023fa7c8bfa62d7c8c77',
-    };
-    commentInsertModel.blogInfo = {
-      ...commentInsertModel.blogInfo,
-      blogId: '64f2023fa7c8bfa62d7c8c77',
-    };
+    userCreateModel =
+      testSettings.testModels.userTestModel.getUserCreateModel();
+    userTestManager = testSettings.testManager.userTestManager;
+    blogTestManager = testSettings.testManager.blogTestManager;
+    blogCreateModel =
+      testSettings.testModels.blogTestModel.getBlogCreateModel();
+    postCreateModel =
+      testSettings.testModels.postTestModel.getPostCreateModel();
+    commentCreateModel =
+      testSettings.testModels.commentsTestModel.getCommentCreateModel();
   });
 
   describe('Get comment', () => {
     it('should get comment by id', async () => {
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        commentInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
       );
 
       const result: CommentOutputModel = await commentTestManager.getComment(
-        commentId.toString(),
+        commentId,
         200,
       );
 
       expect(result).toEqual({
         id: expect.any(String),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
-          userId: commentInsertModel.commentatorInfo.userId,
-          userLogin: commentInsertModel.commentatorInfo.userLogin,
+          userId: userId,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 0,
@@ -88,27 +134,31 @@ describe('Comment e2e', () => {
 
   describe('Update comment', () => {
     it('should update comment by id', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
           userLoginModel,
           200,
         );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
 
       await commentTestManager.updateCommentById(
         commentId.toString(),
@@ -116,24 +166,25 @@ describe('Comment e2e', () => {
         `Bearer ${accessToken}`,
         204,
       );
+
+      const getComment: CommentOutputModel =
+        await commentTestManager.getComment(commentId, 200);
+      expect(getComment.content).not.toBe(commentCreateModel.content);
     });
 
     it('should not update comment by id, bad input model', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
@@ -141,9 +192,16 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       const result1: APIErrorsMessageType =
         await commentTestManager.updateCommentById(
-          commentId.toString(),
+          commentId,
           { content: 'cone' },
           `Bearer ${accessToken}`,
           400,
@@ -159,7 +217,7 @@ describe('Comment e2e', () => {
 
       const result2: APIErrorsMessageType =
         await commentTestManager.updateCommentById(
-          commentId.toString(),
+          commentId,
           { content: '' },
           `Bearer ${accessToken}`,
           400,
@@ -173,87 +231,25 @@ describe('Comment e2e', () => {
           },
         ],
       });
+
+      const getComment: CommentOutputModel =
+        await commentTestManager.getComment(commentId, 200);
+      expect(getComment.content).toBe(commentCreateModel.content);
     });
 
     it('should not update comment by id, unauthorized', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
-
-      await commentTestManager.updateCommentById(
-        commentId.toString(),
-        { content: 'cone' },
-        `Bearer accessToken`,
-        401,
-      );
-    });
-
-    it('should not update comment by id, forbidden', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
-
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        _id: '66d1fdd43170eab4af6c4ba3',
-        login: 'login2',
-        email: 'eamil2@mail.ru',
-      });
-
-      const { accessToken } =
-        await testSettings.testManager.authTestManager.login(
-          { ...userLoginModel, loginOrEmail: 'login2' },
-          200,
-        );
-
-      await commentTestManager.updateCommentById(
-        commentId.toString(),
-        commentUpdateModel,
-        `Bearer ${accessToken}`,
-        403,
-      );
-    });
-
-    it('should not update comment by id, comment not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
@@ -261,10 +257,102 @@ describe('Comment e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.clearDatabase();
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
 
       await commentTestManager.updateCommentById(
-        commentId.toString(),
+        commentId,
+        { content: 'cone' },
+        `Bearer accessToken`,
+        401,
+      );
+    });
+
+    it('should not update comment by id, forbidden', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
+      await userTestManager.createUser(
+        { ...userCreateModel, login: 'login22', email: 'ee@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login22' },
+          200,
+        );
+
+      await commentTestManager.updateCommentById(
+        commentId,
+        commentUpdateModel,
+        `Bearer ${accessToken2}`,
+        403,
+      );
+    });
+
+    it('should not update comment by id, comment not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
+      await commentTestManager.deleteCommentById(
+        commentId,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      await commentTestManager.updateCommentById(
+        commentId,
         commentUpdateModel,
         `Bearer ${accessToken}`,
         404,
@@ -274,21 +362,18 @@ describe('Comment e2e', () => {
 
   describe('Delete comment', () => {
     it('should delete comment by id', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
@@ -296,90 +381,33 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       await commentTestManager.deleteCommentById(
-        commentId.toString(),
+        commentId,
         `Bearer ${accessToken}`,
         204,
       );
     });
 
     it('should not delete comment by id, unauthorized', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
-
-      await commentTestManager.deleteCommentById(
-        commentId.toString(),
-        `Bearer accessToken`,
-        401,
-      );
-    });
-
-    it('should not delete comment by id, forbidden', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
-
-      await testSettings.dataBase.dbInsertOne('users', {
-        ...userInsertModel,
-        _id: '66d1fdd43170eab4af6c4ba3',
-        login: 'login2',
-        email: 'eamil2@mail.ru',
-      });
-
-      const { accessToken } =
-        await testSettings.testManager.authTestManager.login(
-          { ...userLoginModel, loginOrEmail: 'login2' },
-          200,
-        );
-
-      await commentTestManager.deleteCommentById(
-        commentId.toString(),
-        `Bearer ${accessToken}`,
-        403,
-      );
-    });
-
-    it('should not delete comment by id, comment not found', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
-      );
-
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
-      );
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
@@ -387,10 +415,100 @@ describe('Comment e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.clearDatabase();
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
 
       await commentTestManager.deleteCommentById(
-        commentId.toString(),
+        commentId,
+        `Bearer accessToken`,
+        401,
+      );
+    });
+
+    it('should not delete comment by id, forbidden', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
+      await userTestManager.createUser(
+        { ...userCreateModel, login: 'login22', email: 'eek@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+      const { accessToken: accessToken2 } =
+        await testSettings.testManager.authTestManager.login(
+          { ...userLoginModel, loginOrEmail: 'login22' },
+          200,
+        );
+
+      await commentTestManager.deleteCommentById(
+        commentId,
+        `Bearer ${accessToken2}`,
+        403,
+      );
+    });
+
+    it('should not delete comment by id, comment not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
+      await commentTestManager.deleteCommentById(
+        commentId,
+        `Bearer ${accessToken}`,
+        204,
+      );
+
+      await commentTestManager.deleteCommentById(
+        commentId,
         `Bearer ${accessToken}`,
         404,
       );
@@ -399,20 +517,21 @@ describe('Comment e2e', () => {
 
   describe('Update like status for comment by comment id', () => {
     it('should update like status, the status must be "Like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -421,8 +540,15 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
@@ -430,17 +556,17 @@ describe('Comment e2e', () => {
 
       const getComment =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment).toEqual({
-        id: commentId.toString(),
-        content: commentInsertModel.content,
+        id: commentId,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 1,
@@ -452,19 +578,21 @@ describe('Comment e2e', () => {
     });
 
     it('should update like status to "Like" and update again with "Like" the status must be "Like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -473,8 +601,15 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
@@ -482,17 +617,17 @@ describe('Comment e2e', () => {
 
       const getComment =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 1,
@@ -503,7 +638,7 @@ describe('Comment e2e', () => {
       });
 
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
@@ -511,17 +646,17 @@ describe('Comment e2e', () => {
 
       const getComment2 =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment2).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 1,
@@ -533,19 +668,21 @@ describe('Comment e2e', () => {
     });
 
     it('should update like status to "Like" and change status to dislike, the status must be "Dislike"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -554,8 +691,15 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
@@ -563,17 +707,17 @@ describe('Comment e2e', () => {
 
       const getComment =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 1,
@@ -584,7 +728,7 @@ describe('Comment e2e', () => {
       });
 
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
@@ -592,17 +736,17 @@ describe('Comment e2e', () => {
 
       const getComment2 =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment2).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 0,
@@ -614,19 +758,21 @@ describe('Comment e2e', () => {
     });
 
     it('should update like status to "Like" and change status to dislike, than remove like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: commentId } = await testSettings.dataBase.dbInsertOne(
-        'comments',
-        {
-          ...commentInsertModel,
-          commentatorInfo: {
-            ...commentInsertModel.commentatorInfo,
-            userId: userId.toString(),
-          },
-        },
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -635,8 +781,15 @@ describe('Comment e2e', () => {
           200,
         );
 
+      const { id: commentId } = await postTestManager.createCommentByPostId(
+        postId,
+        commentCreateModel,
+        `Bearer ${accessToken}`,
+        201,
+      );
+
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
@@ -644,17 +797,17 @@ describe('Comment e2e', () => {
 
       const getComment =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 1,
@@ -665,7 +818,7 @@ describe('Comment e2e', () => {
       });
 
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
@@ -673,17 +826,17 @@ describe('Comment e2e', () => {
 
       const getComment2 =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment2).toEqual({
-        id: commentId.toString(),
-        content: commentInsertModel.content,
+        id: commentId,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 0,
@@ -694,7 +847,7 @@ describe('Comment e2e', () => {
       });
 
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId.toString(),
+        commentId,
         { likeStatus: 'None' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
@@ -702,17 +855,17 @@ describe('Comment e2e', () => {
 
       const getComment3 =
         await testSettings.testManager.commentTestManager.getComment(
-          commentId.toString(),
+          commentId,
           200,
           `Bearer ${accessToken}`,
         );
 
       expect(getComment3).toEqual({
         id: commentId.toString(),
-        content: commentInsertModel.content,
+        content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 0,

@@ -36,115 +36,11 @@ export class BlogTestModel {
     };
   }
 
-  getBlogInsertModel() {
-    return {
-      name: this.name,
-      description: this.description,
-      websiteUrl: this.websiteUrl,
-      createdAt: new Date().toISOString(),
-      isMembership: false,
-      __v: 0,
-    };
-  }
-
   getBlogUpdateModel() {
     return {
       name: this.updateBlogName,
       description: this.updateBlogDescription,
       websiteUrl: this.updateBlogWebsiteUrl,
     };
-  }
-
-  getBlogInsertManyModel() {
-    return [
-      {
-        name: this.name,
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'MyBlog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Your Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'This Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'About Me',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Jon`s Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Your Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Alina`s Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Try Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Pod Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-      {
-        name: 'Qwerty Blog',
-        description: this.description,
-        websiteUrl: this.websiteUrl,
-        createdAt: new Date().toISOString(),
-        isMembership: false,
-        __v: 0,
-      },
-    ];
   }
 }

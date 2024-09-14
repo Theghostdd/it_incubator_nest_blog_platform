@@ -1,9 +1,6 @@
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
-import {
-  IUserCreateTestModel,
-  IUserInsertTestModel,
-} from '../../models/user/interfaces';
+import { IUserCreateTestModel } from '../../models/user/interfaces';
 import { UserOutputModel } from '../../../src/features/users/user/api/models/output/user-output.model';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { UserSortingQuery } from '../../../src/features/users/user/api/models/input/user-input.model';
@@ -13,7 +10,6 @@ import { APISettings } from '../../../src/settings/api-settings';
 
 describe('User e2e', () => {
   let testSettings: ITestSettings;
-  let userInsertManyModel: IUserInsertTestModel[];
   let userTestManager: UserTestManager;
   let userCreateModel: IUserCreateTestModel;
   let apiSettings: APISettings;
@@ -40,8 +36,6 @@ describe('User e2e', () => {
   beforeEach(async () => {
     await testSettings.dataBase.clearDatabase();
     userTestManager = testSettings.testManager.userTestManager;
-    userInsertManyModel =
-      testSettings.testModels.userTestModel.getUserInsertManyModel();
     userCreateModel =
       testSettings.testModels.userTestModel.getUserCreateModel();
   });
@@ -67,7 +61,7 @@ describe('User e2e', () => {
         pagesCount: 2,
         page: 1,
         pageSize: 10,
-        totalCount: userInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
@@ -97,7 +91,7 @@ describe('User e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 11,
-        totalCount: userInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
@@ -128,7 +122,7 @@ describe('User e2e', () => {
         pagesCount: 2,
         page: 2,
         pageSize: 10,
-        totalCount: userInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });

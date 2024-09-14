@@ -17,7 +17,7 @@
     "test:watch": "jest --watch",
     "test:cov": "set ENV-TESTING && jest -i --coverage ",
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
-    "test:e2e": "set ENV-TESTING && jest -i --config ./test/jest-e2e.json",
+    "test:e2e": "ENV=TESTING jest -i --config ./test/jest-e2e.json",
     "test:integration": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-integration.json",
     "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json"
   },

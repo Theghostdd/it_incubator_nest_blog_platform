@@ -11,17 +11,3 @@ export interface IPostUpdateModel {
   content: string;
   blogId: string;
 }
-
-export interface IPostInsertModel {
-  title: string;
-  shortDescription: string;
-  content: string;
-  blogId: string;
-  createdAt: string;
-  blogName: string;
-  extendedLikesInfo: {
-    likesCount: number;
-    dislikesCount: number;
-  };
-  __v: number;
-}

@@ -86,7 +86,7 @@ export class PostQueryRepository {
       `
         SELECT COUNT(*)
         FROM ${tablesName.POSTS} 
-        WHERE "blogId" = $1 OR "blogId" IS NULL AND "isActive" = true
+        WHERE "blogId" = $1 OR $1 IS NULL AND "isActive" = true
       `,
       [blogId || null],
     );
@@ -103,8 +103,8 @@ export class PostQueryRepository {
         AND "l"."entityType" = $2 
         AND "l"."isActive" = true
         WHERE ("p"."blogId" = $3 OR $3 IS NULL) AND "p"."isActive" = true 
-        ORDER BY $4 || $5
-        LIMIT $6 OFFSET $7;
+        ORDER BY $4 ${sortDirection}
+        LIMIT $5 OFFSET $6;
     `;
 
     const posts: PostLikeJoinType[] | [] = await this.dataSource.query(
@@ -114,7 +114,6 @@ export class PostQueryRepository {
         EntityTypeEnum.Post,
         blogId || null,
         sortBy,
-        sortDirection,
         pageSize,
         skip,
       ],
@@ -126,15 +125,22 @@ export class PostQueryRepository {
         .map((post: PostLikeJoinType) => post.id)
         .join(',');
 
-      const lastLikesQuery = `
+      const lastLikesQuery = `      
       SELECT "l"."lastUpdateAt", "l"."parentId" as "postId", "u"."login" as "userLogin", "u"."id" as "userId"
-      FROM likes as "l"
-      JOIN users as "u"
-      ON "u"."id" = "l"."userId"
-      AND "u"."isActive" = true
-      WHERE "l"."parentId" IN(${postIds}) AND "l"."entityType" = $1 AND "l"."isActive" = true
-      ORDER BY "l"."lastUpdateAt" DESC
-      LIMIT 3
+      FROM ${tablesName.LIKES} as "l"
+      JOIN ${tablesName.USERS} as "u" ON "u"."id" = "l"."userId" AND "u"."isActive" = true
+      WHERE "l"."id" IN (
+        SELECT "l2"."id"
+        FROM likes as "l2"
+        WHERE "l2"."parentId" = "l"."parentId"
+        AND "l2"."entityType" = $1
+        AND "l2"."isActive" = true
+        AND "l2"."status" = 'Like'
+        ORDER BY "l2"."lastUpdateAt" DESC
+        LIMIT 3
+      )
+      AND "l"."parentId" IN (${postIds})
+      ORDER BY "l"."lastUpdateAt" DESC;
     `;
 
       lastLikes = await this.dataSource.query(lastLikesQuery, [

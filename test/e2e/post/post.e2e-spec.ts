@@ -3,39 +3,31 @@ import { ITestSettings } from '../../settings/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import {
   IPostCreateModel,
-  IPostInsertModel,
   IPostUpdateModel,
 } from '../../models/post/interfaces';
 import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
-import { IBlogInsertModel } from '../../models/blog/interfaces';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
-import {
-  ICommentCreateModel,
-  ICommentInsertModel,
-} from '../../models/comments/interfaces';
+import { ICommentCreateModel } from '../../models/comments/interfaces';
 import { APISettings } from '../../../src/settings/api-settings';
 import {
   IUserCreateTestModel,
-  IUserInsertTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
 import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
+import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import { BlogTestManager } from '../../utils/request-test-manager/blog-test-manager';
+import { IBlogCreateModel } from '../../models/blog/interfaces';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
   let testSettings: ITestSettings;
   let postCreateModel: IPostCreateModel;
-  let postInsertModel: IPostInsertModel;
   let postUpdateModel: IPostUpdateModel;
-  let postInsertModels: IPostInsertModel[];
-  let blogInsertModel: IBlogInsertModel;
   let commentCreateModel: ICommentCreateModel;
-  let commentInsertManyModel: ICommentInsertModel[];
-  let userInsertModel: IUserInsertTestModel;
   let userCreateModel: IUserCreateTestModel;
   let userLoginModel: IUserLoginTestModel;
   let apiSettings: APISettings;
@@ -43,6 +35,9 @@ describe('Post e2e', () => {
   let password: string;
   let adminAuthToken: string;
   let likeUpdateModel: ILikeUpdateModel;
+  let userTestManager: UserTestManager;
+  let blogTestManager: BlogTestManager;
+  let blogCreateModel: IBlogCreateModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -64,30 +59,36 @@ describe('Post e2e', () => {
     postTestManager = testSettings.testManager.postTestManager;
     postCreateModel =
       testSettings.testModels.postTestModel.getPostCreateModel();
-    postInsertModel =
-      testSettings.testModels.postTestModel.getPostInsertModel();
     postUpdateModel =
       testSettings.testModels.postTestModel.getPostUpdateModel();
-    blogInsertModel =
-      testSettings.testModels.blogTestModel.getBlogInsertModel();
-    postInsertModels =
-      testSettings.testModels.postTestModel.getPostInsertModels();
-    commentInsertManyModel =
-      testSettings.testModels.commentsTestModel.getCommentInsertManyModel();
     commentCreateModel =
       testSettings.testModels.commentsTestModel.getCommentCreateModel();
-    userInsertModel =
-      testSettings.testModels.userTestModel.getUserInsertModel();
     userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
     likeUpdateModel =
       testSettings.testModels.likeTestModel.getLikeUpdateModel();
     userCreateModel =
       testSettings.testModels.userTestModel.getUserCreateModel();
+    userTestManager = testSettings.testManager.userTestManager;
+    blogTestManager = testSettings.testManager.blogTestManager;
+    blogCreateModel =
+      testSettings.testModels.blogTestModel.getBlogCreateModel();
   });
 
   describe('Get posts', () => {
     it('should get posts without query', async () => {
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await postTestManager.getPosts({}, 200);
@@ -96,13 +97,25 @@ describe('Post e2e', () => {
         pagesCount: 2,
         page: 1,
         pageSize: 10,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get posts with pagination, page size: 11', async () => {
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await postTestManager.getPosts(
@@ -116,13 +129,25 @@ describe('Post e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 11,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get posts with pagination, page number: 2', async () => {
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId },
+          adminAuthToken,
+          201,
+        );
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await postTestManager.getPosts(
@@ -136,7 +161,7 @@ describe('Post e2e', () => {
         pagesCount: 2,
         page: 2,
         pageSize: 10,
-        totalCount: postInsertModels.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
@@ -145,19 +170,39 @@ describe('Post e2e', () => {
       const result: BasePagination<PostOutputModel[] | []> =
         await postTestManager.getPosts({}, 200);
 
+      expect(result.items).toHaveLength(0);
       expect(result).toEqual({
         pagesCount: 0,
         page: 1,
         pageSize: 10,
         totalCount: 0,
-        items: expect.any(Array),
+        items: [],
       });
-
-      expect(result.items).toHaveLength(0);
     });
 
-    it('should get posts with sorting by name, asc', async () => {
-      await testSettings.dataBase.dbInsertMany('posts', postInsertModels);
+    it('should get posts with sorting by title, asc', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const createdPostsArray = [];
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createPost(
+          {
+            ...postCreateModel,
+            title: 'THIS IS POST' + (i - 1),
+            blogId: blogId,
+          },
+          adminAuthToken,
+          201,
+        );
+        createdPostsArray.push({
+          ...postCreateModel,
+          title: 'THIS IS POST' + (i - 1),
+          blogId: blogId,
+        });
+      }
 
       const result: BasePagination<PostOutputModel[] | []> =
         await postTestManager.getPosts(
@@ -177,7 +222,7 @@ describe('Post e2e', () => {
         };
       });
 
-      const mapInsertModelAndSortByAsc = postInsertModels
+      const mapInsertModelAndSortByAsc = createdPostsArray
         .map((item) => {
           return {
             title: item.title,
@@ -191,19 +236,21 @@ describe('Post e2e', () => {
     });
 
     it('should get posts with last likes array, with 2 users and 2 like and 2 dislike', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
+
       const { id: postId1 } =
         await testSettings.testManager.postTestManager.createPost(
-          { ...postCreateModel, blogId: blogId.toString() },
+          { ...postCreateModel, blogId: blogId },
           adminAuthToken,
           201,
         );
       const { id: postId2 } =
         await testSettings.testManager.postTestManager.createPost(
-          { ...postCreateModel, blogId: blogId.toString() },
+          { ...postCreateModel, blogId: blogId },
           adminAuthToken,
           201,
         );
@@ -238,7 +285,6 @@ describe('Post e2e', () => {
           userLoginModel,
           200,
         );
-
       const { accessToken: accessToken2 } =
         await testSettings.testManager.authTestManager.login(
           { ...userLoginModel, loginOrEmail: 'login2' },
@@ -256,49 +302,49 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId1.toString(),
+        postId1,
         likeUpdateModel,
         `Bearer ${accessToken1}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId1.toString(),
+        postId1,
         likeUpdateModel,
         `Bearer ${accessToken2}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId1.toString(),
+        postId1,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken3}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId1.toString(),
+        postId1,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken4}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId2.toString(),
+        postId2,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken1}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId2.toString(),
+        postId2,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken2}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId2.toString(),
+        postId2,
         likeUpdateModel,
         `Bearer ${accessToken3}`,
         204,
       );
       await postTestManager.updatePostLikeStatusByPostId(
-        postId2.toString(),
+        postId2,
         likeUpdateModel,
         `Bearer ${accessToken4}`,
         204,
@@ -311,7 +357,7 @@ describe('Post e2e', () => {
           `Bearer ${accessToken4}`,
         );
 
-      expect(getPosts.items[0].extendedLikesInfo).toEqual({
+      expect(getPosts.items[1].extendedLikesInfo).toEqual({
         likesCount: 2,
         dislikesCount: 2,
         myStatus: 'Like',
@@ -329,7 +375,7 @@ describe('Post e2e', () => {
         ],
       });
 
-      expect(getPosts.items[1].extendedLikesInfo).toEqual({
+      expect(getPosts.items[0].extendedLikesInfo).toEqual({
         likesCount: 2,
         dislikesCount: 2,
         myStatus: 'Dislike',
@@ -351,24 +397,31 @@ describe('Post e2e', () => {
 
   describe('Get post', () => {
     it('should get post by id', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
       const result: PostOutputModel = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
       );
 
       expect(result).toEqual({
         id: expect.any(String),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId.toString(),
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
           dislikesCount: 0,
@@ -383,10 +436,17 @@ describe('Post e2e', () => {
     });
 
     it('should get post with last likes array, with 2 users and 2 like and 2 dislike', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
+      const { id: postId } =
+        await testSettings.testManager.postTestManager.createPost(
+          { ...postCreateModel, blogId: blogId },
+          adminAuthToken,
+          201,
+        );
 
       const { id: userId1 } =
         await testSettings.testManager.userTestManager.createUser(
@@ -434,35 +494,35 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken1}`,
         204,
       );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken2}`,
         204,
       );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken3}`,
         204,
       );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken4}`,
         204,
       );
 
       const getPost = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken1}`,
       );
@@ -485,7 +545,7 @@ describe('Post e2e', () => {
       });
 
       const getPost2 = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken3}`,
       );
@@ -531,34 +591,33 @@ describe('Post e2e', () => {
     });
 
     it('should get post with last likes array, with 4 like and need get last likes', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
-      );
-
-      await testSettings.testManager.userTestManager.createUser(
-        userCreateModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
         adminAuthToken,
         201,
       );
-      const { id: userId2 } =
-        await testSettings.testManager.userTestManager.createUser(
-          { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
-          adminAuthToken,
-          201,
-        );
-      const { id: userId3 } =
-        await testSettings.testManager.userTestManager.createUser(
-          { ...userCreateModel, login: 'login3', email: 'email3@mail.ru' },
-          adminAuthToken,
-          201,
-        );
-      const { id: userId4 } =
-        await testSettings.testManager.userTestManager.createUser(
-          { ...userCreateModel, login: 'login4', email: 'email4@mail.ru' },
-          adminAuthToken,
-          201,
-        );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      const { id: userId2 } = await userTestManager.createUser(
+        { ...userCreateModel, login: 'login2', email: 'email2@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+      const { id: userId3 } = await userTestManager.createUser(
+        { ...userCreateModel, login: 'login3', email: 'email3@mail.ru' },
+        adminAuthToken,
+        201,
+      );
+      const { id: userId4 } = await userTestManager.createUser(
+        { ...userCreateModel, login: 'login4', email: 'email4@mail.ru' },
+        adminAuthToken,
+        201,
+      );
 
       const { accessToken: accessToken1 } =
         await testSettings.testManager.authTestManager.login(
@@ -642,12 +701,13 @@ describe('Post e2e', () => {
 
   describe('Create post', () => {
     it('should create post by blog id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
       const result: PostOutputModel = await postTestManager.createPost(
-        { ...postCreateModel, blogId: blogId.toString() },
+        { ...postCreateModel, blogId: blogId },
         adminAuthToken,
         201,
       );
@@ -658,7 +718,7 @@ describe('Post e2e', () => {
         shortDescription: postCreateModel.shortDescription,
         content: postCreateModel.content,
         blogId: blogId.toString(),
-        blogName: blogInsertModel.name,
+        blogName: blogCreateModel.name,
         createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
@@ -811,17 +871,21 @@ describe('Post e2e', () => {
 
   describe('Delete post', () => {
     it('should delete post by id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
-      );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        { ...postInsertModel, blogId: blogId.toString() },
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
 
-      await postTestManager.deletePost(postId.toString(), adminAuthToken, 204);
-      await postTestManager.getPost(postId.toString(), 404);
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await postTestManager.deletePost(postId, adminAuthToken, 204);
+      await postTestManager.getPost(postId, 404);
+      await postTestManager.deletePost(postId, adminAuthToken, 404);
     });
 
     it('should not delete post by id, post not found', async () => {
@@ -835,18 +899,21 @@ describe('Post e2e', () => {
 
   describe('Update post', () => {
     it('should update post by id', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        { ...postInsertModel, blogId: blogId.toString() },
+
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
       await postTestManager.updatePost(
-        postId.toString(),
-        { ...postUpdateModel, blogId: blogId.toString() },
+        postId,
+        { ...postUpdateModel, blogId: blogId },
         adminAuthToken,
         204,
       );
@@ -855,20 +922,24 @@ describe('Post e2e', () => {
         postId.toString(),
         200,
       );
-      expect(result.title).not.toBe(postInsertModel.title);
-      expect(result.content).not.toBe(postInsertModel.content);
+      expect(result.title).not.toBe(postCreateModel.title);
+      expect(result.content).not.toBe(postCreateModel.content);
       expect(result.shortDescription).not.toBe(
-        postInsertModel.shortDescription,
+        postCreateModel.shortDescription,
       );
     });
 
     it('should not update post, bad input data', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        {
-          ...postInsertModel,
-          blogId: '66d22840fe8ba2e6f7319152',
-        },
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
       const result: APIErrorsMessageType = await postTestManager.updatePost(
@@ -996,19 +1067,20 @@ describe('Post e2e', () => {
         postId.toString(),
         200,
       );
-      expect(post.title).toBe(postInsertModel.title);
-      expect(post.shortDescription).toBe(postInsertModel.shortDescription);
-      expect(post.content).toBe(postInsertModel.content);
+      expect(post.title).toBe(postCreateModel.title);
+      expect(post.shortDescription).toBe(postCreateModel.shortDescription);
+      expect(post.content).toBe(postCreateModel.content);
     });
 
     it('should not update post by id, post not found', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
       await postTestManager.updatePost(
         '66bf39c8f855a5438d02adbf',
-        { ...postUpdateModel, blogId: blogId.toString() },
+        { ...postUpdateModel, blogId: blogId },
         adminAuthToken,
         404,
       );
@@ -1017,46 +1089,78 @@ describe('Post e2e', () => {
 
   describe('Get comments by post id', () => {
     it('should get comments by post id without query', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const comments = commentInsertManyModel.map((comment) => {
-        comment.postInfo.postId = postId.toString();
-        return comment;
-      });
-      await testSettings.dataBase.dbInsertMany('comments', comments);
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
 
-      const result: BasePagination<CommentOutputModel[] | []> =
-        await postTestManager.getCommentsByPostId(
-          comments[1].postInfo.postId,
-          {},
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
           200,
         );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createCommentByPostId(
+          postId,
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          201,
+        );
+      }
+
+      const result: BasePagination<CommentOutputModel[] | []> =
+        await postTestManager.getCommentsByPostId(postId, {}, 200);
 
       expect(result).toEqual({
         pagesCount: 2,
         page: 1,
         pageSize: 10,
-        totalCount: commentInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get comments by post id with pagination, page size: 11', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const comments = commentInsertManyModel.map((comment) => {
-        comment.postInfo.postId = postId.toString();
-        return comment;
-      });
-      await testSettings.dataBase.dbInsertMany('comments', comments);
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createCommentByPostId(
+          postId,
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          201,
+        );
+      }
 
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          comments[0].postInfo.postId,
+          postId,
           {
             pageSize: 11,
           } as BaseSorting,
@@ -1067,24 +1171,43 @@ describe('Post e2e', () => {
         pagesCount: 1,
         page: 1,
         pageSize: 11,
-        totalCount: commentInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
 
     it('should get comments by post id with pagination, page number: 2', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const comments = commentInsertManyModel.map((comment) => {
-        comment.postInfo.postId = postId.toString();
-        return comment;
-      });
-      await testSettings.dataBase.dbInsertMany('comments', comments);
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createCommentByPostId(
+          postId,
+          commentCreateModel,
+          `Bearer ${accessToken}`,
+          201,
+        );
+      }
+
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          comments[0].postInfo.postId,
+          postId,
           {
             pageNumber: 2,
           } as BaseSorting,
@@ -1095,7 +1218,7 @@ describe('Post e2e', () => {
         pagesCount: 2,
         page: 2,
         pageSize: 10,
-        totalCount: commentInsertManyModel.length,
+        totalCount: 11,
         items: expect.any(Array),
       });
     });
@@ -1109,19 +1232,41 @@ describe('Post e2e', () => {
     });
 
     it('should get comments by post id with sorting by content, asc', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const comments = commentInsertManyModel.map((comment) => {
-        comment.postInfo.postId = postId.toString();
-        return comment;
-      });
-      await testSettings.dataBase.dbInsertMany('comments', comments);
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+
+      const { accessToken } =
+        await testSettings.testManager.authTestManager.login(
+          userLoginModel,
+          200,
+        );
+
+      const createdCommentsArray = [];
+      for (let i = 0; i < 11; i++) {
+        await postTestManager.createCommentByPostId(
+          postId,
+          { content: 'Content some content some content' + 1 },
+          `Bearer ${accessToken}`,
+          201,
+        );
+        createdCommentsArray.push({
+          content: 'Content some content some content' + 1,
+        });
+      }
 
       const result: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          comments[0].postInfo.postId,
+          postId,
           {
             sortBy: 'content',
             sortDirection: 'asc',
@@ -1136,7 +1281,7 @@ describe('Post e2e', () => {
         };
       });
 
-      const mapInsertModelAndSortByAsc = comments
+      const mapInsertModelAndSortByAsc = createdCommentsArray
         .map((item) => {
           return {
             content: item.content,
@@ -1148,9 +1293,15 @@ describe('Post e2e', () => {
     });
 
     it('should get comments by post id with user`s like status', async () => {
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
       const { id: userId1 } =
@@ -1180,53 +1331,53 @@ describe('Post e2e', () => {
 
       const { id: commentId1 } =
         await testSettings.testManager.postTestManager.createCommentByPostId(
-          postId.toString(),
+          postId,
           commentCreateModel,
           `Bearer ${accessToken1}`,
           201,
         );
       const { id: commentId2 } =
         await testSettings.testManager.postTestManager.createCommentByPostId(
-          postId.toString(),
+          postId,
           commentCreateModel,
           `Bearer ${accessToken1}`,
           201,
         );
       const { id: commentId3 } =
         await testSettings.testManager.postTestManager.createCommentByPostId(
-          postId.toString(),
+          postId,
           commentCreateModel,
           `Bearer ${accessToken2}`,
           201,
         );
       const { id: commentId4 } =
         await testSettings.testManager.postTestManager.createCommentByPostId(
-          postId.toString(),
+          postId,
           commentCreateModel,
           `Bearer ${accessToken2}`,
           201,
         );
 
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId1.toString(),
+        commentId1,
         likeUpdateModel,
         `Bearer ${accessToken1}`,
         204,
       );
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId2.toString(),
+        commentId2,
         likeUpdateModel,
         `Bearer ${accessToken1}`,
         204,
       );
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId3.toString(),
+        commentId3,
         likeUpdateModel,
         `Bearer ${accessToken2}`,
         204,
       );
       await testSettings.testManager.commentTestManager.updateCommentLikeStatusByPostId(
-        commentId4.toString(),
+        commentId4,
         likeUpdateModel,
         `Bearer ${accessToken2}`,
         204,
@@ -1234,7 +1385,7 @@ describe('Post e2e', () => {
 
       const getComments: BasePagination<CommentOutputModel[] | []> =
         await postTestManager.getCommentsByPostId(
-          postId.toString(),
+          postId,
           {},
           200,
           `Bearer ${accessToken2}`,
@@ -1256,7 +1407,7 @@ describe('Post e2e', () => {
         createdAt: expect.any(String),
       });
 
-      expect(getComments.items[1]).toEqual({
+      expect(getComments.items[0]).toEqual({
         id: expect.any(String),
         content: commentCreateModel.content,
         commentatorInfo: {
@@ -1267,21 +1418,6 @@ describe('Post e2e', () => {
           likesCount: 1,
           dislikesCount: 0,
           myStatus: 'Like',
-        },
-        createdAt: expect.any(String),
-      });
-
-      expect(getComments.items[2]).toEqual({
-        id: expect.any(String),
-        content: commentCreateModel.content,
-        commentatorInfo: {
-          userId: userId1,
-          userLogin: userLoginModel.loginOrEmail,
-        },
-        likesInfo: {
-          likesCount: 1,
-          dislikesCount: 0,
-          myStatus: 'None',
         },
         createdAt: expect.any(String),
       });
@@ -1300,22 +1436,41 @@ describe('Post e2e', () => {
         },
         createdAt: expect.any(String),
       });
+
+      expect(getComments.items[2]).toEqual({
+        id: expect.any(String),
+        content: commentCreateModel.content,
+        commentatorInfo: {
+          userId: userId1,
+          userLogin: userLoginModel.loginOrEmail,
+        },
+        likesInfo: {
+          likesCount: 1,
+          dislikesCount: 0,
+          myStatus: 'None',
+        },
+        createdAt: expect.any(String),
+      });
     });
   });
 
   describe('Create comment by post id for special post', () => {
     it('should create comment by post id', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        { ...postInsertModel, blogId: blogId.toString() },
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -1326,7 +1481,7 @@ describe('Post e2e', () => {
 
       const result: CommentOutputModel =
         await postTestManager.createCommentByPostId(
-          postId.toString(),
+          postId,
           commentCreateModel,
           `Bearer ${accessToken}`,
           201,
@@ -1336,7 +1491,7 @@ describe('Post e2e', () => {
         content: commentCreateModel.content,
         commentatorInfo: {
           userId: userId.toString(),
-          userLogin: userInsertModel.login,
+          userLogin: userCreateModel.login,
         },
         likesInfo: {
           likesCount: 0,
@@ -1348,21 +1503,25 @@ describe('Post e2e', () => {
     });
 
     it('should not create comment by post id, bad input model', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        { ...postInsertModel, blogId: blogId.toString() },
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
           userLoginModel,
           200,
         );
+
       commentCreateModel.content = '';
       const result: APIErrorsMessageType =
         await postTestManager.createCommentByPostId(
@@ -1399,16 +1558,19 @@ describe('Post e2e', () => {
     });
 
     it('should not create comment by post id, user not authorized', async () => {
-      const { insertedId: blogId } = await testSettings.dataBase.dbInsertOne(
-        'blogs',
-        blogInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        { ...postInsertModel, blogId: blogId.toString() },
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
+
       await postTestManager.createCommentByPostId(
-        postId.toString(),
+        postId,
         commentCreateModel,
         `Bearer accessToken`,
         401,
@@ -1416,8 +1578,18 @@ describe('Post e2e', () => {
     });
 
     it('should not create comment by post id, post not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-      await testSettings.dataBase.dbInsertOne('blogs', blogInsertModel);
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
 
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
@@ -1434,8 +1606,7 @@ describe('Post e2e', () => {
     });
 
     it('should not create comment by post id, user not found', async () => {
-      await testSettings.dataBase.dbInsertOne('users', userInsertModel);
-
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       const { accessToken } =
         await testSettings.testManager.authTestManager.login(
           userLoginModel,
@@ -1444,9 +1615,15 @@ describe('Post e2e', () => {
 
       await testSettings.dataBase.clearDatabase();
 
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
       );
 
       await postTestManager.createCommentByPostId(
@@ -1460,13 +1637,21 @@ describe('Post e2e', () => {
 
   describe('Update like status for post by post id', () => {
     it('should update like status, the status must be "Like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -1476,26 +1661,26 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPost = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPost).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId.toString(),
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 1,
           dislikesCount: 0,
@@ -1504,7 +1689,7 @@ describe('Post e2e', () => {
             {
               addedAt: expect.any(String),
               userId: userId.toString(),
-              login: userInsertModel.login,
+              login: userCreateModel.login,
             },
           ],
         },
@@ -1512,13 +1697,21 @@ describe('Post e2e', () => {
     });
 
     it('should update like status to "Like" and update again with "Like" the status must be "Like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -1528,26 +1721,26 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPost = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPost).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId.toString(),
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 1,
           dislikesCount: 0,
@@ -1556,33 +1749,33 @@ describe('Post e2e', () => {
             {
               addedAt: expect.any(String),
               userId: userId.toString(),
-              login: userInsertModel.login,
+              login: userCreateModel.login,
             },
           ],
         },
       });
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPostSecond = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPostSecond).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 1,
           dislikesCount: 0,
@@ -1591,7 +1784,7 @@ describe('Post e2e', () => {
             {
               addedAt: expect.any(String),
               userId: userId.toString(),
-              login: userInsertModel.login,
+              login: userCreateModel.login,
             },
           ],
         },
@@ -1599,13 +1792,21 @@ describe('Post e2e', () => {
     });
 
     it('should update like status to "Like" and change status to dislike, the status must be "Dislike"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -1615,26 +1816,26 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPost = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPost).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 1,
           dislikesCount: 0,
@@ -1643,14 +1844,14 @@ describe('Post e2e', () => {
             {
               addedAt: expect.any(String),
               userId: userId.toString(),
-              login: userInsertModel.login,
+              login: userCreateModel.login,
             },
           ],
         },
       });
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
@@ -1664,12 +1865,12 @@ describe('Post e2e', () => {
 
       expect(getPostSecond).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
           dislikesCount: 1,
@@ -1680,13 +1881,21 @@ describe('Post e2e', () => {
     });
 
     it('should update like status to "Like" and change status to dislike, than remove like"', async () => {
-      const { insertedId: userId } = await testSettings.dataBase.dbInsertOne(
-        'users',
-        userInsertModel,
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
       );
-      const { insertedId: postId } = await testSettings.dataBase.dbInsertOne(
-        'posts',
-        postInsertModel,
+      const { id: postId } = await postTestManager.createPost(
+        { ...postCreateModel, blogId: blogId },
+        adminAuthToken,
+        201,
+      );
+
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
       );
 
       const { accessToken } =
@@ -1696,26 +1905,26 @@ describe('Post e2e', () => {
         );
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         likeUpdateModel,
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPost = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPost).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 1,
           dislikesCount: 0,
@@ -1724,33 +1933,33 @@ describe('Post e2e', () => {
             {
               addedAt: expect.any(String),
               userId: userId.toString(),
-              login: userInsertModel.login,
+              login: userCreateModel.login,
             },
           ],
         },
       });
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         { likeStatus: 'Dislike' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPostSecond = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPostSecond).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
           dislikesCount: 1,
@@ -1760,26 +1969,26 @@ describe('Post e2e', () => {
       });
 
       await postTestManager.updatePostLikeStatusByPostId(
-        postId.toString(),
+        postId,
         { likeStatus: 'None' as LikeStatusEnum },
         `Bearer ${accessToken}`,
         204,
       );
 
       const getPostThree = await postTestManager.getPost(
-        postId.toString(),
+        postId,
         200,
         `Bearer ${accessToken}`,
       );
 
       expect(getPostThree).toEqual({
         id: postId.toString(),
-        title: postInsertModel.title,
-        shortDescription: postInsertModel.shortDescription,
-        content: postInsertModel.content,
-        blogId: postInsertModel.blogId,
-        blogName: postInsertModel.blogName,
-        createdAt: postInsertModel.createdAt,
+        title: postCreateModel.title,
+        shortDescription: postCreateModel.shortDescription,
+        content: postCreateModel.content,
+        blogId: blogId,
+        blogName: blogCreateModel.name,
+        createdAt: expect.any(String),
         extendedLikesInfo: {
           likesCount: 0,
           dislikesCount: 0,

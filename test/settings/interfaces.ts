@@ -2,7 +2,7 @@ import { INestApplication } from '@nestjs/common';
 import { TestingModule } from '@nestjs/testing';
 import { UserTestManager } from '../utils/request-test-manager/user-test-manager';
 import { UserTestModel } from '../models/user/user.model';
-import { DataBase } from '../utils/clear-database/clear-data-base';
+import { DataBase } from '../utils/database/database';
 import { AuthTestModel } from '../models/auth/auth.model';
 import { BlogTestModel } from '../models/blog/blog.model';
 import { PostTestModel } from '../models/post/post.model';

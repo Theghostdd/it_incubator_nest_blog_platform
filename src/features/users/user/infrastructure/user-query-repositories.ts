@@ -68,15 +68,14 @@ export class UserQueryRepositories {
           AND 
           ("email" ILIKE '%' || $2 || '%' OR $2 IS NULL) 
           AND "isActive" = true
-      ORDER BY $3 || $4
-      LIMIT $5 OFFSET $6;
+      ORDER BY $3 ${sortDirection}
+      LIMIT $4 OFFSET $5;
     `;
 
     const users: UserType[] | [] = await this.dataSource.query(queryR, [
       searchLoginTerm,
       searchEmailTerm,
       sortBy,
-      sortDirection,
       pageSize,
       skip,
     ]);

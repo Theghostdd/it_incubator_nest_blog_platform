@@ -5,7 +5,7 @@ import { UserTestManager } from '../utils/request-test-manager/user-test-manager
 import { INestApplication } from '@nestjs/common';
 import { UserTestModel } from '../models/user/user.model';
 import { ITestManger, ITestModels, ITestSettings } from './interfaces';
-import { DataBase } from '../utils/clear-database/clear-data-base';
+import { DataBase } from '../utils/database/database';
 import { NodeMailerService } from '../../src/features/nodemailer/application/nodemailer-application';
 import { NodeMailerMockService } from '../mock/nodemailer-mock';
 import { AuthTestModel } from '../models/auth/auth.model';
@@ -30,13 +30,12 @@ export const initSettings = async (): Promise<ITestSettings> => {
   });
 
   setGlobalMock(testingModuleBuilder);
-
   const testingAppModule: TestingModule = await testingModuleBuilder.compile();
   const app: INestApplication = testingAppModule.createNestApplication();
   applyAppSettings(app);
   await app.init();
 
-  const dataSource: DataSource = app.get(DataSource);
+  const dataSource: DataSource = await app.get(DataSource);
   const dataBase: DataBase = new DataBase(dataSource);
 
   const testManager: ITestManger = getTestManagers(app);
