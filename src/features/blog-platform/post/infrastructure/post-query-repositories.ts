@@ -30,8 +30,8 @@ export class PostQueryRepository {
       FROM ${tablesName.POSTS} as "p"
       LEFT JOIN ${tablesName.LIKES} as "l"
       ON ("l"."userId" = $1 OR "l"."userId" IS NULL)
-      AND "l"."parentId" = "p"."id" 
-      AND "l"."entityType" = $2 
+       AND "l"."parentId" = "p"."id"
+       AND "l"."entityType" = $2
       AND "l"."isActive" = true
       WHERE "p"."id" = $3 AND "p"."isActive" = true
     `;
@@ -103,20 +103,13 @@ export class PostQueryRepository {
         AND "l"."entityType" = $2 
         AND "l"."isActive" = true
         WHERE ("p"."blogId" = $3 OR $3 IS NULL) AND "p"."isActive" = true 
-        ORDER BY $4 ${sortDirection}
-        LIMIT $5 OFFSET $6;
+        ORDER BY "${sortBy}" ${sortDirection}
+        LIMIT $4 OFFSET $5;
     `;
 
     const posts: PostLikeJoinType[] | [] = await this.dataSource.query(
       postQuery,
-      [
-        userId || null,
-        EntityTypeEnum.Post,
-        blogId || null,
-        sortBy,
-        pageSize,
-        skip,
-      ],
+      [userId || null, EntityTypeEnum.Post, blogId || null, pageSize, skip],
     );
 
     let lastLikes: LastPostsLikeJoinType[] | [] = [];

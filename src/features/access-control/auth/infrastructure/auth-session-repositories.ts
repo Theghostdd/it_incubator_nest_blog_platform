@@ -78,16 +78,16 @@ export class AuthSessionRepositories {
     return result.length > 0 ? result : null;
   }
 
-  async updateAuthSessionByUserId(
+  async updateAuthSessionBySessionId(
     iatDate: string,
     expDate: string,
-    userId: number,
+    sessionId: number,
   ): Promise<void> {
     const query = `
     UPDATE ${tablesName.AUTH_SESSIONS}
       SET "issueAt" = $1, "expAt" = $2
-      WHERE "userId" = $3
+      WHERE "id" = $3
     `;
-    await this.dataSource.query(query, [iatDate, expDate, userId]);
+    await this.dataSource.query(query, [iatDate, expDate, sessionId]);
   }
 }

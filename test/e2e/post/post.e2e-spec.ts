@@ -51,7 +51,7 @@ describe('Post e2e', () => {
 
   afterAll(async () => {
     await testSettings.app.close();
-    await testSettings.dataBase.dbConnectionClose();
+    // await testSettings.dataBase.dbConnectionClose();
   });
 
   beforeEach(async () => {
@@ -357,7 +357,7 @@ describe('Post e2e', () => {
           `Bearer ${accessToken4}`,
         );
 
-      expect(getPosts.items[1].extendedLikesInfo).toEqual({
+      expect(getPosts.items[0].extendedLikesInfo).toEqual({
         likesCount: 2,
         dislikesCount: 2,
         myStatus: 'Like',
@@ -375,7 +375,7 @@ describe('Post e2e', () => {
         ],
       });
 
-      expect(getPosts.items[0].extendedLikesInfo).toEqual({
+      expect(getPosts.items[1].extendedLikesInfo).toEqual({
         likesCount: 2,
         dislikesCount: 2,
         myStatus: 'Dislike',

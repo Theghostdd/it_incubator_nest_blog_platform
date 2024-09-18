@@ -6,6 +6,17 @@ export type BaseSortingType = {
 };
 
 export class BaseSorting {
+  private sortByParams: string[] = [
+    'createdAt',
+    'updatedAt',
+    'lastUpdateAt',
+    'name',
+    'title',
+    'login',
+    'email',
+    'content',
+  ];
+
   constructor(
     public readonly sortBy: string,
     public readonly sortDirection: string,
@@ -16,7 +27,9 @@ export class BaseSorting {
   public createBaseQuery(query: BaseSorting): BaseSortingType {
     return query
       ? {
-          sortBy: query.sortBy ? query.sortBy : 'createdAt',
+          sortBy: this.sortByParams.includes(query.sortBy)
+            ? query.sortBy
+            : 'createdAt',
           sortDirection:
             query.sortDirection === 'asc' || query.sortDirection === 'desc'
               ? query.sortDirection

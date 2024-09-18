@@ -83,12 +83,12 @@ export class CommentQueryRepositories {
         AND "l"."entityType" = $2 
         AND "l"."isActive" = true
         WHERE "c"."postId" = $3 AND "c"."isActive" = true
-        ORDER BY $4 ${sortDirection}
-        LIMIT $5 OFFSET $6 
+        ORDER BY "${sortBy}" ${sortDirection}
+        LIMIT $4 OFFSET $5 
     `;
     const comments: CommentLikeJoinType[] | [] = await this.dataSource.query(
       queryComments,
-      [userId || null, EntityTypeEnum.Comment, postId, sortBy, pageSize, skip],
+      [userId || null, EntityTypeEnum.Comment, postId, pageSize, skip],
     );
 
     return {

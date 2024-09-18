@@ -21,10 +21,9 @@ export class UserQueryRepositories {
 
   async getUserById(id: number): Promise<UserOutputModel> {
     const query = `
-    SELECT 
-      "id", "login", "email", "createdAt"
-    FROM "${tablesName.USERS}"
-    WHERE "id" = $1 AND "isActive" = true
+        SELECT "id", "login", "email", "createdAt"
+        FROM ${tablesName.USERS}
+        WHERE "id" = $1 AND "isActive" = true 
     `;
     const result: UserType[] | [] = await this.dataSource.query(query, [id]);
     if (result.length > 0) {
@@ -48,10 +47,19 @@ export class UserQueryRepositories {
     const getTotalDocument: { count: number }[] = await this.dataSource.query(
       `SELECT COUNT(*) 
              FROM "${tablesName.USERS}"
-                WHERE
-                    ("login" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
-                AND 
-                    ("email" ILIKE '%' || $2 || '%' OR $2 IS NULL) 
+                 WHERE
+                      (
+                        CASE
+                            WHEN $1 <> '' AND $2 <> '' THEN
+                                ("login" ILIKE '%' || $1 || '%')
+                                OR
+                                ("email" ILIKE '%' || $2 || '%')
+                            ELSE
+                                ("login" ILIKE '%' || $1 || '%')
+                                AND
+                                ("email" ILIKE '%' || $2 || '%')
+                        END
+                    )
                 AND "isActive" = true
     `,
       [searchLoginTerm, searchEmailTerm],
@@ -61,21 +69,29 @@ export class UserQueryRepositories {
     const skip: number = (pageNumber - 1) * pageSize;
 
     const queryR = `
-      SELECT "id", "login", "email", "createdAt"
-      FROM ${tablesName.USERS}
-      WHERE 
-          ("login" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
-          AND 
-          ("email" ILIKE '%' || $2 || '%' OR $2 IS NULL) 
-          AND "isActive" = true
-      ORDER BY $3 ${sortDirection}
-      LIMIT $4 OFFSET $5;
+        SELECT "id", "login", "email", "createdAt"
+        FROM ${tablesName.USERS}
+        WHERE
+              (
+                CASE
+                    WHEN $1 <> '' AND $2 <> '' THEN
+                        ("login" ILIKE '%' || $1 || '%')
+                        OR
+                        ("email" ILIKE '%' || $2 || '%')
+                    ELSE
+                        ("login" ILIKE '%' || $1 || '%')
+                        AND
+                        ("email" ILIKE '%' || $2 || '%')
+                END
+            )
+        AND "isActive" = true
+        ORDER BY "${sortBy}" ${sortDirection}
+        LIMIT $3 OFFSET $4
     `;
 
     const users: UserType[] | [] = await this.dataSource.query(queryR, [
       searchLoginTerm,
       searchEmailTerm,
-      sortBy,
       pageSize,
       skip,
     ]);

@@ -38,7 +38,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
       },
       inject: [ConfigService],
     }),
-
     MailerModule.forRootAsync({
       useFactory: (configService: ConfigService<ConfigurationType, true>) => {
         const apiSettings = configService.get('apiSettings', { infer: true });

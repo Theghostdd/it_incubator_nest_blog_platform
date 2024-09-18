@@ -54,12 +54,11 @@ export class BlogQueryRepository {
       FROM ${tablesName.BLOGS}
       WHERE ("name" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
       AND "isActive" = true
-      ORDER BY $2 ${sortDirection}
-      LIMIT $3 OFFSET $4;
+      ORDER BY "${sortBy}" ${sortDirection}
+      LIMIT $2 OFFSET $3;
     `;
     const blogs: BlogType[] | [] = await this.dataSource.query(queryR, [
       searchNameTerm,
-      sortBy,
       pageSize,
       skip,
     ]);

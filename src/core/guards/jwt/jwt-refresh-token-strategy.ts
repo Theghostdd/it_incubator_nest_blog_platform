@@ -38,6 +38,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   ): Promise<JWTRefreshTokenPayloadType & { iat: number; exp: number }> {
     const session: AuthSessionType | null =
       await this.authSessionRepositories.getSessionByDeviceId(payload.deviceId);
+
     if (!session) return null;
     if (
       session.issueAt.toISOString() !==

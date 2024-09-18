@@ -61,10 +61,10 @@ export class UpdatePairTokenHandler
     const iatDate: string = new Date(iatNewDate * 1000).toISOString();
     const expDate: string = new Date(expNewDate * 1000).toISOString();
 
-    await this.authSessionRepositories.updateAuthSessionByUserId(
+    await this.authSessionRepositories.updateAuthSessionBySessionId(
       iatDate,
       expDate,
-      userId,
+      session.data.id,
     );
 
     return this.applicationObjectResult.success({

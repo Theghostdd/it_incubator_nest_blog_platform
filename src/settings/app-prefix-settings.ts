@@ -1,7 +1,7 @@
 export const apiPrefixSettings = {
   API_PREFIX: '/api',
   USER_PREFIX: {
-    user: 'users',
+    user: 'sa/users',
   },
   TESTING: {
     testing: 'testing',

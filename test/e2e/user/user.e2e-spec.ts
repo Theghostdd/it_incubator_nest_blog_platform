@@ -30,7 +30,7 @@ describe('User e2e', () => {
 
   afterAll(async () => {
     await testSettings.app.close();
-    await testSettings.dataBase.dbConnectionClose();
+    // await testSettings.dataBase.dbConnectionClose();
   });
 
   beforeEach(async () => {

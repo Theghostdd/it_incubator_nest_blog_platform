@@ -38,7 +38,6 @@ describe('Blog e2e', () => {
 
   afterAll(async () => {
     await testSettings.app.close();
-    await testSettings.dataBase.dbConnectionClose();
   });
 
   beforeEach(async () => {
@@ -149,7 +148,7 @@ describe('Blog e2e', () => {
         items: [
           {
             id: expect.any(String),
-            name: 'nameBlog1',
+            name: 'nameBlog10',
             description: blogCreateModel.description,
             websiteUrl: blogCreateModel.websiteUrl,
             createdAt: expect.any(String),
@@ -157,7 +156,7 @@ describe('Blog e2e', () => {
           },
           {
             id: expect.any(String),
-            name: 'nameBlog10',
+            name: 'nameBlog1',
             description: blogCreateModel.description,
             websiteUrl: blogCreateModel.websiteUrl,
             createdAt: expect.any(String),
