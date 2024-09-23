@@ -7,16 +7,19 @@ import {
   IBlogPostCreateModel,
   IBlogUpdateModel,
 } from '../../models/blog/interfaces';
+import { IPostUpdateModel } from '../../models/post/interfaces';
 
 export class BlogTestManager {
   private readonly apiPrefix: string;
   private readonly blogEndpoint: string;
   private readonly postEndpoint: string;
+  private readonly blogAdminEndpoint: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
     this.blogEndpoint = `${this.apiPrefix}/${apiPrefixSettings.BLOG.blogs}`;
     this.postEndpoint = `${apiPrefixSettings.BLOG.posts}`;
+    this.blogAdminEndpoint = `${this.apiPrefix}/${apiPrefixSettings.BLOG.sa_blogs}`;
   }
   async createBlog(
     blogModel: IBlogCreateModel,
@@ -24,7 +27,7 @@ export class BlogTestManager {
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
-      .post(`${this.blogEndpoint}`)
+      .post(`${this.blogAdminEndpoint}`)
       .set({ authorization: authorizationToken })
       .send(blogModel)
       .expect(statusCode);
@@ -48,7 +51,7 @@ export class BlogTestManager {
 
   async deleteBlog(id: string, authorizationToken: string, statusCode: number) {
     const result = await request(this.app.getHttpServer())
-      .delete(`${this.blogEndpoint}/${id}`)
+      .delete(`${this.blogAdminEndpoint}/${id}`)
       .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
@@ -61,7 +64,7 @@ export class BlogTestManager {
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
-      .put(`${this.blogEndpoint}/${id}`)
+      .put(`${this.blogAdminEndpoint}/${id}`)
       .set({ authorization: authorizationToken })
       .send(updateModel)
       .expect(statusCode);
@@ -75,7 +78,7 @@ export class BlogTestManager {
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
-      .post(`${this.blogEndpoint}/${blogId}/${this.postEndpoint}`)
+      .post(`${this.blogAdminEndpoint}/${blogId}/${this.postEndpoint}`)
       .set({ authorization: authorizationToken })
       .send(postModel)
       .expect(statusCode);
@@ -86,6 +89,34 @@ export class BlogTestManager {
     const result = await request(this.app.getHttpServer())
       .get(`${this.blogEndpoint}/${blogId}/${this.postEndpoint}`)
       .query(query)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async updatePostByBlogId(
+    id: number,
+    postId: number,
+    updateModel: Omit<IPostUpdateModel, 'blogId'>,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .put(`${this.blogAdminEndpoint}/${id}/${this.postEndpoint}/${postId}`)
+      .set({ authorization: authorizationToken })
+      .send(updateModel)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async deletePostByBlogId(
+    id: number,
+    postId: number,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .delete(`${this.blogAdminEndpoint}/${id}/${this.postEndpoint}/${postId}`)
+      .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
   }

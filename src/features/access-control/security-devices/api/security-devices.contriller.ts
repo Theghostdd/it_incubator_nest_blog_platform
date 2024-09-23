@@ -9,19 +9,19 @@ import {
   Param,
   UseGuards,
 } from '@nestjs/common';
-import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
-import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
-import { CurrentUser } from '../../../../core/decorators/current-user';
-import {
-  AppResultType,
-  JWTRefreshTokenPayloadType,
-} from '../../../../base/types/types';
 import { SecurityDevicesOutputModel } from './models/security-devices-output.model';
 import { SecurityDevicesQueryRepository } from '../infrastructure/security-devices-query-repositories';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeleteDevicesByDeviceIdCommand } from '../application/command/delete-device-by-id.command';
-import { AppResult } from '../../../../base/enum/app-result.enum';
 import { DeleteAllDevicesExcludeCurrentCommand } from '../application/command/delete-all-devices-exclude-current.command';
+import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
+import {
+  AppResultType,
+  JWTRefreshTokenPayloadType,
+} from '../../../../base/types/types';
+import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
+import { CurrentUser } from '../../../../core/decorators/current-user';
+import { AppResult } from '../../../../base/enum/app-result.enum';
 
 @Controller(apiPrefixSettings.SECURITY_DEVICES.security)
 export class SecurityDevicesController {

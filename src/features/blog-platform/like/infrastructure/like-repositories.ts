@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Like, LikeType } from '../domain/like.entity';
-import { tablesName } from '../../../../core/utils/tables/tables';
 import { EntityTypeEnum, LikeStatusEnum } from '../domain/type';
+import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()
 export class LikeRepositories {
@@ -54,7 +54,7 @@ export class LikeRepositories {
     const query = `
       UPDATE ${tablesName.LIKES}
        SET "status" = $1
-       WHERE "id" = $2 AND "entityType" = $3 AND "parentId" = $4 AND "isActive" = true 
+       WHERE "id" = $2 AND "entityType" = $3 AND "parentId" = $4 AND "isActive" = ${true} 
     `;
     await this.dataSource.query(query, [likeStatus, id, entityType, parentId]);
   }

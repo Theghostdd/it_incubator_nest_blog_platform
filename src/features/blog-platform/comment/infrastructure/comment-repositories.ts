@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { Comment, CommentType } from '../domain/comment.entity';
-import { tablesName } from '../../../../core/utils/tables/tables';
 import { CommentUpdateModel } from '../api/model/input/comment-input.model';
+import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()
 export class CommentRepositories {
@@ -11,14 +11,13 @@ export class CommentRepositories {
   async save(comment: Comment): Promise<number> {
     const query = `
         INSERT INTO ${tablesName.COMMENTS}
-        ("content", "userId", "userLogin", "blogId", "postId", "likesCount", "dislikesCount", "createdAt", "isActive")
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
+        ("content", "userId", "blogId", "postId", "likesCount", "dislikesCount", "createdAt", "isActive")
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING "id";
     `;
     const result: { id: number }[] = await this.dataSource.query(query, [
       comment.content,
       comment.userId,
-      comment.userLogin,
       comment.blogId,
       comment.postId,
       comment.likesCount,
@@ -31,18 +30,18 @@ export class CommentRepositories {
 
   async delete(commentId: number): Promise<void> {
     const query = `
-        UPDATE ${tablesName.COMMENTS}
-        SET "isActive" = false
-        WHERE "id" = $1 AND "isActive" = true
+        UPDATE "${tablesName.COMMENTS}"
+        SET "isActive" = ${false}
+        WHERE "id" = $1 AND "isActive" = ${true}
     `;
     await this.dataSource.query(query, [commentId]);
   }
 
   async getCommentById(id: number): Promise<CommentType | null> {
     const query = `
-        SELECT "id", "content", "userId", "userLogin", "blogId", "postId", "likesCount", "dislikesCount", "createdAt"
-        FROM ${tablesName.COMMENTS}
-        WHERE "id" = $1 AND "isActive" = true
+        SELECT "id", "content", "userId", "blogId", "postId", "likesCount", "dislikesCount", "createdAt"
+        FROM "${tablesName.COMMENTS}"
+        WHERE "id" = $1 AND "isActive" = ${true}
     `;
     const result: CommentType[] | [] = await this.dataSource.query(query, [id]);
     return result.length > 0 ? result[0] : null;
@@ -53,9 +52,9 @@ export class CommentRepositories {
     commentUpdateModel: CommentUpdateModel,
   ): Promise<void> {
     const query = `
-        UPDATE ${tablesName.COMMENTS}
+        UPDATE "${tablesName.COMMENTS}"
         SET "content" = $1
-        WHERE "id" = $2 AND "isActive" = true
+        WHERE "id" = $2 AND "isActive" = ${true}
     `;
     await this.dataSource.query(query, [commentUpdateModel.content, id]);
   }
@@ -66,10 +65,10 @@ export class CommentRepositories {
     dislikeCount: number,
   ): Promise<void> {
     const query = `
-        UPDATE ${tablesName.COMMENTS}
+        UPDATE "${tablesName.COMMENTS}"
         SET "likesCount" = "likesCount" + $1, 
             "dislikesCount" = "dislikesCount" + $2
-        WHERE "id" = $3 AND "isActive" = true
+        WHERE "id" = $3 AND "isActive" = ${true}
     `;
     await this.dataSource.query(query, [likeCount, dislikeCount, id]);
   }

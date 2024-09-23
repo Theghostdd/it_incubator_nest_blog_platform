@@ -2,6 +2,10 @@ import { Inject, Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
 import { ConfigService } from '@nestjs/config';
+import { format } from 'date-fns';
+import { AuthSessionType } from '../domain/auth-session.entity';
+import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
+import { RecoveryPasswordSessionType } from '../domain/recovery-session.entity';
 import { APISettings } from '../../../../settings/api-settings';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
@@ -10,10 +14,6 @@ import {
   JWTAccessTokenPayloadType,
   JWTRefreshTokenPayloadType,
 } from '../../../../base/types/types';
-import { format } from 'date-fns';
-import { AuthSessionType } from '../domain/auth-session.entity';
-import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
-import { RecoveryPasswordSessionType } from '../domain/recovery-session.entity';
 
 @Injectable()
 export class AuthService {

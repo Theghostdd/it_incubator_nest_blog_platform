@@ -1,5 +1,4 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import {
   AuthSession,
   AuthSessionFactory,
@@ -9,6 +8,7 @@ import {
   AppResultType,
   JWTRefreshTokenPayloadType,
 } from '../../../../../base/types/types';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
 
 export class CreateAuthSessionCommand {

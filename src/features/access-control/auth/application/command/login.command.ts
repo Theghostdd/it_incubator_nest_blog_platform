@@ -1,6 +1,7 @@
 import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LoginInputModel } from '../../api/models/input/auth-input.models';
 import { AuthService } from '../auth-application';
+import { CreateAuthSessionCommand } from './create-auth-session.command';
 import {
   APIErrorMessageType,
   AppResultType,
@@ -11,10 +12,9 @@ import {
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { CreateAuthSessionCommand } from './create-auth-session.command';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import { UserType } from '../../../../users/user/domain/user.entity';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class LoginCommand {
   constructor(

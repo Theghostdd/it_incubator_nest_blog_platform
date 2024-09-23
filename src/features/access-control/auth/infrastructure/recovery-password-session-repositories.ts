@@ -13,13 +13,14 @@ export class RecoveryPasswordSessionRepositories {
   async save(session: RecoveryPasswordSession): Promise<void> {
     const query = `
       INSERT INTO ${tablesName.RECOVERY_PASSWORD_SESSIONS}
-        ("email", "code", "expAt")
-        VALUES ($1, $2, $3)
+        ("email", "code", "expAt", "userId")
+        VALUES ($1, $2, $3, $4)
     `;
     await this.dataSource.query(query, [
       session.email,
       session.code,
       session.expAt,
+      session.userId,
     ]);
   }
 
@@ -35,7 +36,7 @@ export class RecoveryPasswordSessionRepositories {
     code: string,
   ): Promise<RecoveryPasswordSessionType | null> {
     const query = `
-      SELECT "email", "code", "expAt"
+      SELECT "email", "code", "expAt", "userId", "id"
       FROM ${tablesName.RECOVERY_PASSWORD_SESSIONS}
       WHERE "code" = $1
     `;

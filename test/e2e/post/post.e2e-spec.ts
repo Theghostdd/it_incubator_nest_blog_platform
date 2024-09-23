@@ -5,11 +5,9 @@ import {
   IPostCreateModel,
   IPostUpdateModel,
 } from '../../models/post/interfaces';
-import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
-import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 import { ICommentCreateModel } from '../../models/comments/interfaces';
 import { APISettings } from '../../../src/settings/api-settings';
 import {
@@ -17,10 +15,12 @@ import {
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
-import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
 import { BlogTestManager } from '../../utils/request-test-manager/blog-test-manager';
 import { IBlogCreateModel } from '../../models/blog/interfaces';
+import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
+import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
+import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -700,7 +700,7 @@ describe('Post e2e', () => {
   });
 
   describe('Create post', () => {
-    it('should create post by blog id', async () => {
+    it('should create post by blog-sa id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -729,7 +729,7 @@ describe('Post e2e', () => {
       });
     });
 
-    it('should not create post by blog id, blog not found', async () => {
+    it('should not create post by blog-sa id, blog-sa not found', async () => {
       const result = await postTestManager.createPost(
         { ...postCreateModel, blogId: '66bf39c8f855a5438d02adbf' },
         adminAuthToken,

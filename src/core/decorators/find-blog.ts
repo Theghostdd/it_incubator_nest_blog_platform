@@ -1,5 +1,4 @@
 import { Injectable } from '@nestjs/common';
-import { BlogService } from '../../features/blog-platform/blog/application/blog-service';
 import {
   registerDecorator,
   ValidationOptions,
@@ -7,10 +6,10 @@ import {
   ValidatorConstraintInterface,
   ValidationArguments,
 } from 'class-validator';
-import { BlogType } from '../../features/blog-platform/blog/domain/blog.entity';
 import { AppResultType } from '../../base/types/types';
 import { AppResult } from '../../base/enum/app-result.enum';
-import { Types } from 'mongoose';
+import { BlogService } from '../../features/blog-platform/blog/application/blog-service';
+import { BlogType } from '../../features/blog-platform/blog/domain/blog.entity';
 
 @ValidatorConstraint({ async: false })
 @Injectable()

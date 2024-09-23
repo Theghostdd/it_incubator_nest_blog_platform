@@ -1,17 +1,17 @@
 import { LikeInputModel } from '../../api/models/input/like-input-model';
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppResultType } from '../../../../../base/types/types';
 import { CommentService } from '../../../comment/application/comment-service';
 import { LikeService } from '../like-service';
 import { LikeRepositories } from '../../infrastructure/like-repositories';
 import { CommentRepositories } from '../../../comment/infrastructure/comment-repositories';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { EntityTypeEnum, LikeStatusEnum } from '../../domain/type';
 import { LikeChangeCount } from '../../domain/models';
 import { CalculateLike } from '../../domain/calculate-like';
 import { CommentType } from '../../../comment/domain/comment.entity';
 import { Like, LikeFactory, LikeType } from '../../domain/like.entity';
+import { AppResultType } from '../../../../../base/types/types';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class UpdateCommentLikeStatusCommand {
   constructor(

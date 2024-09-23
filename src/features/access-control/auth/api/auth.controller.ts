@@ -26,6 +26,10 @@ import { ResendConfirmationCodeCommand } from '../application/command/resend-con
 import { ChangeUserPasswordCommand } from '../application/command/change-user-password.command';
 import { PasswordRecoveryCommand } from '../application/command/password-recovery.command';
 import { Response } from 'express';
+import { ThrottlerGuard } from '@nestjs/throttler';
+import { LogoutCommand } from '../application/command/logout.command';
+import { UpdatePairTokenCommand } from '../application/command/update-new-pair-token.command';
+import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import { UserQueryRepositories } from '../../../users/user/infrastructure/user-query-repositories';
 import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { CurrentUser } from '../../../../core/decorators/current-user';
@@ -39,13 +43,9 @@ import {
   JWTRefreshTokenPayloadType,
 } from '../../../../base/types/types';
 import { UserMeOutputModel } from '../../../users/user/api/models/output/user-output.model';
-import { AppResult } from '../../../../base/enum/app-result.enum';
-import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
-import { ThrottlerGuard } from '@nestjs/throttler';
 import { ClientInfo } from '../../../../core/decorators/client-info';
-import { LogoutCommand } from '../application/command/logout.command';
+import { AppResult } from '../../../../base/enum/app-result.enum';
 import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
-import { UpdatePairTokenCommand } from '../application/command/update-new-pair-token.command';
 
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {

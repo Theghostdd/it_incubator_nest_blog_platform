@@ -1,12 +1,12 @@
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
 import { IUserCreateTestModel } from '../../models/user/interfaces';
-import { UserOutputModel } from '../../../src/features/users/user/api/models/output/user-output.model';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
-import { UserSortingQuery } from '../../../src/features/users/user/api/models/input/user-input.model';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
 import { APISettings } from '../../../src/settings/api-settings';
+import { UserSortingQuery } from '../../../src/features/users/user/api/models/input/user-input.model';
+import { UserOutputModel } from '../../../src/features/users/user/api/models/output/user-output.model';
 
 describe('User e2e', () => {
   let testSettings: ITestSettings;

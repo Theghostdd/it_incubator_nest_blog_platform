@@ -1,14 +1,14 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { CommentInputModel } from '../../api/model/input/comment-input.model';
-import { UserService } from '../../../../users/user/application/user-service';
-import { AppResultType } from '../../../../../base/types/types';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { PostService } from '../../../post/application/post-service';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
 import { CommentFactory } from '../../domain/comment.entity';
-import { UserType } from '../../../../users/user/domain/user.entity';
 import { PostType } from '../../../post/domain/post.entity';
+import { UserService } from '../../../../users/user/application/user-service';
+import { AppResultType } from '../../../../../base/types/types';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { UserType } from '../../../../users/user/domain/user.entity';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class CreateCommentByPostIdCommand {
   constructor(
@@ -47,7 +47,6 @@ export class CreateCommentByPostIdHandler
     const comment = this.commentFactory.create(
       command.inputCommentModel,
       userId,
-      user.data.login,
       postId,
       post.data.blogId,
     );

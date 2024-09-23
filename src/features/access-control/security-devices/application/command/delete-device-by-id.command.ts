@@ -1,13 +1,13 @@
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { AuthService } from '../../../auth/application/auth-application';
+import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
+import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
 import {
   AppResultType,
   JWTRefreshTokenPayloadType,
 } from '../../../../../base/types/types';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AuthService } from '../../../auth/application/auth-application';
-import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
 
 export class DeleteDevicesByDeviceIdCommand {
   constructor(

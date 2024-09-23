@@ -1,12 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostService } from '../post-service';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { PostRepository } from '../../infrastructure/post-repositories';
-import { AppResultType } from '../../../../../base/types/types';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { PostUpdateModel } from '../../api/models/input/post-input.model';
 import { PostType } from '../../domain/post.entity';
-
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { AppResultType } from '../../../../../base/types/types';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 export class UpdatePostByIdCommand {
   constructor(
     public id: number,

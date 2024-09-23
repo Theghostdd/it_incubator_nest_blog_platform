@@ -1,9 +1,6 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppResultType } from '../../../../../base/types/types';
 import { PostService } from '../../../post/application/post-service';
 import { LikeInputModel } from '../../api/models/input/like-input-model';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { LikeService } from '../like-service';
 import { EntityTypeEnum, LikeStatusEnum } from '../../domain/type';
 import { LikeRepositories } from '../../infrastructure/like-repositories';
@@ -12,6 +9,9 @@ import { LikeChangeCount } from '../../domain/models';
 import { CalculateLike } from '../../domain/calculate-like';
 import { PostType } from '../../../post/domain/post.entity';
 import { Like, LikeFactory, LikeType } from '../../domain/like.entity';
+import { AppResultType } from '../../../../../base/types/types';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class UpdatePostLikeStatusCommand {
   constructor(

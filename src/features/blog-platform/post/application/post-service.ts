@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { PostType } from '../domain/post.entity';
-import { AppResultType } from '../../../../base/types/types';
 import { PostRepository } from '../infrastructure/post-repositories';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
+import { AppResultType } from '../../../../base/types/types';
 
 @Injectable()
 export class PostService {

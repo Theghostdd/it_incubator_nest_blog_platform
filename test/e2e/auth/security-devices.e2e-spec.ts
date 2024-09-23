@@ -7,8 +7,8 @@ import { initSettings } from '../../settings/test-settings';
 import { delay } from '../../utils/delay/delay';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
 import { APISettings } from '../../../src/settings/api-settings';
-import { AuthService } from '../../../src/features/access-control/auth/application/auth-application';
 import { tablesName } from '../../../src/core/utils/tables/tables';
+import { AuthService } from '../../../src/features/access-control/auth/application/auth-application';
 
 describe('Security devices e2e', () => {
   let testSettings: ITestSettings;

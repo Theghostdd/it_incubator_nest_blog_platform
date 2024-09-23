@@ -8,7 +8,6 @@ export class Post {
   content: string;
   blogId: number;
   createdAt: Date;
-  blogName: string;
   likesCount: number;
   dislikesCount: number;
 }
@@ -18,14 +17,13 @@ export type PostType = Post & { id: number };
 @Injectable()
 export class PostFactory {
   constructor() {}
-  create(postInputModel: PostInputModel, blogName: string): Post {
+  create(postInputModel: PostInputModel): Post {
     const post = new Post();
     const { title, shortDescription, content, blogId } = postInputModel;
     post.title = title;
     post.shortDescription = shortDescription;
     post.content = content;
     post.blogId = blogId;
-    post.blogName = blogName;
     post.createdAt = new Date();
     post.likesCount = 0;
     post.dislikesCount = 0;
@@ -35,6 +33,11 @@ export class PostFactory {
 
 export type PostLikeJoinType = PostType & {
   status: LikeStatusEnum;
+  blogName: string;
+};
+
+export type PostBlogJoinType = PostType & {
+  blogName: string;
 };
 
 export type LastPostLikeJoinType = {

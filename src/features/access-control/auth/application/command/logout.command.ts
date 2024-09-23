@@ -1,13 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
+import { AuthService } from '../auth-application';
+import { AuthSessionType } from '../../domain/auth-session.entity';
 import {
   AppResultType,
   JWTRefreshTokenPayloadType,
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
-import { AuthService } from '../auth-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { AuthSessionType } from '../../domain/auth-session.entity';
 
 export class LogoutCommand {
   constructor(public user: JWTRefreshTokenPayloadType) {}

@@ -5,6 +5,10 @@ import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
 import {
+  RecoveryPasswordSession,
+  RecoveryPasswordSessionFactory,
+} from '../../domain/recovery-session.entity';
+import {
   AppResultType,
   MailTemplateType,
 } from '../../../../../base/types/types';
@@ -14,12 +18,8 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
-import {
-  RecoveryPasswordSession,
-  RecoveryPasswordSessionFactory,
-} from '../../domain/recovery-session.entity';
 import { UserType } from '../../../../users/user/domain/user.entity';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class PasswordRecoveryCommand {
   constructor(public inputPasswordRecoveryModel: PasswordRecoveryInputModel) {}
@@ -62,6 +62,7 @@ export class PasswordRecoveryHandler
           command.inputPasswordRecoveryModel.email,
           confirmationCode,
           dateExpired,
+          user.data.id,
         );
       await this.recoveryPasswordSessionRepositories.save(recoverySession);
     }

@@ -1,7 +1,6 @@
 import { BlogTestManager } from '../../utils/request-test-manager/blog-test-manager';
 import { initSettings } from '../../settings/test-settings';
 import { ITestSettings } from '../../settings/interfaces';
-import { BlogOutputModel } from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
 import {
   IBlogCreateModel,
   IBlogPostCreateModel,
@@ -9,10 +8,13 @@ import {
 } from '../../models/blog/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
-import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { APISettings } from '../../../src/settings/api-settings';
+import { BlogOutputModel } from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
 import { BlogSortingQuery } from '../../../src/features/blog-platform/blog/api/models/input/blog-input.model';
+import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
+import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
+import { IPostUpdateModel } from '../../models/post/interfaces';
 
 describe('Blog e2e', () => {
   let blogTestManager: BlogTestManager;
@@ -24,6 +26,8 @@ describe('Blog e2e', () => {
   let login: string;
   let password: string;
   let adminAuthToken: string;
+  let postTestManager: PostTestManager;
+  let postUpdateModel: IPostUpdateModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -49,6 +53,9 @@ describe('Blog e2e', () => {
       testSettings.testModels.blogTestModel.getBlogUpdateModel();
     blogPostCreateModel =
       testSettings.testModels.blogTestModel.getBlogPostCreateModel();
+    postTestManager = testSettings.testManager.postTestManager;
+    postUpdateModel =
+      testSettings.testModels.postTestModel.getPostUpdateModel();
   });
 
   describe('Get blogs', () => {
@@ -98,7 +105,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get blog with pagination, page number: 2', async () => {
+    it('should get blog-sa with pagination, page number: 2', async () => {
       for (let i = 0; i < 11; i++) {
         await blogTestManager.createBlog(
           { ...blogCreateModel, name: 'nameBlog' + i },
@@ -123,7 +130,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get blog with pagination, search name term', async () => {
+    it('should get blog-sa with pagination, search name term', async () => {
       for (let i = 0; i < 11; i++) {
         await blogTestManager.createBlog(
           { ...blogCreateModel, name: 'nameBlog' + i },
@@ -225,8 +232,8 @@ describe('Blog e2e', () => {
     });
   });
 
-  describe('Get blog', () => {
-    it('should get blog by id', async () => {
+  describe('Get blog-sa', () => {
+    it('should get blog-sa by id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -248,13 +255,13 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should not get blog by id, blog not found', async () => {
+    it('should not get blog-sa by id, blog-sa not found', async () => {
       await blogTestManager.getBlog('66bf39c8f855a5438d02adbf', 404);
     });
   });
 
-  describe('Create blog', () => {
-    it('should create blog', async () => {
+  describe('Create blog-sa', () => {
+    it('should create blog-sa', async () => {
       const result: BlogOutputModel = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -271,7 +278,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should not create blog, bad input data', async () => {
+    it('should not create blog-sa, bad input data', async () => {
       const result: APIErrorsMessageType = await blogTestManager.createBlog(
         { name: '', description: '', websiteUrl: '' },
         adminAuthToken,
@@ -352,8 +359,8 @@ describe('Blog e2e', () => {
     });
   });
 
-  describe('Delete blog', () => {
-    it('should delete blog by id', async () => {
+  describe('Delete blog-sa', () => {
+    it('should delete blog-sa by id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -363,7 +370,7 @@ describe('Blog e2e', () => {
       await blogTestManager.deleteBlog(blogId, adminAuthToken, 204);
     });
 
-    it('should not delete blog by id, blog not found', async () => {
+    it('should not delete blog-sa by id, blog-sa not found', async () => {
       await blogTestManager.deleteBlog(
         '66bf39c8f855a5438d02adbf',
         adminAuthToken,
@@ -371,7 +378,7 @@ describe('Blog e2e', () => {
       );
     });
 
-    it('should delete blog by id, and should not delete again, not found', async () => {
+    it('should delete blog-sa by id, and should not delete again, not found', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -383,8 +390,8 @@ describe('Blog e2e', () => {
     });
   });
 
-  describe('Update blog', () => {
-    it('should update blog by id', async () => {
+  describe('Update blog-sa', () => {
+    it('should update blog-sa by id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -407,7 +414,7 @@ describe('Blog e2e', () => {
       expect(result.websiteUrl).not.toBe(blogCreateModel.websiteUrl);
     });
 
-    it('should not update blog, bad input data', async () => {
+    it('should not update blog-sa, bad input data', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -505,7 +512,7 @@ describe('Blog e2e', () => {
       expect(blog.websiteUrl).toBe(blogCreateModel.websiteUrl);
     });
 
-    it('should not update blog by id, blog not found', async () => {
+    it('should not update blog-sa by id, blog-sa not found', async () => {
       await blogTestManager.updateBlog(
         '66bf39c8f855a5438d02adbf',
         blogUpdateModel,
@@ -515,8 +522,8 @@ describe('Blog e2e', () => {
     });
   });
 
-  describe('Create post by blog id', () => {
-    it('should create post by blog id', async () => {
+  describe('Create post by blog-sa id', () => {
+    it('should create post by blog-sa id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -547,7 +554,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should not create post by blog id, blog not found', async () => {
+    it('should not create post by blog-sa id, blog-sa not found', async () => {
       await blogTestManager.createPostByBlogId(
         '66bf39c8f855a5438d02adbf',
         blogPostCreateModel,
@@ -556,7 +563,7 @@ describe('Blog e2e', () => {
       );
     });
 
-    it('should not create post by blog id, bad input data', async () => {
+    it('should not create post by blog-sa id, bad input data', async () => {
       const result: APIErrorsMessageType =
         await blogTestManager.createPostByBlogId(
           '66bf39c8f855a5438d02adbf',
@@ -643,8 +650,8 @@ describe('Blog e2e', () => {
     });
   });
 
-  describe('Get posts by blog id', () => {
-    it('should get posts by blog id without query', async () => {
+  describe('Get posts by blog-sa id', () => {
+    it('should get posts by blog-sa id without query', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -672,7 +679,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get posts by blog id with pagination, page size: 11', async () => {
+    it('should get posts by blog-sa id with pagination, page size: 11', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -704,7 +711,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get posts by blog id with pagination, page number: 2', async () => {
+    it('should get posts by blog-sa id with pagination, page number: 2', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -737,7 +744,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get empty posts array by blog id', async () => {
+    it('should get empty posts array by blog-sa id', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -757,7 +764,7 @@ describe('Blog e2e', () => {
       });
     });
 
-    it('should get posts by blog id with sorting by name, asc', async () => {
+    it('should get posts by blog-sa id with sorting by name, asc', async () => {
       const { id: blogId } = await blogTestManager.createBlog(
         blogCreateModel,
         adminAuthToken,
@@ -807,6 +814,234 @@ describe('Blog e2e', () => {
         .sort((a, b) => a.title.localeCompare(b.title));
 
       expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
+    });
+  });
+
+  describe('Delete post by blog id by super admin', () => {
+    it('should delete post by id and blog id', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { id: postId } = await blogTestManager.createPostByBlogId(
+        blogId,
+        blogPostCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.deletePostByBlogId(
+        blogId,
+        postId,
+        adminAuthToken,
+        204,
+      );
+      await postTestManager.getPost(postId, 404);
+      await blogTestManager.deletePostByBlogId(
+        blogId,
+        postId,
+        adminAuthToken,
+        404,
+      );
+    });
+
+    it('should not delete post by id and blog id, post not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.deletePostByBlogId(
+        blogId,
+        2833,
+        adminAuthToken,
+        404,
+      );
+    });
+
+    it('should not delete post by id and blog id, blog not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: postId } = await blogTestManager.createPostByBlogId(
+        blogId,
+        blogPostCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.deleteBlog(blogId, adminAuthToken, 204);
+
+      await blogTestManager.deletePostByBlogId(
+        blogId,
+        postId,
+        adminAuthToken,
+        404,
+      );
+    });
+  });
+
+  describe('Update post by blog id by super admin', () => {
+    it('should update post by id and blog id', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { id: postId } = await blogTestManager.createPostByBlogId(
+        blogId,
+        blogPostCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.updatePostByBlogId(
+        blogId,
+        postId,
+        postUpdateModel,
+        adminAuthToken,
+        204,
+      );
+
+      const result: PostOutputModel = await postTestManager.getPost(
+        postId,
+        200,
+      );
+      expect(result.title).not.toBe(blogPostCreateModel.title);
+      expect(result.content).not.toBe(blogPostCreateModel.content);
+      expect(result.shortDescription).not.toBe(
+        blogPostCreateModel.shortDescription,
+      );
+    });
+
+    it('should not update post by id and blog id, bad input data', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const { id: postId } = await blogTestManager.createPostByBlogId(
+        blogId,
+        blogPostCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const result: APIErrorsMessageType =
+        await blogTestManager.updatePostByBlogId(
+          blogId,
+          postId,
+          { title: '', shortDescription: '', content: '' },
+          adminAuthToken,
+          400,
+        );
+      expect(result).toEqual({
+        errorsMessages: [
+          {
+            field: 'title',
+            message: expect.any(String),
+          },
+          {
+            field: 'shortDescription',
+            message: expect.any(String),
+          },
+          {
+            field: 'content',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      const withTitle: APIErrorsMessageType =
+        await blogTestManager.updatePostByBlogId(
+          blogId,
+          postId,
+          {
+            title: '',
+            shortDescription: 'shortDescription',
+            content: 'content',
+          },
+          adminAuthToken,
+          400,
+        );
+      expect(withTitle).toEqual({
+        errorsMessages: [
+          {
+            field: 'title',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      const withShortDescription: APIErrorsMessageType =
+        await blogTestManager.updatePostByBlogId(
+          blogId,
+          postId,
+          {
+            title: 'title',
+            shortDescription: '',
+            content: 'content',
+          },
+          adminAuthToken,
+          400,
+        );
+      expect(withShortDescription).toEqual({
+        errorsMessages: [
+          {
+            field: 'shortDescription',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      const withContent: APIErrorsMessageType =
+        await blogTestManager.updatePostByBlogId(
+          blogId,
+          postId,
+          {
+            title: 'title',
+            shortDescription: 'shortDescription',
+            content: '',
+          },
+          adminAuthToken,
+          400,
+        );
+      expect(withContent).toEqual({
+        errorsMessages: [
+          {
+            field: 'content',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      const post: PostOutputModel = await postTestManager.getPost(postId, 200);
+      expect(post.title).toBe(blogPostCreateModel.title);
+      expect(post.shortDescription).toBe(blogPostCreateModel.shortDescription);
+      expect(post.content).toBe(blogPostCreateModel.content);
+    });
+
+    it('should not update post by id, post not found', async () => {
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.updatePostByBlogId(
+        blogId,
+        23456,
+        postUpdateModel,
+        adminAuthToken,
+        404,
+      );
     });
   });
 });

@@ -3,12 +3,12 @@ import {
   BlogMapperOutputModel,
   BlogOutputModel,
 } from '../api/models/output/blog-output.model';
-import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { BlogSortingQuery } from '../api/models/input/blog-input.model';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
-import { BlogType } from '../domain/blog.entity';
 import { tablesName } from '../../../../core/utils/tables/tables';
+import { BlogType } from '../domain/blog.entity';
+import { BasePagination } from '../../../../base/pagination/base-pagination';
 
 @Injectable()
 export class BlogQueryRepository {

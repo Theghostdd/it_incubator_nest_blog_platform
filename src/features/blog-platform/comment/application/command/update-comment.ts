@@ -1,11 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppResultType } from '../../../../../base/types/types';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { CommentService } from '../comment-service';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { CommentUpdateModel } from '../../api/model/input/comment-input.model';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
 import { CommentType } from '../../domain/comment.entity';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { AppResultType } from '../../../../../base/types/types';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class UpdateCommentCommand {
   constructor(

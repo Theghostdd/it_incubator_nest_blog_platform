@@ -1,6 +1,5 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { ConfirmUserByEmailInputModel } from '../../api/models/input/auth-input.models';
-
 import { compareAsc } from 'date-fns';
 import {
   APIErrorMessageType,
@@ -9,8 +8,8 @@ import {
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { UserService } from '../../../../users/user/application/user-service';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { UserType } from '../../../../users/user/domain/user.entity';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class ConfirmUserEmailCommand {
   constructor(

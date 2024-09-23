@@ -4,9 +4,9 @@ import {
   SecurityDeviceOutputModelMapper,
   SecurityDevicesOutputModel,
 } from '../api/models/security-devices-output.model';
-import { JWTRefreshTokenPayloadType } from '../../../../base/types/types';
 import { DataSource } from 'typeorm';
 import { InjectDataSource } from '@nestjs/typeorm';
+import { JWTRefreshTokenPayloadType } from '../../../../base/types/types';
 import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()

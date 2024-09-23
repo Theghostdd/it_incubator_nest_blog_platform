@@ -3,17 +3,17 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { compareAsc } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
-import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
+import { RecoveryPasswordSessionType } from '../../domain/recovery-session.entity';
 import {
   APIErrorMessageType,
   AppResultType,
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { UserType } from '../../../../users/user/domain/user.entity';
-import { RecoveryPasswordSessionType } from '../../domain/recovery-session.entity';
 
 export class ChangeUserPasswordCommand {
   constructor(public inputChangePasswordModel: ChangePasswordInputModel) {}
@@ -58,6 +58,8 @@ export class ChangeUserPasswordHandler
     const user: AppResultType<UserType | null> =
       await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
+      return this.applicationObjectResult.badRequest(null);
+    if (user.data.id !== recoverySession.data.userId)
       return this.applicationObjectResult.badRequest(null);
 
     const hash =

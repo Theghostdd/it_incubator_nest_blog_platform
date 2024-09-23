@@ -10,10 +10,10 @@ export class BlogRepository {
   constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
   async save(blog: Blog): Promise<number> {
     const query = `
-      INSERT INTO "${tablesName.BLOGS}"
+      INSERT INTO ${tablesName.BLOGS}
         ("name", "description", "websiteUrl", "isMembership", "createdAt", "isActive")
         VALUES ($1, $2, $3, $4, $5, $6) 
-        RETURNING "id";
+        RETURNING "id"
     `;
     const result: { id: number }[] = await this.dataSource.query(query, [
       blog.name,
@@ -29,8 +29,8 @@ export class BlogRepository {
   async delete(blogId: number): Promise<void> {
     const query = `
       UPDATE "${tablesName.BLOGS}"
-        SET "isActive" = false
-        WHERE "id" = $1 AND "isActive" = true
+        SET "isActive" = ${false}
+        WHERE "id" = $1 AND "isActive" = ${true}
     `;
     await this.dataSource.query(query, [blogId]);
   }
@@ -39,7 +39,7 @@ export class BlogRepository {
     const query = `
       SELECT "id", "name", "description", "websiteUrl", "isMembership", "createdAt"
       FROM "${tablesName.BLOGS}"
-      WHERE "id" = $1 AND "isActive" = true
+      WHERE "id" = $1 AND "isActive" = ${true}
     `;
     const result = await this.dataSource.query(query, [id]);
     return result.length > 0 ? result[0] : null;
@@ -52,7 +52,7 @@ export class BlogRepository {
     const query = `
       UPDATE "${tablesName.BLOGS}"
       SET "name" = $1, "description" = $2, "websiteUrl" = $3
-      WHERE "id" = $4 AND "isActive" = true
+      WHERE "id" = $4 AND "isActive" = ${true}
     `;
     await this.dataSource.query(query, [
       blogUpdateModel.name,

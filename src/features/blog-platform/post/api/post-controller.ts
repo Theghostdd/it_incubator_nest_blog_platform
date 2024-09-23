@@ -1,4 +1,3 @@
-import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import {
   Body,
   Controller,
@@ -14,32 +13,33 @@ import {
 } from '@nestjs/common';
 import { PostQueryRepository } from '../infrastructure/post-query-repositories';
 import { PostOutputModel } from './models/output/post-output.model';
-import { BaseSorting } from '../../../../base/sorting/base-sorting';
-import { BasePagination } from '../../../../base/pagination/base-pagination';
 import {
   PostInputModel,
   PostUpdateModel,
 } from './models/input/post-input.model';
-import {
-  AppResultType,
-  JWTAccessTokenPayloadType,
-} from '../../../../base/types/types';
-import { AppResult } from '../../../../base/enum/app-result.enum';
 import { CommentOutputModel } from '../../comment/api/model/output/comment-output.model';
 import { CommentQueryRepositories } from '../../comment/infrastructure/comment-query-repositories';
 import { CommandBus } from '@nestjs/cqrs';
 import { DeletePostByIdCommand } from '../application/command/delete-post.command';
 import { UpdatePostByIdCommand } from '../application/command/update-post.command';
-import { BasicGuard } from '../../../../core/guards/basic/basic.guard';
 import { CommentInputModel } from '../../comment/api/model/input/comment-input.model';
 import { CreateCommentByPostIdCommand } from '../../comment/application/command/create-comment';
-import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
-import { CurrentUser } from '../../../../core/decorators/current-user';
 import { LikeInputModel } from '../../like/api/models/input/like-input-model';
 import { UpdatePostLikeStatusCommand } from '../../like/application/command/update-post-like-status';
-import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
 import { CreatePostCommand } from '../application/command/create-post.command';
+import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
+import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
 import { EntityId } from '../../../../core/decorators/entityId';
+import { BaseSorting } from '../../../../base/sorting/base-sorting';
+import { CurrentUser } from '../../../../core/decorators/current-user';
+import {
+  AppResultType,
+  JWTAccessTokenPayloadType,
+} from '../../../../base/types/types';
+import { BasePagination } from '../../../../base/pagination/base-pagination';
+import { BasicGuard } from '../../../../core/guards/basic/basic.guard';
+import { AppResult } from '../../../../base/enum/app-result.enum';
+import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 
 @Controller(apiPrefixSettings.POST.posts)
 export class PostController {

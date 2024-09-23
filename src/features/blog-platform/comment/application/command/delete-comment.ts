@@ -1,10 +1,10 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppResultType } from '../../../../../base/types/types';
 import { CommentService } from '../comment-service';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
+import { CommentType } from '../../domain/comment.entity';
+import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { CommentType } from '../../domain/comment.entity';
 
 export class DeleteCommentCommand {
   constructor(

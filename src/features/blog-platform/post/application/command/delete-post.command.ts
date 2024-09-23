@@ -1,13 +1,18 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
-import { AppResultType } from '../../../../../base/types/types';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { PostRepository } from '../../infrastructure/post-repositories';
 import { PostService } from '../post-service';
-import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { PostType } from '../../domain/post.entity';
+import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
+import { AppResultType } from '../../../../../base/types/types';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { BlogService } from '../../../blog/application/blog-service';
+import { BlogType } from '../../../blog/domain/blog.entity';
 
 export class DeletePostByIdCommand {
-  constructor(public id: number) {}
+  constructor(
+    public postId: number,
+    public blogId?: number,
+  ) {}
 }
 
 @CommandHandler(DeletePostByIdCommand)
@@ -16,13 +21,21 @@ export class DeletePostByIdHandler
 {
   constructor(
     private readonly postService: PostService,
+    private readonly blogService: BlogService,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly postRepository: PostRepository,
   ) {}
   async execute(command: DeletePostByIdCommand): Promise<AppResultType> {
+    if (command.blogId) {
+      const blog: AppResultType<BlogType | null> =
+        await this.blogService.getBlogById(command.blogId);
+      if (blog.appResult !== AppResult.Success)
+        return this.applicationObjectResult.notFound();
+    }
+
     const post: AppResultType<PostType | null> =
-      await this.postService.getPostById(command.id);
-    if (post.appResult === AppResult.NotFound)
+      await this.postService.getPostById(command.postId);
+    if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
     await this.postRepository.delete(post.data.id);

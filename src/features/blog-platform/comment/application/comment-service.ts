@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { CommentRepositories } from '../infrastructure/comment-repositories';
+import { CommentType } from '../domain/comment.entity';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
 import { AppResultType } from '../../../../base/types/types';
-import { CommentType } from '../domain/comment.entity';
 
 @Injectable()
 export class CommentService {

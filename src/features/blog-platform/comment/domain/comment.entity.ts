@@ -5,7 +5,6 @@ import { LikeStatusEnum } from '../../like/domain/type';
 export class Comment {
   content: string;
   userId: number;
-  userLogin: string;
   postId: number;
   blogId: number;
   likesCount: number;
@@ -21,7 +20,6 @@ export class CommentFactory {
   create(
     commentInputModel: CommentInputModel,
     userId: number,
-    userLogin: string,
     postId: number,
     blogId: number,
   ): Comment {
@@ -29,7 +27,6 @@ export class CommentFactory {
     const { content } = commentInputModel;
     comment.content = content;
     comment.userId = userId;
-    comment.userLogin = userLogin;
     comment.blogId = blogId;
     comment.postId = postId;
     comment.likesCount = 0;
@@ -41,4 +38,5 @@ export class CommentFactory {
 
 export type CommentLikeJoinType = CommentType & {
   status: LikeStatusEnum;
+  userLogin: string;
 };

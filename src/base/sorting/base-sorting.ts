@@ -15,6 +15,7 @@ export class BaseSorting {
     'login',
     'email',
     'content',
+    'blogName',
   ];
 
   constructor(

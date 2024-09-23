@@ -8,6 +8,7 @@ export const apiPrefixSettings = {
     all_data: 'all-data',
   },
   BLOG: {
+    sa_blogs: 'sa/blogs',
     blogs: 'blogs',
     posts: 'posts',
   },

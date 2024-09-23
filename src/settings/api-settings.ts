@@ -34,11 +34,11 @@ export class APISettings {
     return {
       ACCESS_TOKEN: {
         SECRET: aSecret,
-        EXPIRES: '10s',
+        EXPIRES: '10h',
       },
       REFRESH_TOKEN: {
         SECRET: rSecret,
-        EXPIRES: '20s',
+        EXPIRES: '20h',
       },
     };
   }

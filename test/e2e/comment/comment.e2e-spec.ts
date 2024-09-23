@@ -5,13 +5,11 @@ import {
 } from '../../models/comments/interfaces';
 import { initSettings } from '../../settings/test-settings';
 import { CommentTestManager } from '../../utils/request-test-manager/comment-test-manager';
-import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
 import {
   IUserCreateTestModel,
   IUserLoginTestModel,
 } from '../../models/user/interfaces';
 import { APIErrorsMessageType } from '../../../src/base/types/types';
-import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 import { ILikeUpdateModel } from '../../models/like/interfaces';
 import { APISettings } from '../../../src/settings/api-settings';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
@@ -19,6 +17,8 @@ import { BlogTestManager } from '../../utils/request-test-manager/blog-test-mana
 import { IBlogCreateModel } from '../../models/blog/interfaces';
 import { IPostCreateModel } from '../../models/post/interfaces';
 import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
+import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
+import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 
 describe('Comment e2e', () => {
   let commentTestManager: CommentTestManager;

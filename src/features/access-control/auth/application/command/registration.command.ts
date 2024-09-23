@@ -15,13 +15,13 @@ import { ConfigurationType } from '../../../../../settings/configuration/configu
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import {
   User,
   UserFactory,
   UserType,
 } from '../../../../users/user/domain/user.entity';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}

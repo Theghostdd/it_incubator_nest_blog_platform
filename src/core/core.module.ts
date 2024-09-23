@@ -14,12 +14,12 @@ import { AccessControlModule } from '../features/access-control/access-control.m
 @Global()
 @Module({
   imports: [
-    CqrsModule,
     AccessControlModule,
+    CqrsModule,
     ThrottlerModule.forRoot([
       {
         ttl: 10000,
-        limit: 5,
+        limit: 9999,
       },
     ]),
   ],

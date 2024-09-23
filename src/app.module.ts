@@ -3,15 +3,15 @@ import { MailerModule } from '@nestjs-modules/mailer';
 import { configModule } from './settings/configuration/config.module';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from './settings/configuration/configuration';
-import { BlogPlatformModule } from './features/blog-platform/blog-platform.module';
 import { ApplicationObjectResultModule } from './base/application-object-result/application-object-result.module';
 import { BaseSortingModule } from './base/sorting/base-sorting.module';
 import { BasePaginationModule } from './base/pagination/base-pagination.module';
-import { AccessControlModule } from './features/access-control/access-control.module';
 import { TestingModule } from './features/testing/testing.module';
-import { UsersModule } from './features/users/users.module';
 import { CoreModule } from './core/core.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { BlogPlatformModule } from './features/blog-platform/blog-platform.module';
+import { AccessControlModule } from './features/access-control/access-control.module';
+import { UsersModule } from './features/users/users.module';
 
 @Module({
   imports: [

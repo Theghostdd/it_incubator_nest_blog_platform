@@ -10,10 +10,10 @@ export class BlogTestModel {
   private readonly postContent: string;
   constructor() {
     this.name = 'Blog1';
-    this.description = 'description blog';
+    this.description = 'description blog-sa';
     this.websiteUrl = 'https://www.google.com';
     this.updateBlogName = 'Blog2';
-    this.updateBlogDescription = 'description blog for update';
+    this.updateBlogDescription = 'description blog-sa for update';
     this.updateBlogWebsiteUrl = 'https://www.yandex.com';
     this.postTitle = 'postTitle';
     this.postShortDescription = 'post description';

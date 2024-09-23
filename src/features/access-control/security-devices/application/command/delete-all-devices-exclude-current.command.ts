@@ -1,11 +1,11 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
+import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
 import {
   AppResultType,
   JWTRefreshTokenPayloadType,
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
-import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
 
 export class DeleteAllDevicesExcludeCurrentCommand {
   constructor(public user: JWTRefreshTokenPayloadType) {}

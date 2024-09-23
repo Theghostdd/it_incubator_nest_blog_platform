@@ -4,15 +4,10 @@ import {
 } from '../../../../../../base/sorting/base-sorting';
 import {
   BlogInputModelValidationRules,
+  BlogPostUpdateModelValidationRules,
   BlogUpdateModelValidationRules,
   PostBlogInputModelValidationRules,
 } from '../../../../../../core/utils/validation-rules/validation-rules';
-
-export class PostBlogInputModel extends PostBlogInputModelValidationRules {
-  public title: string;
-  public shortDescription: string;
-  public content: string;
-}
 
 export class BlogInputModel extends BlogInputModelValidationRules {
   public name: string;
@@ -26,6 +21,17 @@ export class BlogUpdateModel extends BlogUpdateModelValidationRules {
   public websiteUrl: string;
 }
 
+export class PostBlogInputModel extends PostBlogInputModelValidationRules {
+  public title: string;
+  public shortDescription: string;
+  public content: string;
+}
+
+export class BlogPostUpdateModel extends BlogPostUpdateModelValidationRules {
+  public title: string;
+  public shortDescription: string;
+  public content: string;
+}
 export type BlogSortQueryType = BaseSortingType & {
   searchNameTerm: string;
 };

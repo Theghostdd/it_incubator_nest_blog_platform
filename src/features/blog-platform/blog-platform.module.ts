@@ -1,12 +1,7 @@
 import { Module } from '@nestjs/common';
-import { BlogRepository } from './blog/infrastructure/blog-repositories';
 import { BlogQueryRepository } from './blog/infrastructure/blog-query-repositories';
-import { BlogService } from './blog/application/blog-service';
 import { BlogMapperOutputModel } from './blog/api/models/output/blog-output.model';
 import { BlogSortingQuery } from './blog/api/models/input/blog-input.model';
-import { CreateBlogHandler } from './blog/application/command/create-blog.command';
-import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.command';
-import { UpdateBlogByIdHandler } from './blog/application/command/update-blog.command';
 import { PostService } from './post/application/post-service';
 import { PostRepository } from './post/infrastructure/post-repositories';
 import { PostQueryRepository } from './post/infrastructure/post-query-repositories';
@@ -25,29 +20,35 @@ import { UpdateCommentLikeStatusHandler } from './like/application/command/updat
 import { UpdatePostLikeStatusHandler } from './like/application/command/update-post-like-status';
 import { LikeService } from './like/application/like-service';
 import { LikeRepositories } from './like/infrastructure/like-repositories';
-import { UsersModule } from '../users/users.module';
 import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
-import { FindBlogConstraint } from '../../core/decorators/find-blog';
 import { CalculateLike } from './like/domain/calculate-like';
-import { BlogFactory } from './blog/domain/blog.entity';
 import { PostFactory } from './post/domain/post.entity';
 import { CommentFactory } from './comment/domain/comment.entity';
 import { LikeFactory } from './like/domain/like.entity';
+import { FindBlogConstraint } from '../../core/decorators/find-blog';
+import { BlogAdminController } from './blog/api/blog-sa-controller';
+import { BlogService } from './blog/application/blog-service';
+import { UsersModule } from '../users/users.module';
+import { BlogRepository } from './blog/infrastructure/blog-repositories';
+import { CreateBlogHandler } from './blog/application/command/create-blog.command';
+import { BlogFactory } from './blog/domain/blog.entity';
+import { UpdateBlogByIdHandler } from './blog/application/command/update-blog.command';
+import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.command';
 
 @Module({
   imports: [UsersModule],
-  controllers: [BlogController, PostController, CommentController],
+  controllers: [
+    BlogController,
+    PostController,
+    CommentController,
+    BlogAdminController,
+  ],
   providers: [
-    BlogRepository,
     BlogQueryRepository,
-    BlogService,
     BlogMapperOutputModel,
     BlogSortingQuery,
-    CreateBlogHandler,
-    DeleteBlogByIdHandler,
-    UpdateBlogByIdHandler,
     PostService,
     PostRepository,
     PostQueryRepository,
@@ -68,10 +69,15 @@ import { LikeFactory } from './like/domain/like.entity';
     LikeRepositories,
     FindBlogConstraint,
     CalculateLike,
-    BlogFactory,
     PostFactory,
     CommentFactory,
     LikeFactory,
+    BlogService,
+    BlogRepository,
+    CreateBlogHandler,
+    BlogFactory,
+    UpdateBlogByIdHandler,
+    DeleteBlogByIdHandler,
   ],
   exports: [],
 })

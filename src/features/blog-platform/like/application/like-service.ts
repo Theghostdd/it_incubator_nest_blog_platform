@@ -1,9 +1,9 @@
 import { LikeRepositories } from '../infrastructure/like-repositories';
-import { AppResultType } from '../../../../base/types/types';
-import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
 import { Injectable } from '@nestjs/common';
 import { LikeType } from '../domain/like.entity';
 import { EntityTypeEnum } from '../domain/type';
+import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
+import { AppResultType } from '../../../../base/types/types';
 
 @Injectable()
 export class LikeService {

@@ -1,4 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { AuthService } from '../auth-application';
+import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
+import { AuthSessionType } from '../../domain/auth-session.entity';
 import {
   AppResultType,
   AuthorizationUserResponseType,
@@ -6,10 +9,7 @@ import {
   JWTRefreshTokenPayloadType,
 } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { AuthService } from '../auth-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
-import { AuthSessionType } from '../../domain/auth-session.entity';
 
 export class UpdatePairTokenCommand {
   constructor(public user: JWTRefreshTokenPayloadType) {}

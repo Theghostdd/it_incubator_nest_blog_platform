@@ -3,14 +3,14 @@ import {
   CommentMapperOutputModel,
   CommentOutputModel,
 } from '../api/model/output/comment-output.model';
-import { BaseSorting } from '../../../../base/sorting/base-sorting';
-import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { EntityTypeEnum } from '../../like/domain/type';
-import { tablesName } from '../../../../core/utils/tables/tables';
 import { CommentLikeJoinType } from '../domain/comment.entity';
 import { PostType } from '../../post/domain/post.entity';
+import { BaseSorting } from '../../../../base/sorting/base-sorting';
+import { tablesName } from '../../../../core/utils/tables/tables';
+import { BasePagination } from '../../../../base/pagination/base-pagination';
 
 @Injectable()
 export class CommentQueryRepositories {
@@ -25,14 +25,16 @@ export class CommentQueryRepositories {
     userId?: number,
   ): Promise<CommentOutputModel> {
     const query = `
-      SELECT "c"."id", "c"."content", "c"."userId", "c"."userLogin", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", COALESCE("l"."status", 'None') as "status"
-      FROM ${tablesName.COMMENTS} as "c"
+      SELECT "c"."id", "c"."content", "c"."userId", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", "u"."login" as "userLogin", COALESCE("l"."status", 'None') as "status"
+      FROM "${tablesName.COMMENTS}" as "c"
       LEFT JOIN ${tablesName.LIKES} as "l"
       ON ("l"."userId" = $1 OR "l"."userId" IS NULL)
       AND "l"."parentId" = "c"."id"
       AND "l"."entityType" = $2
-      AND "l"."isActive" = true
-      WHERE "c"."id" = $3 AND "c"."isActive" = true
+      AND "l"."isActive" = ${true}
+      LEFT JOIN "${tablesName.USERS}" as "u"
+      ON "c"."userId" = "u"."id" AND "u"."isActive" = ${true}  
+      WHERE "c"."id" = $3 AND "c"."isActive" = ${true}
     `;
     const result: CommentLikeJoinType[] | [] = await this.dataSource.query(
       query,
@@ -75,13 +77,15 @@ export class CommentQueryRepositories {
     const skip: number = (+pageNumber - 1) * pageSize;
 
     const queryComments = `
-        SELECT "c"."id", "c"."content", "c"."userId", "c"."userLogin", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", COALESCE("l"."status", 'None') as "status"
+        SELECT "c"."id", "c"."content", "c"."userId", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", "u"."login" as "userLogin", COALESCE("l"."status", 'None') as "status"
         FROM ${tablesName.COMMENTS} as "c"
         LEFT JOIN ${tablesName.LIKES} as "l"
         ON ("l"."userId" = $1 OR $1 IS NULL)
         AND "l"."parentId" = "c"."id" 
         AND "l"."entityType" = $2 
         AND "l"."isActive" = true
+        LEFT JOIN "${tablesName.USERS}" as "u"
+        ON "c"."userId" = "u"."id" AND "u"."isActive" = ${true}  
         WHERE "c"."postId" = $3 AND "c"."isActive" = true
         ORDER BY "${sortBy}" ${sortDirection}
         LIMIT $4 OFFSET $5 

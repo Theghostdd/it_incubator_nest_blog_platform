@@ -1,4 +1,3 @@
-import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import {
   Body,
   Controller,
@@ -14,20 +13,21 @@ import {
 import { CommentQueryRepositories } from '../infrastructure/comment-query-repositories';
 import { CommentOutputModel } from './model/output/comment-output.model';
 import { CommentUpdateModel } from './model/input/comment-input.model';
-import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { CommandBus } from '@nestjs/cqrs';
 import { UpdateCommentCommand } from '../application/command/update-comment';
+import { DeleteCommentCommand } from '../application/command/delete-comment';
+import { LikeInputModel } from '../../like/api/models/input/like-input-model';
+import { UpdateCommentLikeStatusCommand } from '../../like/application/command/update-comment-like-status';
+import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
+import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
+import { EntityId } from '../../../../core/decorators/entityId';
 import { CurrentUser } from '../../../../core/decorators/current-user';
 import {
   AppResultType,
   JWTAccessTokenPayloadType,
 } from '../../../../base/types/types';
+import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { AppResult } from '../../../../base/enum/app-result.enum';
-import { DeleteCommentCommand } from '../application/command/delete-comment';
-import { LikeInputModel } from '../../like/api/models/input/like-input-model';
-import { UpdateCommentLikeStatusCommand } from '../../like/application/command/update-comment-like-status';
-import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
-import { EntityId } from '../../../../core/decorators/entityId';
 
 @Controller(apiPrefixSettings.COMMENT.comments)
 export class CommentController {
