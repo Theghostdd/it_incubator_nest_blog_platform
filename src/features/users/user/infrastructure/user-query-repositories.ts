@@ -46,7 +46,7 @@ export class UserQueryRepositories {
 
     const getTotalDocument: { count: number }[] = await this.dataSource.query(
       `SELECT COUNT(*) 
-             FROM "${tablesName.USERS}"
+             FROM ${tablesName.USERS}
                  WHERE
                       (
                         CASE
@@ -60,7 +60,7 @@ export class UserQueryRepositories {
                                 ("email" ILIKE '%' || $2 || '%')
                         END
                     )
-                AND "isActive" = true
+                AND "isActive" = ${true}
     `,
       [searchLoginTerm, searchEmailTerm],
     );
@@ -84,7 +84,7 @@ export class UserQueryRepositories {
                         ("email" ILIKE '%' || $2 || '%')
                 END
             )
-        AND "isActive" = true
+        AND "isActive" = ${true}
         ORDER BY "${sortBy}" ${sortDirection}
         LIMIT $3 OFFSET $4
     `;
@@ -110,7 +110,7 @@ export class UserQueryRepositories {
     const query = `
         SELECT "id", "login", "email"
         FROM ${tablesName.USERS}
-        WHERE "id" = $1 AND "isActive" = true
+        WHERE "id" = $1 AND "isActive" = ${true}
     `;
     const user: UserType[] | [] = await this.dataSource.query(query, [id]);
     if (user.length <= 0) throw new NotFoundException();

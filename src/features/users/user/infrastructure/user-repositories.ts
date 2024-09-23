@@ -10,22 +10,15 @@ export class UserRepositories {
 
   async save(user: User): Promise<number> {
     const query = `
-      WITH inserted_user AS (
-          INSERT INTO "${tablesName.USERS}" (
-              "login", "email", "password", "createdAt", "isActive"
-          )
-          VALUES (
-              $1, $2, $3, $4, $5
-          )
+      WITH inserted_user AS ( 
+          INSERT INTO ${tablesName.USERS} ("login", "email", "password", "createdAt", "isActive")
+          VALUES ($1, $2, $3, $4, $5)
       RETURNING "id" as createdUserId
       )
-      INSERT INTO ${tablesName.USERS_CONFIRMATION} (
-          "userId", "isConfirm", "confirmationCode", "dataExpire"
-      )
-      SELECT
-          createdUserId, $6, $7, $8
+      INSERT INTO ${tablesName.USERS_CONFIRMATION} ("userId", "isConfirm", "confirmationCode", "dataExpire")
+      SELECT createdUserId, $6, $7, $8
       FROM inserted_user
-      RETURNING "userId";
+      RETURNING "userId"
     `;
 
     const result: { userId: number }[] = await this.dataSource.query(query, [

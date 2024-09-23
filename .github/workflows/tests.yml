@@ -1,3 +1,66 @@
+#name: Tests & Vercel Deploy
+#
+#env:
+#  VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+#  VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+#
+#on:
+#  push:
+#    branches: [ "main" ]
+#
+#jobs:
+#  tests:
+#    name: Tests
+#    runs-on: ubuntu-latest
+#
+#    services:
+#      mongodb:
+#        image: mongo:4.4.6
+#        ports:
+#          - 27017:27017
+#        options: >-
+#          --health-cmd mongo
+#          --health-interval 10s
+#          --health-timeout 5s
+#          --health-retries 5
+#
+#    steps:
+#      - name: Checkout
+#        uses: actions/checkout@v3
+#
+#      - name: Install dependencies
+#        run: yarn
+#
+#      - name: Run e2e tests
+#        run: yarn test:e2e
+#        env:
+#          ENV: ${{ vars.ENV_GH }}
+#          SUPER_ADMIN_LOGIN: ${{secrets.SUPER_ADMIN_LOGIN}}
+#          SUPER_ADMIN_PASSWORD: ${{secrets.SUPER_ADMIN_PASSWORD}}
+#          PASSWORD_MAIL_AGENT: ${{vars.ENV_GH_PASSWORD_MAIL_AGENT}}
+#          JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
+#          JWT_REFRESH_TOKEN_SECRET: ${{secrets.JWT_REFRESH_TOKEN_SECRET}}
+#          LOGIN_MAIL_AGENT: "some@gmail.com"
+##
+#
+#  deploy:
+#    name: Deploy
+#    needs: tests
+#    runs-on: ubuntu-latest
+#    steps:
+#      - uses: actions/checkout@v2
+#      - name: Install Vercel CLI
+#        run: npm install --global vercel@latest
+#      - name: Pull Vercel Environment Information
+#        run: vercel pull --yes --environment=production --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Build Project Artifacts
+#        run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
+#      - name: Deploy Project Artifacts to Vercel
+#        run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+
+
+
 name: Tests & Vercel Deploy
 
 env:
@@ -14,12 +77,16 @@ jobs:
     runs-on: ubuntu-latest
 
     services:
-      mongodb:
-        image: mongo:4.4.6
+      postgres:
+        image: postgres:13
         ports:
-          - 27017:27017
+          - 5432:5432
+        env:
+          POSTGRES_USER: test_user
+          POSTGRES_PASSWORD: test_password
+          POSTGRES_DB: test_db
         options: >-
-          --health-cmd mongo
+          --health-cmd "pg_isready -U test_user"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
@@ -31,6 +98,18 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Wait for Postgres
+        run: |
+          until pg_isready -h 127.0.0.1 -p 5432 -U test_user; do
+            echo "Waiting for Postgres..."
+            sleep 1
+          done
+
+      - name: Run migrations
+        run: yarn typeorm migration:run
+        env:
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
+
       - name: Run e2e tests
         run: yarn test:e2e
         env:
@@ -41,7 +120,7 @@ jobs:
           JWT_ACCESS_TOKEN_SECRET: ${{secrets.JWT_ACCESS_TOKEN_SECRET}}
           JWT_REFRESH_TOKEN_SECRET: ${{secrets.JWT_REFRESH_TOKEN_SECRET}}
           LOGIN_MAIL_AGENT: "some@gmail.com"
-#
+          DATABASE_URL: postgres://test_user:test_password@localhost:5432/test_db
 
   deploy:
     name: Deploy
@@ -57,8 +136,4 @@ jobs:
         run: vercel build --prod --token=${{ secrets.VERCEL_TOKEN }}
       - name: Deploy Project Artifacts to Vercel
         run: vercel deploy --prebuilt --prod --token=${{ secrets.VERCEL_TOKEN }}
-
-
-
-
 
