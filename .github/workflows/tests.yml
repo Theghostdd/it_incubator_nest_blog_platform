@@ -98,6 +98,10 @@ jobs:
       - name: Install dependencies
         run: yarn
 
+      - name: Create Database and Tables from SQL File
+        run: |
+              psql -h localhost -U postgres -f setup.sql
+
       - name: Run e2e tests
         run: yarn test:e2e
         env:
