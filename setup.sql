@@ -1,9 +1,105 @@
 CREATE DATABASE blog_platform;
 
-\c blog_platform
+CREATE SEQUENCE users_id_seq;
+CREATE SEQUENCE blogs_id_seq;
+CREATE SEQUENCE posts_id_seq;
+CREATE SEQUENCE user_confirmation_id_seq;
+CREATE SEQUENCE auth_session_id_seq;
+CREATE SEQUENCE likes_id_seq;
+CREATE SEQUENCE comments_id_seq;
+CREATE SEQUENCE recovery_password_session_id_seq;
+
 
 CREATE TABLE users (
-    id SERIAL PRIMARY KEY,
-    name VARCHAR(100),
-    email VARCHAR(100)
+    id INTEGER NOT NULL DEFAULT nextval('users_id_seq'::regclass) PRIMARY KEY,
+    login CHARACTER VARYING NOT NULL,
+    email CHARACTER VARYING NOT NULL,
+    password CHARACTER VARYING NOT NULL,
+    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    isActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+
+CREATE TABLE blogs (
+    id INTEGER NOT NULL DEFAULT nextval('blogs_id_seq'::regclass) PRIMARY KEY,
+    name CHARACTER VARYING NOT NULL,
+    description CHARACTER VARYING NOT NULL,
+    websiteUrl CHARACTER VARYING NOT NULL,
+    isMembership BOOLEAN DEFAULT FALSE NOT NULL,
+    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    isActive BOOLEAN NOT NULL
+);
+
+
+CREATE TABLE posts (
+    id INTEGER NOT NULL DEFAULT nextval('posts_id_seq'::regclass) PRIMARY KEY,
+    title CHARACTER VARYING NOT NULL,
+    shortDescription CHARACTER VARYING NOT NULL,
+    content TEXT NOT NULL,
+    blogId INTEGER NOT NULL,
+    likesCount INTEGER DEFAULT 0 NOT NULL,
+    dislikesCount INTEGER DEFAULT 0 NOT NULL,
+    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    isActive BOOLEAN NOT NULL
+);
+
+
+
+CREATE TABLE user_confirmation (
+    userId INTEGER NOT NULL,
+    isConfirm BOOLEAN NOT NULL,
+    confirmationCode TEXT NOT NULL,
+    dataExpire TIMESTAMP WITH TIME ZONE NOT NULL,
+    id INTEGER NOT NULL DEFAULT nextval('user_confirmation_id_seq'::regclass) PRIMARY KEY
+);
+
+
+
+CREATE TABLE auth_session (
+    id INTEGER NOT NULL DEFAULT nextval('auth_session_id_seq'::regclass) PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    deviceId CHARACTER VARYING NOT NULL,
+    deviceName CHARACTER VARYING NOT NULL,
+    ip CHARACTER VARYING NOT NULL,
+    issueAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    expAt TIMESTAMP WITH TIME ZONE NOT NULL,
+    isActive BOOLEAN DEFAULT TRUE
+);
+
+
+
+CREATE TABLE likes (
+    id INTEGER NOT NULL DEFAULT nextval('likes_id_seq'::regclass) PRIMARY KEY,
+    userId INTEGER NOT NULL,
+    parentId INTEGER NOT NULL,
+    entityType CHARACTER VARYING NOT NULL,
+    status CHARACTER VARYING NOT NULL,
+    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    lastUpdateAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    isActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+
+CREATE TABLE comments (
+    id INTEGER NOT NULL DEFAULT nextval('comments_id_seq'::regclass) PRIMARY KEY,
+    content TEXT NOT NULL,
+    userId INTEGER NOT NULL,
+    blogId INTEGER NOT NULL,
+    postId INTEGER NOT NULL,
+    likesCount INTEGER DEFAULT 0 NOT NULL,
+    dislikesCount INTEGER DEFAULT 0 NOT NULL,
+    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    isActive BOOLEAN NOT NULL DEFAULT TRUE
+);
+
+
+
+CREATE TABLE recovery_password_session (
+    id INTEGER NOT NULL DEFAULT nextval('recovery_password_session_id_seq'::regclass) PRIMARY KEY,
+    email CHARACTER VARYING NOT NULL,
+    code CHARACTER VARYING NOT NULL,
+    expAt TIMESTAMP WITH TIME ZONE NOT NULL,
+    userId INTEGER NOT NULL
 );
