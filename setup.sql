@@ -1,5 +1,3 @@
-CREATE DATABASE blog_platform;
-
 CREATE SEQUENCE users_id_seq;
 CREATE SEQUENCE blogs_id_seq;
 CREATE SEQUENCE posts_id_seq;

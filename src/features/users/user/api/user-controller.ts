@@ -29,6 +29,7 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserCommand } from '../application/command/create-user.command';
 import { DeleteUserByIdCommand } from '../application/command/delete-user.command';
 import { EntityId } from '../../../../core/decorators/entityId';
+
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
 export class UserController {
