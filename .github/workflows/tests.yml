@@ -101,7 +101,7 @@ jobs:
       - name: Create Database and Tables from SQL File
         run: |
           export PGPASSWORD=sa
-          psql -h localhost -U postgres -f setup.sql
+          psql -h localhost -U postgres -d blog_platform -f setup.sql
 
       - name: Run e2e tests
         run: yarn test:e2e
