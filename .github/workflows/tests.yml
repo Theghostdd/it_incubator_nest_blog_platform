@@ -101,7 +101,7 @@ jobs:
       - name: Create Database and Tables from SQL File
         run: |
           export PGPASSWORD=sa
-          psql -h localhost -U postgres -c 'CREATE DATABASE blog_platform;' || { echo 'Failed to create database'; exit 1; }
+          psql -h localhost -U postgres -c 'CREATE DATABASE blog_platform WITH LC_COLLATE = "C" LC_CTYPE = "C" TEMPLATE = template0;' || { echo 'Failed to create database'; exit 1; }
           sleep 5
           psql -h localhost -U postgres -d blog_platform -f setup.sql || { echo 'Failed to set up database'; exit 1; }
 
