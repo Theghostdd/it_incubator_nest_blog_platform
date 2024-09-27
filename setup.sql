@@ -1,103 +1,131 @@
-CREATE SEQUENCE users_id_seq;
-CREATE SEQUENCE blogs_id_seq;
-CREATE SEQUENCE posts_id_seq;
-CREATE SEQUENCE user_confirmation_id_seq;
-CREATE SEQUENCE auth_session_id_seq;
-CREATE SEQUENCE likes_id_seq;
-CREATE SEQUENCE comments_id_seq;
-CREATE SEQUENCE recovery_password_session_id_seq;
-
-
-CREATE TABLE users (
-    id INTEGER NOT NULL DEFAULT nextval('users_id_seq'::regclass) PRIMARY KEY,
-    login CHARACTER VARYING NOT NULL,
-    email CHARACTER VARYING NOT NULL,
-    password CHARACTER VARYING NOT NULL,
-    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isActive BOOLEAN NOT NULL DEFAULT TRUE
+CREATE TABLE users
+(
+    id serial NOT NULL,
+    login character varying NOT NULL,
+    email character varying NOT NULL,
+    password character varying NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "isActive" boolean NOT NULL DEFAULT true,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS users
+    OWNER to postgres;
 
 
-CREATE TABLE blogs (
-    id INTEGER NOT NULL DEFAULT nextval('blogs_id_seq'::regclass) PRIMARY KEY,
-    name CHARACTER VARYING NOT NULL,
-    description CHARACTER VARYING NOT NULL,
-    websiteUrl CHARACTER VARYING NOT NULL,
-    isMembership BOOLEAN DEFAULT FALSE NOT NULL,
-    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isActive BOOLEAN NOT NULL
+CREATE TABLE blogs
+(
+    id serial NOT NULL,
+    name character varying NOT NULL,
+    description character varying NOT NULL,
+    "websiteUrl" character varying NOT NULL,
+    "isMembership" boolean NOT NULL,
+    "isActive" boolean NOT NULL DEFAULT true,
+    "createdAt" timestamp with time zone NOT NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS blogs
+    OWNER to postgres;
 
-CREATE TABLE posts (
-    id INTEGER NOT NULL DEFAULT nextval('posts_id_seq'::regclass) PRIMARY KEY,
-    title CHARACTER VARYING NOT NULL,
-    shortDescription CHARACTER VARYING NOT NULL,
-    content TEXT NOT NULL,
-    blogId INTEGER NOT NULL,
-    likesCount INTEGER DEFAULT 0 NOT NULL,
-    dislikesCount INTEGER DEFAULT 0 NOT NULL,
-    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isActive BOOLEAN NOT NULL
+
+CREATE TABLE posts
+(
+    id serial NOT NULL,
+    title character varying NOT NULL,
+    "shortDescription" character varying NOT NULL,
+    content text NOT NULL,
+    "blogId" integer NOT NULL,
+    "likesCount" integer NOT NULL,
+    "dislikesCount" integer NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "isActive" boolean NOT NULL DEFAULT true,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS posts
+    OWNER to postgres;
 
 
-CREATE TABLE user_confirmation (
-    userId INTEGER NOT NULL,
-    isConfirm BOOLEAN NOT NULL,
-    confirmationCode TEXT NOT NULL,
-    dataExpire TIMESTAMP WITH TIME ZONE NOT NULL,
-    id INTEGER NOT NULL DEFAULT nextval('user_confirmation_id_seq'::regclass) PRIMARY KEY
+
+CREATE TABLE user_confirmation
+(
+    id serial NOT NULL,
+    "userId" integer NOT NULL,
+    "isConfirm" boolean NOT NULL,
+    "confirmationCode" text NOT NULL,
+    "dataExpire" timestamp with time zone NOT NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS user_confirmation
+    OWNER to postgres;
 
 
-CREATE TABLE auth_session (
-    id INTEGER NOT NULL DEFAULT nextval('auth_session_id_seq'::regclass) PRIMARY KEY,
-    userId INTEGER NOT NULL,
-    deviceId CHARACTER VARYING NOT NULL,
-    deviceName CHARACTER VARYING NOT NULL,
-    ip CHARACTER VARYING NOT NULL,
-    issueAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    expAt TIMESTAMP WITH TIME ZONE NOT NULL,
-    isActive BOOLEAN DEFAULT TRUE
+
+CREATE TABLE auth_session
+(
+    id serial NOT NULL,
+    "userId" integer NOT NULL,
+    "deviceId" character varying NOT NULL,
+    "deviceName" text NOT NULL,
+    ip character varying NOT NULL,
+    "issueAt" timestamp with time zone NOT NULL,
+    "expAt" timestamp with time zone NOT NULL,
+    "isActive" boolean NOT NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS auth_session
+    OWNER to postgres;
 
 
-CREATE TABLE likes (
-    id INTEGER NOT NULL DEFAULT nextval('likes_id_seq'::regclass) PRIMARY KEY,
-    userId INTEGER NOT NULL,
-    parentId INTEGER NOT NULL,
-    entityType CHARACTER VARYING NOT NULL,
-    status CHARACTER VARYING NOT NULL,
-    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    lastUpdateAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isActive BOOLEAN NOT NULL DEFAULT TRUE
+
+CREATE TABLE likes
+(
+    id serial NOT NULL,
+    "userId" integer NOT NULL,
+    "parentId" integer NOT NULL,
+    "entityType" character varying NOT NULL,
+    status character varying NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "lastUpdateAt" timestamp with time zone NOT NULL,
+    "isActive" boolean NOT NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS likes
+    OWNER to postgres;
 
 
-CREATE TABLE comments (
-    id INTEGER NOT NULL DEFAULT nextval('comments_id_seq'::regclass) PRIMARY KEY,
-    content TEXT NOT NULL,
-    userId INTEGER NOT NULL,
-    blogId INTEGER NOT NULL,
-    postId INTEGER NOT NULL,
-    likesCount INTEGER DEFAULT 0 NOT NULL,
-    dislikesCount INTEGER DEFAULT 0 NOT NULL,
-    createdAt TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    isActive BOOLEAN NOT NULL DEFAULT TRUE
+
+CREATE TABLE comments
+(
+    id serial NOT NULL,
+    "userId" integer NOT NULL,
+    "blogId" integer NOT NULL,
+    "postId" integer NOT NULL,
+    "likesCount" integer NOT NULL,
+    "dislikesCount" integer NOT NULL,
+    "createdAt" timestamp with time zone NOT NULL,
+    "isActive" boolean NOT NULL,
+    content text NOT NULL,
+    PRIMARY KEY (id)
 );
 
+ALTER TABLE IF EXISTS comments
+    OWNER to postgres;
 
 
-CREATE TABLE recovery_password_session (
-    id INTEGER NOT NULL DEFAULT nextval('recovery_password_session_id_seq'::regclass) PRIMARY KEY,
-    email CHARACTER VARYING NOT NULL,
-    code CHARACTER VARYING NOT NULL,
-    expAt TIMESTAMP WITH TIME ZONE NOT NULL,
-    userId INTEGER NOT NULL
+CREATE TABLE recovery_password_session
+(
+    id serial NOT NULL,
+    email character varying NOT NULL,
+    code character varying NOT NULL,
+    "expAt" timestamp with time zone NOT NULL,
+    "userId" integer NOT NULL,
+    PRIMARY KEY (id)
 );
+
+ALTER TABLE IF EXISTS recovery_password_session
+    OWNER to postgres;
