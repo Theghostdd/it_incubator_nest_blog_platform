@@ -1,79 +1,108 @@
 import { UserInputModel } from '../api/models/input/user-input.model';
-import { Injectable } from '@nestjs/common';
+import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import { UserConfirmation } from './user-confirm.entity';
 
+export enum UserPropertyEnum {
+  'id' = 'id',
+  'login' = 'login',
+  'email' = 'email',
+  'password' = 'password',
+  'isActive' = 'isActive',
+  'createdAt' = 'createdAt',
+  'userConfirm' = 'userConfirm',
+}
+
+export const selectUserProperty = [
+  `u.${UserPropertyEnum.id}`,
+  `u.${UserPropertyEnum.email}`,
+  `u.${UserPropertyEnum.login}`,
+  `u.${UserPropertyEnum.createdAt}`,
+  `u.${UserPropertyEnum.password}`,
+];
+
+@Entity()
 export class User {
-  public login: string;
-  public email: string;
-  public password: string;
-  public isActive: boolean;
-  public createdAt: Date;
-  public userConfirm: UserConfirmationModel;
-}
-
-class UserConfirmationModel {
-  public isConfirm: boolean;
-  public confirmationCode: string;
-  public dataExpire: Date;
-}
-
-export type UserTableType = User & { id: number };
-
-export type UserType = {
+  @PrimaryGeneratedColumn()
+  id: number;
+  @Column()
   login: string;
+  @Column()
   email: string;
+  @Column()
   password: string;
-  createdAt: Date;
-  userConfirm: UserConfirmationModel;
-} & { id: number };
-
-export type UserJoinType = {
-  login: string;
-  email: string;
-  password: string;
+  @Column({ default: true })
   isActive: boolean;
+  @Column({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
   createdAt: Date;
-  isConfirm: boolean;
-  confirmationCode: string;
-  dataExpire: Date;
-} & { id: number };
+  @OneToOne(
+    () => UserConfirmation,
+    (userConfirmation: UserConfirmation) => userConfirmation.user,
+    { cascade: true },
+  )
+  userConfirm: UserConfirmation;
 
-@Injectable()
-export class UserFactory {
-  constructor() {}
-  create(userInputModel: UserInputModel, hash: string): User {
-    const user = new User();
+  static createUser(
+    userInputModel: UserInputModel,
+    createdAt: Date,
+    hash: string,
+  ): User {
+    const user = new this();
+    const userConfirm = new UserConfirmation();
     const { login, email } = userInputModel;
     user.login = login;
     user.email = email;
     user.password = hash;
-    user.createdAt = new Date();
+    user.createdAt = createdAt;
     user.isActive = true;
-    user.userConfirm = {
-      isConfirm: true,
-      confirmationCode: 'none',
-      dataExpire: new Date(),
-    };
+    user.userConfirm = userConfirm;
+
+    userConfirm.user = user;
+    userConfirm.isConfirm = true;
+    userConfirm.confirmationCode = 'none';
+    userConfirm.dataExpire = createdAt;
     return user;
   }
 
-  createRegistration(
+  static registrationUser(
     userInputModel: UserInputModel,
     hash: string,
     confirmationCode: string,
+    createdAt: Date,
     dataExpire: Date,
   ): User {
-    const user = new User();
+    const user = new this();
+    const userConfirm = new UserConfirmation();
     const { login, email } = userInputModel;
     user.login = login;
     user.email = email;
     user.password = hash;
-    user.createdAt = new Date();
+    user.createdAt = createdAt;
     user.isActive = true;
-    user.userConfirm = {
-      isConfirm: false,
-      confirmationCode: confirmationCode,
-      dataExpire: dataExpire,
-    };
+
+    userConfirm.user = user;
+    userConfirm.isConfirm = false;
+    userConfirm.confirmationCode = confirmationCode;
+    userConfirm.dataExpire = dataExpire;
     return user;
+  }
+
+  confirmEmail(): void {
+    this.userConfirm.isConfirm = true;
+  }
+
+  updateConfirmationCode(newCode: string, dateExpireConfirmCode: Date): void {
+    this.userConfirm.confirmationCode = newCode;
+    this.userConfirm.dataExpire = dateExpireConfirmCode;
+  }
+
+  changePassword(newPassword: string): void {
+    this.password = newPassword;
+  }
+
+  deleteUser(): void {
+    this.isActive = false;
   }
 }

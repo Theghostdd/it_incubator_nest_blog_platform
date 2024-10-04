@@ -1,4 +1,4 @@
-import { UserType } from '../../../domain/user.entity';
+import { User } from '../../../domain/user.entity';
 
 export class UserOutputModel {
   constructor(
@@ -17,7 +17,7 @@ export class UserMeOutputModel {
 
 export class UserMapperOutputModel {
   constructor() {}
-  userModel(user: UserType): UserOutputModel {
+  userModel(user: User): UserOutputModel {
     return {
       id: user.id.toString(),
       login: user.login,
@@ -26,8 +26,8 @@ export class UserMapperOutputModel {
     };
   }
 
-  usersModel(users: UserType[]): UserOutputModel[] {
-    return users.map((user: UserType) => {
+  usersModel(users: User[]): UserOutputModel[] {
+    return users.map((user: User) => {
       return {
         id: user.id.toString(),
         login: user.login,
@@ -36,7 +36,7 @@ export class UserMapperOutputModel {
       };
     });
   }
-  currentUserModel(user: UserType): UserMeOutputModel {
+  currentUserModel(user: User): UserMeOutputModel {
     return {
       login: user.login,
       email: user.email,

@@ -13,7 +13,7 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
-import { UserType } from '../../../../users/user/domain/user.entity';
+import { User } from '../../../../users/user/domain/user.entity';
 
 export class ChangeUserPasswordCommand {
   constructor(public inputChangePasswordModel: ChangePasswordInputModel) {}
@@ -55,7 +55,7 @@ export class ChangeUserPasswordHandler
         field: 'recoveryCode',
       });
 
-    const user: AppResultType<UserType | null> =
+    const user: AppResultType<User | null> =
       await this.userService.getUserByEmail(email);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest(null);

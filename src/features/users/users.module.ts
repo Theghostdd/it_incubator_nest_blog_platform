@@ -8,13 +8,20 @@ import { DeleteUserByIdHandler } from './user/application/command/delete-user.co
 import { CreateUserCommandHandler } from './user/application/command/create-user.command';
 import { UserController } from './user/api/user-controller';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
-import { UserFactory } from './user/domain/user.entity';
+import { User } from './user/domain/user.entity';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { UserConfirmation } from './user/domain/user-confirm.entity';
+
+export const UserProvider = {
+  provide: 'User',
+  useValue: User,
+};
 
 @Module({
-  imports: [BcryptModule],
+  imports: [BcryptModule, TypeOrmModule.forFeature([User, UserConfirmation])],
   controllers: [UserController],
   providers: [
-    UserFactory,
+    UserProvider,
     UserRepositories,
     UserQueryRepositories,
     UserService,
@@ -23,6 +30,6 @@ import { UserFactory } from './user/domain/user.entity';
     DeleteUserByIdHandler,
     CreateUserCommandHandler,
   ],
-  exports: [UserRepositories, UserQueryRepositories, UserService, UserFactory],
+  exports: [UserRepositories, UserQueryRepositories, UserService],
 })
 export class UsersModule {}

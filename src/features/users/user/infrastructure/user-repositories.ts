@@ -1,66 +1,52 @@
 import { Injectable } from '@nestjs/common';
-import { User, UserJoinType, UserType } from '../domain/user.entity';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import {
+  selectUserProperty,
+  User,
+  UserPropertyEnum,
+} from '../domain/user.entity';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import {
+  Brackets,
+  DataSource,
+  Repository,
+  WhereExpressionBuilder,
+} from 'typeorm';
 import { tablesName } from '../../../../core/utils/tables/tables';
+import {
+  selectUserConfirmationProperty,
+  UserConfirmation,
+} from '../domain/user-confirm.entity';
 
 @Injectable()
 export class UserRepositories {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
+    @InjectRepository(UserConfirmation)
+    private readonly userConfirmationRepository: Repository<UserConfirmation>,
+    @InjectDataSource() private readonly dataSource: DataSource,
+  ) {}
 
   async save(user: User): Promise<number> {
-    const query = `
-      WITH inserted_user AS ( 
-          INSERT INTO ${tablesName.USERS} ("login", "email", "password", "createdAt", "isActive")
-          VALUES ($1, $2, $3, $4, $5)
-      RETURNING "id" as createdUserId
-      )
-      INSERT INTO ${tablesName.USERS_CONFIRMATION} ("userId", "isConfirm", "confirmationCode", "dataExpire")
-      SELECT createdUserId, $6, $7, $8
-      FROM inserted_user
-      RETURNING "userId"
-    `;
-
-    const result: { userId: number }[] = await this.dataSource.query(query, [
-      user.login,
-      user.email,
-      user.password,
-      user.createdAt,
-      user.isActive,
-      user.userConfirm.isConfirm,
-      user.userConfirm.confirmationCode,
-      user.userConfirm.dataExpire,
-    ]);
-    return result[0].userId;
+    const newUser: User = await this.userRepository.save(user);
+    return newUser.id;
   }
 
-  async delete(userId: number): Promise<void> {
-    const query = `
-      UPDATE ${tablesName.USERS}
-      SET "isActive" = $1
-      WHERE id = $2
-    `;
-    await this.dataSource.query(query, [false, userId]);
+  // async delete(userId: number): Promise<void> {
+  //   const query = `
+  //     UPDATE ${tablesName.USERS}
+  //     SET "isActive" = $1
+  //     WHERE id = $2
+  //   `;
+  //   await this.dataSource.query(query, [false, userId]);
+  // }
+
+  async getUserById(id: number): Promise<User | null> {
+    return await this.userRepository.findOne({
+      where: { id: id, isActive: true },
+    });
   }
 
-  async getUserById(id: number): Promise<UserType | null> {
-    const query = `
-    SELECT 
-        u."id", u."login", u."email", u."password",
-        uc."isConfirm", uc."confirmationCode", uc."dataExpire" 
-    FROM ${tablesName.USERS} as u
-        LEFT JOIN ${tablesName.USERS_CONFIRMATION} as uc
-        ON u."id" = uc."userId"
-    WHERE u."id" = $1 AND u."isActive" = true
-    `;
-    const result = await this.dataSource.query(query, [id]);
-    if (result.length > 0) {
-      return this.mapResultUser(result);
-    }
-    return null;
-  }
-
-  async getUserByConfirmCode(code: string): Promise<UserType | null> {
+  async getUserByConfirmCode(code: string): Promise<User | null> {
     const query = `
     SELECT 
       u."id", u."login", u."email", u."password",
@@ -72,12 +58,12 @@ export class UserRepositories {
     `;
     const result = await this.dataSource.query(query, [code]);
     if (result.length > 0) {
-      return this.mapResultUser(result);
+      //return this.mapResultUser(result);
     }
     return null;
   }
 
-  async getUserByEmail(email: string): Promise<UserType | null> {
+  async getUserByEmail(email: string): Promise<User | null> {
     const query = `
     SELECT 
     u."id", u."login", u."email", u."password",
@@ -89,7 +75,7 @@ export class UserRepositories {
     `;
     const result = await this.dataSource.query(query, [email]);
     if (result.length > 0) {
-      return this.mapResultUser(result);
+      //return this.mapResultUser(result);
     }
     return null;
   }
@@ -98,26 +84,24 @@ export class UserRepositories {
     email: string,
     login: string,
     emailOrLogin?: string,
-  ): Promise<UserType | null> {
-    const query = `
-    SELECT 
-      u."id", u."login", u."email", u."password",
-      uc."isConfirm", uc."confirmationCode", uc."dataExpire" 
-    FROM ${tablesName.USERS} as u
-        LEFT JOIN ${tablesName.USERS_CONFIRMATION} as uc
-        ON u."id" = uc."userId"
-    WHERE u."email" = $1 OR u."login" = $2 AND u."isActive" = true
-    `;
-
-    const result: UserJoinType[] | [] = await this.dataSource.query(query, [
-      email || emailOrLogin,
-      login || emailOrLogin,
-    ]);
-
-    if (result.length > 0) {
-      return this.mapResultUser(result);
-    }
-    return null;
+  ): Promise<User | null> {
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .select(selectUserProperty)
+      .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+      .addSelect(selectUserConfirmationProperty)
+      .where(
+        new Brackets((qb: WhereExpressionBuilder) => {
+          qb.where('email = :email', { email: email || emailOrLogin }).orWhere(
+            'login = :login',
+            {
+              login: login || emailOrLogin,
+            },
+          );
+        }),
+      )
+      .andWhere({ isActive: true })
+      .getOne();
   }
 
   async confirmUserEmailByUserId(userId: number): Promise<void> {
@@ -154,21 +138,22 @@ export class UserRepositories {
     await this.dataSource.query(query, [hash, userId]);
   }
 
-  mapResultUser(users: UserJoinType[]): UserType {
-    const user = users.map((u: UserJoinType) => {
-      return {
-        id: u.id,
-        login: u.login,
-        email: u.email,
-        password: u.password,
-        createdAt: u.createdAt,
-        userConfirm: {
-          isConfirm: u.isConfirm,
-          confirmationCode: u.confirmationCode,
-          dataExpire: u.dataExpire,
-        },
-      };
-    });
-    return user[0];
-  }
+  // mapResultUser(users: User[]): User {
+  //   const user = users.map((u: User) => {
+  //     return {
+  //       id: u.id,
+  //       login: u.login,
+  //       email: u.email,
+  //       password: u.password,
+  //       createdAt: u.createdAt,
+  //       userConfirm: {
+  //         isConfirm: u.isConfirm,
+  //         confirmationCode: u.confirmationCode,
+  //         dataExpire: u.dataExpire,
+  //       },
+  //     };
+  //   });
+  //   // @ts-ignore
+  //   return user[0];
+  // }
 }

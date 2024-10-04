@@ -4,12 +4,12 @@ import {
   UserMeOutputModel,
   UserOutputModel,
 } from '../api/models/output/user-output.model';
-import { UserType } from '../domain/user.entity';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
 import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { tablesName } from '../../../../core/utils/tables/tables';
+import { User } from '../domain/user.entity';
 
 @Injectable()
 export class UserQueryRepositories {
@@ -25,7 +25,7 @@ export class UserQueryRepositories {
         FROM ${tablesName.USERS}
         WHERE "id" = $1 AND "isActive" = true 
     `;
-    const result: UserType[] | [] = await this.dataSource.query(query, [id]);
+    const result: User[] | [] = await this.dataSource.query(query, [id]);
     if (result.length > 0) {
       return this.userMapperOutputModel.userModel(result[0]);
     }
@@ -89,7 +89,7 @@ export class UserQueryRepositories {
         LIMIT $3 OFFSET $4
     `;
 
-    const users: UserType[] | [] = await this.dataSource.query(queryR, [
+    const users: User[] | [] = await this.dataSource.query(queryR, [
       searchLoginTerm,
       searchEmailTerm,
       pageSize,
@@ -112,7 +112,7 @@ export class UserQueryRepositories {
         FROM ${tablesName.USERS}
         WHERE "id" = $1 AND "isActive" = ${true}
     `;
-    const user: UserType[] | [] = await this.dataSource.query(query, [id]);
+    const user: User[] | [] = await this.dataSource.query(query, [id]);
     if (user.length <= 0) throw new NotFoundException();
     return this.userMapperOutputModel.currentUserModel(user[0]);
   }

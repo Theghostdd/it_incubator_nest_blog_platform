@@ -8,8 +8,8 @@ import {
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
 import { UserService } from '../../../../users/user/application/user-service';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { UserType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { User } from '../../../../users/user/domain/user.entity';
 
 export class ConfirmUserEmailCommand {
   constructor(
@@ -34,7 +34,7 @@ export class ConfirmUserEmailHandler
     command: ConfirmUserEmailCommand,
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { code } = command.inputConfirmUserByEmailModel;
-    const user: AppResultType<UserType | null> =
+    const user: AppResultType<User | null> =
       await this.userService.getUserByConfirmationCode(code);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({

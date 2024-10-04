@@ -7,8 +7,8 @@ import { PostType } from '../../../post/domain/post.entity';
 import { UserService } from '../../../../users/user/application/user-service';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { UserType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { User } from '../../../../users/user/domain/user.entity';
 
 export class CreateCommentByPostIdCommand {
   constructor(
@@ -35,7 +35,7 @@ export class CreateCommentByPostIdHandler
     command: CreateCommentByPostIdCommand,
   ): Promise<AppResultType<number>> {
     const { userId, postId } = command;
-    const user: AppResultType<UserType | null> =
+    const user: AppResultType<User | null> =
       await this.userService.getUserById(userId);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();

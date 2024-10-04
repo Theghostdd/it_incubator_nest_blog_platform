@@ -4,12 +4,13 @@ import {
   APIErrorsMessageType,
   AppResultType,
 } from '../../../../../base/types/types';
-import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { UserService } from '../user-service';
 import { UserRepositories } from '../../infrastructure/user-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
-import { User, UserFactory, UserType } from '../../domain/user.entity';
+import { User } from '../../domain/user.entity';
+import { Inject } from '@nestjs/common';
+import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class CreateUserCommand {
   constructor(public userInputModel: UserInputModel) {}
@@ -28,13 +29,13 @@ export class CreateUserCommandHandler
     private readonly userRepositories: UserRepositories,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly bcryptService: BcryptService,
-    private readonly userFactory: UserFactory,
+    @Inject(User.name) private readonly userEntity: typeof User,
   ) {}
   async execute(
     command: CreateUserCommand,
   ): Promise<AppResultType<number, APIErrorsMessageType>> {
     const { email, login, password } = command.userInputModel;
-    const user: AppResultType<UserType, APIErrorsMessageType> =
+    const user: AppResultType<User, APIErrorsMessageType> =
       await this.userService.checkUniqLoginAndEmail(email, login);
 
     if (user.appResult !== AppResult.Success)
@@ -43,7 +44,12 @@ export class CreateUserCommandHandler
     const hash: string =
       await this.bcryptService.generatePasswordHashAndSalt(password);
 
-    const newUser: User = this.userFactory.create(command.userInputModel, hash);
+    const date: Date = new Date();
+    const newUser: User = this.userEntity.createUser(
+      command.userInputModel,
+      date,
+      hash,
+    );
 
     const result: number = await this.userRepositories.save(newUser);
     return this.applicationObjectResult.success(result);

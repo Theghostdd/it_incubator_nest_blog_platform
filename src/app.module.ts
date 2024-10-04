@@ -32,8 +32,8 @@ import { UsersModule } from './features/users/users.module';
           username: envSettings.POSTGRES_USER,
           password: envSettings.POSTGRES_USER_PASSWORD,
           database: envSettings.DATABASE_NAME,
-          autoLoadEntities: false,
-          synchronize: false,
+          autoLoadEntities: true,
+          synchronize: true,
         };
       },
       inject: [ConfigService],

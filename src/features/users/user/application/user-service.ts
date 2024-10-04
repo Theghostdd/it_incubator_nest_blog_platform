@@ -5,7 +5,7 @@ import {
   AppResultType,
 } from '../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
-import { UserType } from '../domain/user.entity';
+import { User } from '../domain/user.entity';
 
 @Injectable()
 export class UserService {
@@ -17,9 +17,11 @@ export class UserService {
   async checkUniqLoginAndEmail(
     email: string,
     login: string,
-  ): Promise<AppResultType<UserType, APIErrorsMessageType>> {
-    const user: UserType | null =
-      await this.userRepositories.getUserByEmailOrLogin(email, login);
+  ): Promise<AppResultType<User, APIErrorsMessageType>> {
+    const user: User | null = await this.userRepositories.getUserByEmailOrLogin(
+      email,
+      login,
+    );
     if (user) {
       const errors: APIErrorsMessageType = { errorsMessages: [] };
       login === user.login
@@ -40,8 +42,8 @@ export class UserService {
     return this.applicationObjectResult.success(null);
   }
 
-  async getUserById(id: number): Promise<AppResultType<UserType | null>> {
-    const user: UserType | null = await this.userRepositories.getUserById(id);
+  async getUserById(id: number): Promise<AppResultType<User | null>> {
+    const user: User | null = await this.userRepositories.getUserById(id);
     if (!user) return this.applicationObjectResult.notFound();
 
     return this.applicationObjectResult.success(user);
@@ -49,13 +51,12 @@ export class UserService {
 
   async getUseByLoginOrEmail(
     loginOrEmail: string,
-  ): Promise<AppResultType<UserType | null>> {
-    const user: UserType | null =
-      await this.userRepositories.getUserByEmailOrLogin(
-        null,
-        null,
-        loginOrEmail,
-      );
+  ): Promise<AppResultType<User | null>> {
+    const user: User | null = await this.userRepositories.getUserByEmailOrLogin(
+      null,
+      null,
+      loginOrEmail,
+    );
     if (!user) return this.applicationObjectResult.notFound();
 
     return this.applicationObjectResult.success(user);
@@ -63,17 +64,16 @@ export class UserService {
 
   async getUserByConfirmationCode(
     code: string,
-  ): Promise<AppResultType<UserType | null>> {
-    const user: UserType | null =
+  ): Promise<AppResultType<User | null>> {
+    const user: User | null =
       await this.userRepositories.getUserByConfirmCode(code);
 
     if (!user) return this.applicationObjectResult.notFound();
     return this.applicationObjectResult.success(user);
   }
 
-  async getUserByEmail(email: string): Promise<AppResultType<UserType | null>> {
-    const user: UserType | null =
-      await this.userRepositories.getUserByEmail(email);
+  async getUserByEmail(email: string): Promise<AppResultType<User | null>> {
+    const user: User | null = await this.userRepositories.getUserByEmail(email);
 
     if (!user) return this.applicationObjectResult.notFound();
     return this.applicationObjectResult.success(user);

@@ -16,11 +16,7 @@ import { UserRepositories } from '../../../../users/user/infrastructure/user-rep
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
-import {
-  User,
-  UserFactory,
-  UserType,
-} from '../../../../users/user/domain/user.entity';
+import { User } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 
 export class RegistrationCommand {
@@ -45,7 +41,6 @@ export class RegistrationHandler
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
     private readonly bcryptService: BcryptService,
-    private readonly userFactory: UserFactory,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -54,7 +49,7 @@ export class RegistrationHandler
   async execute(
     command: RegistrationCommand,
   ): Promise<AppResultType<null, APIErrorsMessageType>> {
-    const user: AppResultType<UserType, APIErrorsMessageType> =
+    const user: AppResultType<User, APIErrorsMessageType> =
       await this.userService.checkUniqLoginAndEmail(
         command.registrationInputModel.email,
         command.registrationInputModel.login,
@@ -73,6 +68,7 @@ export class RegistrationHandler
     );
     const dateExpired: Date = addDays(new Date(), 1);
 
+    // @ts-ignore
     const newUser: User = this.userFactory.createRegistration(
       command.registrationInputModel,
       hash,
@@ -80,6 +76,7 @@ export class RegistrationHandler
       dateExpired,
     );
 
+    // @ts-ignore
     await this.userRepositories.save(newUser);
 
     const template: MailTemplateType =

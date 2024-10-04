@@ -13,8 +13,8 @@ import {
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
-import { UserType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { User } from '../../../../users/user/domain/user.entity';
 
 export class LoginCommand {
   constructor(
@@ -51,7 +51,7 @@ export class LoginHandler
     const { ip, userAgent } = command.clientInfo;
     if (!ip) return this.applicationObjectResult.unauthorized();
 
-    const user: AppResultType<UserType | null> =
+    const user: AppResultType<User | null> =
       await this.userService.getUseByLoginOrEmail(loginOrEmail);
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();

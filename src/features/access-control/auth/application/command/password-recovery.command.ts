@@ -18,8 +18,8 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { MailTemplateService } from '../../../../mail-template/application/template-application';
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
-import { UserType } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { User } from '../../../../users/user/domain/user.entity';
 
 export class PasswordRecoveryCommand {
   constructor(public inputPasswordRecoveryModel: PasswordRecoveryInputModel) {}
@@ -46,7 +46,7 @@ export class PasswordRecoveryHandler
   }
   async execute(command: PasswordRecoveryCommand): Promise<AppResultType> {
     const { email } = command.inputPasswordRecoveryModel;
-    const user: AppResultType<UserType | null> =
+    const user: AppResultType<User | null> =
       await this.userService.getUserByEmail(email);
 
     const confirmationCode: string = this.authService.generateUuidCode(
