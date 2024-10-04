@@ -30,6 +30,6 @@ export const UserProvider = {
     DeleteUserByIdHandler,
     CreateUserCommandHandler,
   ],
-  exports: [UserRepositories, UserQueryRepositories, UserService],
+  exports: [UserRepositories, UserQueryRepositories, UserService, UserProvider],
 })
 export class UsersModule {}

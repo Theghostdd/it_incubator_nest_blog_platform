@@ -10,6 +10,7 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
+import { Inject } from '@nestjs/common';
 
 export class ConfirmUserEmailCommand {
   constructor(
@@ -29,6 +30,7 @@ export class ConfirmUserEmailHandler
     private readonly userRepositories: UserRepositories,
     private readonly userService: UserService,
     private readonly applicationObjectResult: ApplicationObjectResult,
+    @Inject(User.name) private readonly userEntity: typeof User,
   ) {}
   async execute(
     command: ConfirmUserEmailCommand,
@@ -54,7 +56,9 @@ export class ConfirmUserEmailHandler
         field: 'code',
       });
 
-    await this.userRepositories.confirmUserEmailByUserId(user.data.id);
+    user.data.confirmEmail();
+    await this.userRepositories.save(user.data);
+
     return this.applicationObjectResult.success(null);
   }
 }

@@ -27,57 +27,41 @@ export class UserRepositories {
   ) {}
 
   async save(user: User): Promise<number> {
-    const newUser: User = await this.userRepository.save(user);
-    return newUser.id;
+    const userEntity: User = await this.userRepository.save(user);
+    return userEntity.id;
   }
 
-  // async delete(userId: number): Promise<void> {
-  //   const query = `
-  //     UPDATE ${tablesName.USERS}
-  //     SET "isActive" = $1
-  //     WHERE id = $2
-  //   `;
-  //   await this.dataSource.query(query, [false, userId]);
-  // }
-
   async getUserById(id: number): Promise<User | null> {
-    return await this.userRepository.findOne({
-      where: { id: id, isActive: true },
-    });
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .select(selectUserProperty)
+      .addSelect(selectUserConfirmationProperty)
+      .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+      .where('u.id = :id', { id: id })
+      .andWhere('u.isActive = true')
+      .getOne();
   }
 
   async getUserByConfirmCode(code: string): Promise<User | null> {
-    const query = `
-    SELECT 
-      u."id", u."login", u."email", u."password",
-      uc."isConfirm", uc."confirmationCode", uc."dataExpire" 
-    FROM ${tablesName.USERS_CONFIRMATION} as uc
-        LEFT JOIN ${tablesName.USERS} as u
-        ON uc."userId" = u."id"
-    WHERE uc."confirmationCode" = $1 AND u."isActive" = true
-    `;
-    const result = await this.dataSource.query(query, [code]);
-    if (result.length > 0) {
-      //return this.mapResultUser(result);
-    }
-    return null;
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .select(selectUserProperty)
+      .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+      .addSelect(selectUserConfirmationProperty)
+      .where('uc.confirmationCode = :code', { code: code })
+      .andWhere({ isActive: true })
+      .getOne();
   }
 
   async getUserByEmail(email: string): Promise<User | null> {
-    const query = `
-    SELECT 
-    u."id", u."login", u."email", u."password",
-    uc."isConfirm", uc."confirmationCode", uc."dataExpire" 
-    FROM ${tablesName.USERS} as u
-        LEFT JOIN ${tablesName.USERS_CONFIRMATION} as uc
-        ON u."id" = uc."userId"
-    WHERE u."email" = $1 AND u."isActive" = true
-    `;
-    const result = await this.dataSource.query(query, [email]);
-    if (result.length > 0) {
-      //return this.mapResultUser(result);
-    }
-    return null;
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .select(selectUserProperty)
+      .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+      .addSelect(selectUserConfirmationProperty)
+      .where('u.email = :email', { email: email })
+      .andWhere({ isActive: true })
+      .getOne();
   }
 
   async getUserByEmailOrLogin(
@@ -104,28 +88,6 @@ export class UserRepositories {
       .getOne();
   }
 
-  async confirmUserEmailByUserId(userId: number): Promise<void> {
-    const query = `
-    UPDATE ${tablesName.USERS_CONFIRMATION}
-      SET "isConfirm"=true
-      WHERE "userId" = $1;
-    `;
-    await this.dataSource.query(query, [userId]);
-  }
-
-  async updateConfirmationCodeByUserId(
-    code: string,
-    dataExpire: string,
-    userId: number,
-  ): Promise<void> {
-    const query = `
-    UPDATE ${tablesName.USERS_CONFIRMATION}
-      SET "confirmationCode"=$1, "dataExpire"=$2
-      WHERE "userId" = $3;
-    `;
-    await this.dataSource.query(query, [code, dataExpire, userId]);
-  }
-
   async updateUserPasswordByUserId(
     userId: number,
     hash: string,
@@ -137,23 +99,4 @@ export class UserRepositories {
     `;
     await this.dataSource.query(query, [hash, userId]);
   }
-
-  // mapResultUser(users: User[]): User {
-  //   const user = users.map((u: User) => {
-  //     return {
-  //       id: u.id,
-  //       login: u.login,
-  //       email: u.email,
-  //       password: u.password,
-  //       createdAt: u.createdAt,
-  //       userConfirm: {
-  //         isConfirm: u.isConfirm,
-  //         confirmationCode: u.confirmationCode,
-  //         dataExpire: u.dataExpire,
-  //       },
-  //     };
-  //   });
-  //   // @ts-ignore
-  //   return user[0];
-  // }
 }

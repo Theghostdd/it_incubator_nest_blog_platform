@@ -6,28 +6,32 @@ import {
 } from '../api/models/output/user-output.model';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { tablesName } from '../../../../core/utils/tables/tables';
-import { User } from '../domain/user.entity';
+import { User, UserPropertyEnum } from '../domain/user.entity';
 
 @Injectable()
 export class UserQueryRepositories {
   constructor(
     private readonly userMapperOutputModel: UserMapperOutputModel,
     private readonly userSortingQuery: UserSortingQuery,
+    @InjectRepository(User) private readonly userRepository: Repository<User>,
     @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async getUserById(id: number): Promise<UserOutputModel> {
-    const query = `
-        SELECT "id", "login", "email", "createdAt"
-        FROM ${tablesName.USERS}
-        WHERE "id" = $1 AND "isActive" = true 
-    `;
-    const result: User[] | [] = await this.dataSource.query(query, [id]);
-    if (result.length > 0) {
-      return this.userMapperOutputModel.userModel(result[0]);
+    const result: User = await this.userRepository.findOne({
+      where: { id: id, isActive: true },
+      select: [
+        UserPropertyEnum.id,
+        UserPropertyEnum.login,
+        UserPropertyEnum.email,
+        UserPropertyEnum.createdAt,
+      ],
+    });
+    if (result) {
+      return this.userMapperOutputModel.userModel(result);
     }
     throw new NotFoundException('User not found');
   }

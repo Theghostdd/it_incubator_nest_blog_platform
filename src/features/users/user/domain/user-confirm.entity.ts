@@ -17,6 +17,8 @@ export enum UserConfirmationPropertyEnum {
 }
 
 export const selectUserConfirmationProperty = [
+  `uc.${UserConfirmationPropertyEnum.id}`,
+  `uc.${UserConfirmationPropertyEnum.userId}`,
   `uc.${UserConfirmationPropertyEnum.isConfirm}`,
   `uc.${UserConfirmationPropertyEnum.confirmationCode}`,
   `uc.${UserConfirmationPropertyEnum.dataExpire}`,

@@ -18,6 +18,7 @@ import { NodeMailerService } from '../../../../nodemailer/application/nodemailer
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import { User } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { Inject } from '@nestjs/common';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}
@@ -41,6 +42,7 @@ export class RegistrationHandler
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
     private readonly bcryptService: BcryptService,
+    @Inject(User.name) private readonly userEntity: typeof User,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -66,17 +68,17 @@ export class RegistrationHandler
       this.staticOptions.uuidOptions.confirmationEmail.prefix,
       this.staticOptions.uuidOptions.confirmationEmail.key,
     );
-    const dateExpired: Date = addDays(new Date(), 1);
+    const date: Date = new Date();
+    const dateExpired: Date = addDays(date, 1);
 
-    // @ts-ignore
-    const newUser: User = this.userFactory.createRegistration(
+    const newUser: User = this.userEntity.registrationUser(
       command.registrationInputModel,
       hash,
       confirmationCode,
+      date,
       dateExpired,
     );
 
-    // @ts-ignore
     await this.userRepositories.save(newUser);
 
     const template: MailTemplateType =

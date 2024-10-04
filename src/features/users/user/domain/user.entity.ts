@@ -81,6 +81,7 @@ export class User {
     user.password = hash;
     user.createdAt = createdAt;
     user.isActive = true;
+    user.userConfirm = userConfirm;
 
     userConfirm.user = user;
     userConfirm.isConfirm = false;

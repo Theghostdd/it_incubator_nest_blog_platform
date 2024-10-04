@@ -69,13 +69,10 @@ export class ResendConfirmationCodeHandler
       this.staticOptions.uuidOptions.newConfirmationCode.prefix,
       this.staticOptions.uuidOptions.newConfirmationCode.key,
     );
-    const dateExpired: string = addDays(new Date(), 1).toISOString();
+    const dateExpired: Date = addDays(new Date(), 1);
 
-    await this.userRepositories.updateConfirmationCodeByUserId(
-      confirmationCode,
-      dateExpired,
-      user.data.id,
-    );
+    user.data.updateConfirmationCode(confirmationCode, dateExpired);
+    await this.userRepositories.save(user.data);
 
     const template: MailTemplateType =
       await this.mailTemplateService.getConfirmationTemplate(confirmationCode);
