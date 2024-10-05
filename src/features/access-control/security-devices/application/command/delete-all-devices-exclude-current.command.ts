@@ -32,7 +32,8 @@ export class DeleteAllDevicesExcludeCurrentHandler
     const ids: string[] = sessions
       .filter((session: AuthSession) => session.deviceId != deviceId)
       .map((session: AuthSession) => session.deviceId);
-    if (ids.length > 0) await this.authSessionRepositories.deleteSessions(ids);
+    if (ids.length > 0)
+      await this.authSessionRepositories.deleteManySessions(ids);
 
     return this.applicationObjectResult.success(null);
   }

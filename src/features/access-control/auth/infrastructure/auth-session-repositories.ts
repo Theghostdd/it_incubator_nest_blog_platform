@@ -4,8 +4,7 @@ import {
   AuthSessionPropertyEnum,
 } from '../domain/auth-session.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { tablesName } from '../../../../core/utils/tables/tables';
+import { DataSource, In, Repository } from 'typeorm';
 
 @Injectable()
 export class AuthSessionRepositories {
@@ -19,17 +18,14 @@ export class AuthSessionRepositories {
     await this.authSessionRepository.save(session);
   }
 
-  async deleteSessions(deviceIds: string[]): Promise<void> {
-    const placeholders = deviceIds
-      .map((_, index) => `$${index + 1}`)
-      .join(', ');
-
-    const query = `
-      UPDATE ${tablesName.AUTH_SESSIONS}
-      SET "isActive" = false
-      WHERE "deviceId" IN (${placeholders})
-    `;
-    await this.dataSource.query(query, [...deviceIds]);
+  async deleteManySessions(deviceIds: string[]): Promise<void> {
+    await this.authSessionRepository.update(
+      {
+        [AuthSessionPropertyEnum.deviceId]: In(deviceIds),
+        [AuthSessionPropertyEnum.isActive]: true,
+      },
+      { [AuthSessionPropertyEnum.isActive]: false },
+    );
   }
 
   async getSessionByDeviceId(deviceId: string): Promise<AuthSession | null> {
@@ -42,11 +38,12 @@ export class AuthSessionRepositories {
   }
 
   async getSessionsByUserId(userId: number): Promise<AuthSession[] | null> {
-    return await this.authSessionRepository.find({
+    const sessions: AuthSession[] | [] = await this.authSessionRepository.find({
       where: {
         [AuthSessionPropertyEnum.userId]: userId,
         [AuthSessionPropertyEnum.isActive]: true,
       },
     });
+    return sessions.length > 0 ? sessions : null;
   }
 }

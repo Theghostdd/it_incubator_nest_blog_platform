@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
+import { AuthSession } from '../../../auth/domain/auth-session.entity';
 
 export class SecurityDevicesOutputModel {
   public ip: string;
@@ -10,8 +10,8 @@ export class SecurityDevicesOutputModel {
 
 @Injectable()
 export class SecurityDeviceOutputModelMapper {
-  modelsMapper(authSessions: AuthSessionType[]): SecurityDevicesOutputModel[] {
-    return authSessions.map((authSession: AuthSessionType) => {
+  modelsMapper(authSessions: AuthSession[]): SecurityDevicesOutputModel[] {
+    return authSessions.map((authSession: AuthSession) => {
       return {
         ip: authSession.ip,
         title: authSession.deviceName,

@@ -17,10 +17,7 @@ import { SecurityDevicesController } from './security-devices/api/security-devic
 import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/security-devices-output.model';
 import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
 import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
-import {
-  AuthSession,
-  AuthSessionFactory,
-} from './auth/domain/auth-session.entity';
+import { AuthSession } from './auth/domain/auth-session.entity';
 import { RecoveryPasswordSession } from './auth/domain/recovery-session.entity';
 import { UsersModule } from '../users/users.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
@@ -71,7 +68,6 @@ export const AuthSessionProvider = {
     SecurityDeviceOutputModelMapper,
     DeleteAllDevicesExcludeCurrentHandler,
     DeleteDeviceByDeviceIdHandler,
-    AuthSessionFactory,
   ],
   exports: [AuthService, AuthSessionRepositories],
 })
