@@ -20,7 +20,7 @@ export class UserQueryRepositories {
 
   async getUserById(id: number): Promise<UserOutputModel> {
     const user: User = await this.userRepository.findOne({
-      where: { id: id, isActive: true },
+      where: { [UserPropertyEnum.id]: id, [UserPropertyEnum.isActive]: true },
       select: [
         UserPropertyEnum.id,
         UserPropertyEnum.login,
@@ -74,12 +74,14 @@ export class UserQueryRepositories {
             }
           }),
         )
-        .andWhere({ isActive: true })
+        .andWhere({ [UserPropertyEnum.isActive]: true })
         .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
         .limit(pageSize)
         .offset(skip)
         .getMany(),
-      await this.userRepository.count({ where: { isActive: true } }),
+      await this.userRepository.count({
+        where: { [UserPropertyEnum.isActive]: true },
+      }),
     ]);
 
     const totalCount: number = count;
@@ -97,7 +99,7 @@ export class UserQueryRepositories {
 
   async getUserByIdAuthMe(id: number): Promise<UserMeOutputModel> {
     const user: User = await this.userRepository.findOne({
-      where: { id: id, isActive: true },
+      where: { [UserPropertyEnum.id]: id, [UserPropertyEnum.isActive]: true },
       select: [
         UserPropertyEnum.id,
         UserPropertyEnum.login,

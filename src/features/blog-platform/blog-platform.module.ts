@@ -33,12 +33,18 @@ import { BlogService } from './blog/application/blog-service';
 import { UsersModule } from '../users/users.module';
 import { BlogRepository } from './blog/infrastructure/blog-repositories';
 import { CreateBlogHandler } from './blog/application/command/create-blog.command';
-import { BlogFactory } from './blog/domain/blog.entity';
+import { Blog } from './blog/domain/blog.entity';
 import { UpdateBlogByIdHandler } from './blog/application/command/update-blog.command';
 import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.command';
+import { TypeOrmModule } from '@nestjs/typeorm';
+
+export const BlogProvider = {
+  provide: 'Blog',
+  useValue: Blog,
+};
 
 @Module({
-  imports: [UsersModule],
+  imports: [UsersModule, TypeOrmModule.forFeature([Blog])],
   controllers: [
     BlogController,
     PostController,
@@ -46,6 +52,7 @@ import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.co
     BlogAdminController,
   ],
   providers: [
+    BlogProvider,
     BlogQueryRepository,
     BlogMapperOutputModel,
     BlogSortingQuery,
@@ -75,7 +82,6 @@ import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.co
     BlogService,
     BlogRepository,
     CreateBlogHandler,
-    BlogFactory,
     UpdateBlogByIdHandler,
     DeleteBlogByIdHandler,
   ],

@@ -4,29 +4,41 @@ import {
   BlogOutputModel,
 } from '../api/models/output/blog-output.model';
 import { BlogSortingQuery } from '../api/models/input/blog-input.model';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { tablesName } from '../../../../core/utils/tables/tables';
-import { BlogType } from '../domain/blog.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
+import {
+  Blog,
+  BlogPropertyEnum,
+  selectBlogProperty,
+} from '../domain/blog.entity';
 
 @Injectable()
 export class BlogQueryRepository {
   constructor(
     private readonly blogMapperOutputModel: BlogMapperOutputModel,
     private readonly blogSortingQuery: BlogSortingQuery,
-    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(Blog) private readonly blogRepository: Repository<Blog>,
   ) {}
 
   async getBlogById(id: number): Promise<BlogOutputModel> {
-    const query = `
-        SELECT "id", "name", "description", "websiteUrl", "isMembership", "createdAt"
-        FROM ${tablesName.BLOGS}
-        WHERE "id" = $1 AND "isActive" = true
-     `;
-    const blog: BlogType[] | [] = await this.dataSource.query(query, [id]);
-    if (blog.length > 0) {
-      return this.blogMapperOutputModel.blogModel(blog[0]);
+    const blog: Blog | null = await this.blogRepository.findOne({
+      where: {
+        [BlogPropertyEnum.id]: id,
+        [BlogPropertyEnum.isActive]: true,
+      },
+      select: [
+        BlogPropertyEnum.id,
+        BlogPropertyEnum.name,
+        BlogPropertyEnum.description,
+        BlogPropertyEnum.websiteUrl,
+        BlogPropertyEnum.createdAt,
+        BlogPropertyEnum.isMembership,
+      ],
+    });
+
+    if (blog) {
+      return this.blogMapperOutputModel.blogModel(blog);
     }
     throw new NotFoundException('Blog not found');
   }
@@ -37,31 +49,21 @@ export class BlogQueryRepository {
     const { sortBy, sortDirection, searchNameTerm, pageSize, pageNumber } =
       this.blogSortingQuery.createBlogQuery(query);
 
-    const getTotalDocument: { count: number }[] = await this.dataSource.query(
-      `SELECT COUNT(*) 
-             FROM ${tablesName.BLOGS}
-             WHERE ("name" ILIKE '%' || $1 || '%' OR $1 IS NULL)
-             AND "isActive" = true
-    `,
-      [searchNameTerm],
-    );
-    const totalCount: number = +getTotalDocument[0].count;
-    const pagesCount: number = Math.ceil(totalCount / pageSize);
     const skip: number = (+pageNumber - 1) * pageSize;
+    const [blogs, count]: [Blog[], number] = await this.blogRepository
+      .createQueryBuilder('b')
+      .select(selectBlogProperty)
+      .where(`b.${BlogPropertyEnum.name} ILIKE :name`, {
+        name: `%${searchNameTerm || ''}%`,
+      })
+      .andWhere({ [BlogPropertyEnum.isActive]: true })
+      .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+      .limit(pageSize)
+      .offset(skip)
+      .getManyAndCount();
 
-    const queryR = `
-      SELECT "id", "name", "description", "websiteUrl", "isMembership", "createdAt"
-      FROM ${tablesName.BLOGS}
-      WHERE ("name" ILIKE '%' || $1 || '%' OR $1 IS NULL) 
-      AND "isActive" = true
-      ORDER BY "${sortBy}" ${sortDirection}
-      LIMIT $2 OFFSET $3;
-    `;
-    const blogs: BlogType[] | [] = await this.dataSource.query(queryR, [
-      searchNameTerm,
-      pageSize,
-      skip,
-    ]);
+    const totalCount: number = count;
+    const pagesCount: number = Math.ceil(totalCount / pageSize);
 
     return {
       pagesCount: pagesCount,

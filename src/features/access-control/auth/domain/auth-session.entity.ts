@@ -63,6 +63,12 @@ export class AuthSession {
     session.isActive = true;
     session.issueAt = iatDate;
     session.expAt = expDate;
+    if (user.userAuthSessions) {
+      user.userAuthSessions.push(session);
+      return session;
+    }
+    user.userAuthSessions = [];
+    user.userAuthSessions.push(session);
     return session;
   }
 

@@ -1,4 +1,4 @@
-import { BlogType } from '../../../domain/blog.entity';
+import { Blog } from '../../../domain/blog.entity';
 
 export class BlogOutputModel {
   constructor(
@@ -13,7 +13,7 @@ export class BlogOutputModel {
 
 export class BlogMapperOutputModel {
   constructor() {}
-  blogModel(blog: BlogType): BlogOutputModel {
+  blogModel(blog: Blog): BlogOutputModel {
     return {
       id: blog.id.toString(),
       name: blog.name,
@@ -24,8 +24,8 @@ export class BlogMapperOutputModel {
     };
   }
 
-  blogsModel(blogs: BlogType[]): BlogOutputModel[] {
-    return blogs.map((blog: BlogType) => {
+  blogsModel(blogs: Blog[]): BlogOutputModel[] {
+    return blogs.map((blog: Blog) => {
       return {
         id: blog.id.toString(),
         name: blog.name,

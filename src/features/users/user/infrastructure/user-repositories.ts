@@ -11,7 +11,10 @@ import {
   Repository,
   WhereExpressionBuilder,
 } from 'typeorm';
-import { selectUserConfirmationProperty } from '../domain/user-confirm.entity';
+import {
+  selectUserConfirmationProperty,
+  UserConfirmationPropertyEnum,
+} from '../domain/user-confirm.entity';
 import {
   selectUserRecoveryPasswordSessionProperty,
   UserRecoveryPasswordSessionPropertyEnum,
@@ -36,8 +39,8 @@ export class UserRepositories {
       .select(selectUserProperty)
       .addSelect(selectUserConfirmationProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
-      .where('u.id = :id', { id: id })
-      .andWhere('u.isActive = true')
+      .where(`u.${UserPropertyEnum.id}} = :id`, { id: id })
+      .andWhere(`u.${UserPropertyEnum.isActive} = true`)
       .getOne();
   }
 
@@ -47,8 +50,10 @@ export class UserRepositories {
       .select(selectUserProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
       .addSelect(selectUserConfirmationProperty)
-      .where('uc.confirmationCode = :code', { code: code })
-      .andWhere({ isActive: true })
+      .where(`uc.${UserConfirmationPropertyEnum.confirmationCode} = :code`, {
+        code: code,
+      })
+      .andWhere({ [UserPropertyEnum.isActive]: true })
       .getOne();
   }
 
@@ -64,8 +69,8 @@ export class UserRepositories {
         `rps.${UserRecoveryPasswordSessionPropertyEnum.isActive} = true`,
       )
       .addSelect(selectUserRecoveryPasswordSessionProperty)
-      .where('u.email = :email', { email: email })
-      .andWhere({ isActive: true })
+      .where(`u.${UserPropertyEnum.email} = :email`, { email: email })
+      .andWhere({ [UserPropertyEnum.isActive]: true })
       .getOne();
   }
 
@@ -81,15 +86,14 @@ export class UserRepositories {
       .addSelect(selectUserConfirmationProperty)
       .where(
         new Brackets((qb: WhereExpressionBuilder) => {
-          qb.where('email = :email', { email: email || emailOrLogin }).orWhere(
-            'login = :login',
-            {
-              login: login || emailOrLogin,
-            },
-          );
+          qb.where(`${UserPropertyEnum.email} = :email`, {
+            email: email || emailOrLogin,
+          }).orWhere(`${UserPropertyEnum.login} = :login`, {
+            login: login || emailOrLogin,
+          });
         }),
       )
-      .andWhere({ isActive: true })
+      .andWhere({ [UserPropertyEnum.isActive]: true })
       .getOne();
   }
 }

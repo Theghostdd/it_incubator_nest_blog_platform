@@ -14,7 +14,7 @@ import { DataSource } from 'typeorm';
 import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { tablesName } from '../../../../core/utils/tables/tables';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
-import { BlogType } from '../../blog/domain/blog.entity';
+import { Blog } from '../../blog/domain/blog.entity';
 
 @Injectable()
 export class PostQueryRepository {
@@ -75,7 +75,7 @@ export class PostQueryRepository {
           FROM ${tablesName.BLOGS}
           WHERE "id" = $1 AND "isActive" = true
       `;
-      const blog: BlogType[] | [] = await this.dataSource.query(blogQuery, [
+      const blog: Blog[] | [] = await this.dataSource.query(blogQuery, [
         blogId,
       ]);
       if (blog.length <= 0) throw new NotFoundException('Blog not found');

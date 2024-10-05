@@ -5,7 +5,7 @@ import { BlogRepository } from '../../infrastructure/blog-repositories';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BlogUpdateModel } from '../../api/models/input/blog-input.model';
-import { BlogType } from '../../domain/blog.entity';
+import { Blog } from '../../domain/blog.entity';
 
 export class UpdateBlogByIdCommand {
   constructor(
@@ -24,15 +24,14 @@ export class UpdateBlogByIdHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
   async execute(command: UpdateBlogByIdCommand): Promise<AppResultType> {
-    const blog: AppResultType<BlogType | null> =
-      await this.blogService.getBlogById(command.id);
+    const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
+      command.id,
+    );
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 
-    await this.blogRepository.updateBlogById(
-      command.id,
-      command.blogUpdateModel,
-    );
+    blog.data.updateBlog(command.blogUpdateModel);
+    await this.blogRepository.save(blog.data);
     return this.applicationObjectResult.success(null);
   }
 }

@@ -6,7 +6,7 @@ import { ApplicationObjectResult } from '../../../../../base/application-object-
 import { AppResultType } from '../../../../../base/types/types';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BlogService } from '../../../blog/application/blog-service';
-import { BlogType } from '../../../blog/domain/blog.entity';
+import { Blog } from '../../../blog/domain/blog.entity';
 
 export class DeletePostByIdCommand {
   constructor(
@@ -27,7 +27,7 @@ export class DeletePostByIdHandler
   ) {}
   async execute(command: DeletePostByIdCommand): Promise<AppResultType> {
     if (command.blogId) {
-      const blog: AppResultType<BlogType | null> =
+      const blog: AppResultType<Blog | null> =
         await this.blogService.getBlogById(command.blogId);
       if (blog.appResult !== AppResult.Success)
         return this.applicationObjectResult.notFound();

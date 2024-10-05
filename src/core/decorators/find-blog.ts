@@ -9,7 +9,7 @@ import {
 import { AppResultType } from '../../base/types/types';
 import { AppResult } from '../../base/enum/app-result.enum';
 import { BlogService } from '../../features/blog-platform/blog/application/blog-service';
-import { BlogType } from '../../features/blog-platform/blog/domain/blog.entity';
+import { Blog } from '../../features/blog-platform/blog/domain/blog.entity';
 
 @ValidatorConstraint({ async: false })
 @Injectable()
@@ -18,7 +18,7 @@ export class FindBlogConstraint implements ValidatorConstraintInterface {
 
   async validate(blogId: number, args: ValidationArguments) {
     if (!blogId || !Number(blogId)) return false;
-    const blog: AppResultType<BlogType | null> =
+    const blog: AppResultType<Blog | null> =
       await this.blogService.getBlogById(blogId);
     return blog.appResult === AppResult.Success;
   }

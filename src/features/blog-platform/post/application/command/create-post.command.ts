@@ -4,9 +4,9 @@ import { PostRepository } from '../../infrastructure/post-repositories';
 import { Post, PostFactory } from '../../domain/post.entity';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
-import { BlogType } from '../../../blog/domain/blog.entity';
 import { BlogService } from '../../../blog/application/blog-service';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { Blog } from '../../../blog/domain/blog.entity';
 
 export class CreatePostCommand {
   constructor(public postInputModel: PostInputModel) {}
@@ -23,8 +23,9 @@ export class CreatePostHandler
     private readonly postFactory: PostFactory,
   ) {}
   async execute(command: CreatePostCommand): Promise<AppResultType<number>> {
-    const blog: AppResultType<BlogType | null> =
-      await this.blogService.getBlogById(command.postInputModel.blogId);
+    const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
+      command.postInputModel.blogId,
+    );
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 
