@@ -32,9 +32,9 @@ export class BaseSorting {
             ? query.sortBy
             : 'createdAt',
           sortDirection:
-            query.sortDirection === 'asc' || query.sortDirection === 'desc'
-              ? query.sortDirection
-              : 'desc',
+            query.sortDirection === 'ASC' || query.sortDirection === 'DESC'
+              ? query.sortDirection.toUpperCase()
+              : 'DESC',
           pageNumber: query.pageNumber ? Number(query.pageNumber) : 1,
           pageSize: query.pageSize ? Number(query.pageSize) : 10,
         }

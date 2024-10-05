@@ -1,5 +1,5 @@
 export const tablesName = {
-  USERS: 'users',
+  USERS: 'user',
   USERS_CONFIRMATION: 'user_confirmation',
   BLOGS: 'blogs',
   POSTS: 'posts',

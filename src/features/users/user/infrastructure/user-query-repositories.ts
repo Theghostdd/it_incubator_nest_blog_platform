@@ -7,8 +7,12 @@ import {
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, Repository } from 'typeorm';
-import { tablesName } from '../../../../core/utils/tables/tables';
+import {
+  Brackets,
+  DataSource,
+  Repository,
+  WhereExpressionBuilder,
+} from 'typeorm';
 import { User, UserPropertyEnum } from '../domain/user.entity';
 
 @Injectable()
@@ -21,7 +25,7 @@ export class UserQueryRepositories {
   ) {}
 
   async getUserById(id: number): Promise<UserOutputModel> {
-    const result: User = await this.userRepository.findOne({
+    const user: User = await this.userRepository.findOne({
       where: { id: id, isActive: true },
       select: [
         UserPropertyEnum.id,
@@ -30,8 +34,8 @@ export class UserQueryRepositories {
         UserPropertyEnum.createdAt,
       ],
     });
-    if (result) {
-      return this.userMapperOutputModel.userModel(result);
+    if (user) {
+      return this.userMapperOutputModel.userModel(user);
     }
     throw new NotFoundException('User not found');
   }
@@ -48,57 +52,44 @@ export class UserQueryRepositories {
       pageNumber,
     } = this.userSortingQuery.createUserQuery(query);
 
-    const getTotalDocument: { count: number }[] = await this.dataSource.query(
-      `SELECT COUNT(*) 
-             FROM ${tablesName.USERS}
-                 WHERE
-                      (
-                        CASE
-                            WHEN $1 <> '' AND $2 <> '' THEN
-                                ("login" ILIKE '%' || $1 || '%')
-                                OR
-                                ("email" ILIKE '%' || $2 || '%')
-                            ELSE
-                                ("login" ILIKE '%' || $1 || '%')
-                                AND
-                                ("email" ILIKE '%' || $2 || '%')
-                        END
-                    )
-                AND "isActive" = ${true}
-    `,
-      [searchLoginTerm, searchEmailTerm],
-    );
-    const totalCount: number = getTotalDocument[0].count;
-    const pagesCount: number = Math.ceil(totalCount / pageSize);
     const skip: number = (pageNumber - 1) * pageSize;
 
-    const queryR = `
-        SELECT "id", "login", "email", "createdAt"
-        FROM ${tablesName.USERS}
-        WHERE
-              (
-                CASE
-                    WHEN $1 <> '' AND $2 <> '' THEN
-                        ("login" ILIKE '%' || $1 || '%')
-                        OR
-                        ("email" ILIKE '%' || $2 || '%')
-                    ELSE
-                        ("login" ILIKE '%' || $1 || '%')
-                        AND
-                        ("email" ILIKE '%' || $2 || '%')
-                END
-            )
-        AND "isActive" = ${true}
-        ORDER BY "${sortBy}" ${sortDirection}
-        LIMIT $3 OFFSET $4
-    `;
-
-    const users: User[] | [] = await this.dataSource.query(queryR, [
-      searchLoginTerm,
-      searchEmailTerm,
-      pageSize,
-      skip,
+    const [users, count] = await Promise.all([
+      await this.userRepository
+        .createQueryBuilder('u')
+        .select([
+          `u.${UserPropertyEnum.id}`,
+          `u.${UserPropertyEnum.email}`,
+          `u.${UserPropertyEnum.login}`,
+          `u.${UserPropertyEnum.createdAt}`,
+        ])
+        .where(
+          new Brackets((qb: WhereExpressionBuilder) => {
+            if (searchLoginTerm && searchEmailTerm) {
+              qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
+                login: `%${searchLoginTerm}%`,
+              }).orWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
+                email: `%${searchEmailTerm}%`,
+              });
+            } else {
+              qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
+                login: `%${searchLoginTerm || ''}%`,
+              }).andWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
+                email: `%${searchEmailTerm || ''}%`,
+              });
+            }
+          }),
+        )
+        .andWhere({ isActive: true })
+        .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+        .limit(pageSize)
+        .offset(skip)
+        .getMany(),
+      await this.userRepository.count({ where: { isActive: true } }),
     ]);
+
+    const totalCount: number = count;
+    const pagesCount: number = Math.ceil(totalCount / pageSize);
 
     return {
       pagesCount: +pagesCount,
@@ -111,13 +102,16 @@ export class UserQueryRepositories {
   }
 
   async getUserByIdAuthMe(id: number): Promise<UserMeOutputModel> {
-    const query = `
-        SELECT "id", "login", "email"
-        FROM ${tablesName.USERS}
-        WHERE "id" = $1 AND "isActive" = ${true}
-    `;
-    const user: User[] | [] = await this.dataSource.query(query, [id]);
-    if (user.length <= 0) throw new NotFoundException();
-    return this.userMapperOutputModel.currentUserModel(user[0]);
+    const user: User = await this.userRepository.findOne({
+      where: { id: id, isActive: true },
+      select: [
+        UserPropertyEnum.id,
+        UserPropertyEnum.login,
+        UserPropertyEnum.email,
+        UserPropertyEnum.createdAt,
+      ],
+    });
+    if (user) throw new NotFoundException('User not found');
+    return this.userMapperOutputModel.currentUserModel(user);
   }
 }
