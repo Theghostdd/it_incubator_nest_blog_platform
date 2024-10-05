@@ -1,7 +1,6 @@
-import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { LoginInputModel } from '../../api/models/input/auth-input.models';
 import { AuthService } from '../auth-application';
-import { CreateAuthSessionCommand } from './create-auth-session.command';
 import {
   APIErrorMessageType,
   AppResultType,
@@ -15,6 +14,9 @@ import { UserService } from '../../../../users/user/application/user-service';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
+import { AuthSession } from '../../domain/auth-session.entity';
+import { Inject } from '@nestjs/common';
+import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
 
 export class LoginCommand {
   constructor(
@@ -38,8 +40,10 @@ export class LoginHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly userService: UserService,
     private readonly authService: AuthService,
-    private readonly commandBus: CommandBus,
+    private readonly authSessionRepositories: AuthSessionRepositories,
     private readonly bcryptService: BcryptService,
+    @Inject(AuthSession.name)
+    private readonly authSessionEntity: typeof AuthSession,
   ) {}
 
   async execute(
@@ -86,13 +90,28 @@ export class LoginHandler
     const refreshToken: string =
       await this.authService.generateRefreshToken(payloadRefreshToken);
 
-    const session: AppResultType = await this.commandBus.execute(
-      new CreateAuthSessionCommand(dId, refreshToken, ip, userAgent),
-    );
+    const decodeRefreshToken: JWTRefreshTokenPayloadType & {
+      iat: number;
+      exp: number;
+    } = await this.authService.decodeJWTToken(refreshToken);
 
-    if (session.appResult !== AppResult.Success)
+    if (!decodeRefreshToken)
       return this.applicationObjectResult.badRequest(null);
 
+    const { iat, exp } = decodeRefreshToken;
+    const iatDate: Date = new Date(iat * 1000);
+    const expDate: Date = new Date(exp * 1000);
+
+    const authSession: AuthSession = this.authSessionEntity.createAuthSession(
+      dId,
+      ip,
+      userAgent,
+      user.data,
+      iatDate,
+      expDate,
+    );
+
+    await this.authSessionRepositories.save(authSession);
     return this.applicationObjectResult.success({
       accessToken: accessToken,
       refreshToken: refreshToken,

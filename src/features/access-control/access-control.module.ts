@@ -10,7 +10,6 @@ import { AuthController } from './auth/api/auth.controller';
 import { v4 as uuidv4 } from 'uuid';
 import { RecoveryPasswordSessionRepositories } from './auth/infrastructure/recovery-password-session-repositories';
 import { AuthSessionRepositories } from './auth/infrastructure/auth-session-repositories';
-import { CreateAuthSessionHandler } from './auth/application/command/create-auth-session.command';
 import { LogoutHandler } from './auth/application/command/logout.command';
 import { UpdatePairTokenHandler } from './auth/application/command/update-new-pair-token.command';
 import { SecurityDevicesQueryRepository } from './security-devices/infrastructure/security-devices-query-repositories';
@@ -18,7 +17,10 @@ import { SecurityDevicesController } from './security-devices/api/security-devic
 import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/security-devices-output.model';
 import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
 import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
-import { AuthSessionFactory } from './auth/domain/auth-session.entity';
+import {
+  AuthSession,
+  AuthSessionFactory,
+} from './auth/domain/auth-session.entity';
 import { RecoveryPasswordSession } from './auth/domain/recovery-session.entity';
 import { UsersModule } from '../users/users.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
@@ -36,17 +38,23 @@ export const RecoveryPasswordSessionProvider = {
   useValue: RecoveryPasswordSession,
 };
 
+export const AuthSessionProvider = {
+  provide: 'AuthSession',
+  useValue: AuthSession,
+};
+
 @Module({
   imports: [
     NodeMailerModule,
     UsersModule,
     MailTemplateModule,
     BcryptModule,
-    TypeOrmModule.forFeature([RecoveryPasswordSession]),
+    TypeOrmModule.forFeature([RecoveryPasswordSession, AuthSession]),
   ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
     RecoveryPasswordSessionProvider,
+    AuthSessionProvider,
     AuthService,
     RecoveryPasswordSessionRepositories,
     UUIDProvider,
@@ -57,7 +65,6 @@ export const RecoveryPasswordSessionProvider = {
     ResendConfirmationCodeHandler,
     PasswordRecoveryHandler,
     RegistrationHandler,
-    CreateAuthSessionHandler,
     LogoutHandler,
     UpdatePairTokenHandler,
     SecurityDevicesQueryRepository,

@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthService } from '../../../auth/application/auth-application';
 import { AuthSessionRepositories } from '../../../auth/infrastructure/auth-session-repositories';
-import { AuthSessionType } from '../../../auth/domain/auth-session.entity';
+import { AuthSession } from '../../../auth/domain/auth-session.entity';
 import {
   AppResultType,
   JWTRefreshTokenPayloadType,
@@ -31,14 +31,15 @@ export class DeleteDeviceByDeviceIdHandler
     const { userId } = command.user;
     const { deviceId } = command;
 
-    const session: AppResultType<AuthSessionType | null> =
+    const session: AppResultType<AuthSession | null> =
       await this.authService.getAuthSessionByDeviceId(deviceId);
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
     if (session.data.userId !== userId)
       return this.applicationObjectResult.forbidden();
 
-    await this.authSessionRepositories.delete(session.data.id);
+    session.data.deleteAuthSession();
+    await this.authSessionRepositories.save(session.data);
     return this.applicationObjectResult.success(null);
   }
 }

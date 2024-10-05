@@ -3,7 +3,7 @@ import { JwtService } from '@nestjs/jwt';
 import { RecoveryPasswordSessionRepositories } from '../infrastructure/recovery-password-session-repositories';
 import { ConfigService } from '@nestjs/config';
 import { format } from 'date-fns';
-import { AuthSessionType } from '../domain/auth-session.entity';
+import { AuthSession } from '../domain/auth-session.entity';
 import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
 import { RecoveryPasswordSession } from '../domain/recovery-session.entity';
 import { APISettings } from '../../../../settings/api-settings';
@@ -72,8 +72,8 @@ export class AuthService {
 
   async getAuthSessionByDeviceId(
     deviceId: string,
-  ): Promise<AppResultType<AuthSessionType | null>> {
-    const authSession: AuthSessionType | null =
+  ): Promise<AppResultType<AuthSession | null>> {
+    const authSession: AuthSession | null =
       await this.authSessionRepositories.getSessionByDeviceId(deviceId);
 
     if (!authSession) return this.applicationObjectResult.notFound();

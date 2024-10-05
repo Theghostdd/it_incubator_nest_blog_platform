@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
 import { AuthService } from '../auth-application';
-import { AuthSessionType } from '../../domain/auth-session.entity';
+import { AuthSession } from '../../domain/auth-session.entity';
 import {
   AppResultType,
   JWTRefreshTokenPayloadType,
@@ -24,13 +24,14 @@ export class LogoutHandler
   ) {}
   async execute(command: LogoutCommand): Promise<AppResultType> {
     const { deviceId } = command.user;
-    const session: AppResultType<AuthSessionType | null> =
+    const session: AppResultType<AuthSession | null> =
       await this.authService.getAuthSessionByDeviceId(deviceId);
 
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();
 
-    await this.authSessionRepositories.delete(session.data.id);
+    session.data.deleteAuthSession();
+    await this.authSessionRepositories.save(session.data);
     return this.applicationObjectResult.success(null);
   }
 }

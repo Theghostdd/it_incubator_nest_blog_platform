@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { AuthService } from '../auth-application';
 import { AuthSessionRepositories } from '../../infrastructure/auth-session-repositories';
-import { AuthSessionType } from '../../domain/auth-session.entity';
+import { AuthSession } from '../../domain/auth-session.entity';
 import {
   AppResultType,
   AuthorizationUserResponseType,
@@ -32,7 +32,7 @@ export class UpdatePairTokenHandler
     command: UpdatePairTokenCommand,
   ): Promise<AppResultType<AuthorizationUserResponseType>> {
     const { userId, deviceId } = command.user;
-    const session: AppResultType<AuthSessionType | null> =
+    const session: AppResultType<AuthSession | null> =
       await this.authService.getAuthSessionByDeviceId(deviceId);
 
     if (session.appResult !== AppResult.Success)
@@ -58,14 +58,11 @@ export class UpdatePairTokenHandler
     }: JWTRefreshTokenPayloadType & { iat: number; exp: number } =
       await this.authService.decodeJWTToken(refreshToken);
 
-    const iatDate: string = new Date(iatNewDate * 1000).toISOString();
-    const expDate: string = new Date(expNewDate * 1000).toISOString();
+    const iatDate: Date = new Date(iatNewDate * 1000);
+    const expDate: Date = new Date(expNewDate * 1000);
 
-    await this.authSessionRepositories.updateAuthSessionBySessionId(
-      iatDate,
-      expDate,
-      session.data.id,
-    );
+    session.data.updateAuthSession(iatDate, expDate);
+    await this.authSessionRepositories.save(session.data);
 
     return this.applicationObjectResult.success({
       accessToken: accessToken,

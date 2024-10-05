@@ -1,38 +1,22 @@
 import { Injectable } from '@nestjs/common';
-import { AuthSession, AuthSessionType } from '../domain/auth-session.entity';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
+import {
+  AuthSession,
+  AuthSessionPropertyEnum,
+} from '../domain/auth-session.entity';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { tablesName } from '../../../../core/utils/tables/tables';
 
 @Injectable()
 export class AuthSessionRepositories {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(AuthSession)
+    private readonly authSessionRepository: Repository<AuthSession>,
+  ) {}
 
-  async save(session: AuthSession): Promise<number> {
-    const query = `
-    INSERT INTO ${tablesName.AUTH_SESSIONS}("userId", "deviceId", "deviceName", ip, "issueAt", "expAt", "isActive")
-      VALUES ($1, $2, $3, $4, $5, $6, $7)
-      RETURNING "id";
-    `;
-    const result: { id: number }[] = await this.dataSource.query(query, [
-      session.userId,
-      session.deviceId,
-      session.deviceName,
-      session.ip,
-      session.issueAt,
-      session.expAt,
-      true,
-    ]);
-    return result[0].id;
-  }
-
-  async delete(sessionId: number): Promise<void> {
-    const query = `
-    UPDATE ${tablesName.AUTH_SESSIONS}
-      SET "isActive"= false
-      WHERE "id" = $1;
-     `;
-    await this.dataSource.query(query, [sessionId]);
+  async save(session: AuthSession): Promise<void> {
+    await this.authSessionRepository.save(session);
   }
 
   async deleteSessions(deviceIds: string[]): Promise<void> {
@@ -48,46 +32,21 @@ export class AuthSessionRepositories {
     await this.dataSource.query(query, [...deviceIds]);
   }
 
-  async getSessionByDeviceId(
-    deviceId: string,
-  ): Promise<AuthSessionType | null> {
-    const query = `
-      SELECT "as"."deviceId", "as"."id", "as"."deviceName", "as"."userId", "as"."issueAt", "as"."expAt"
-        FROM ${tablesName.AUTH_SESSIONS} as "as"
-        JOIN ${tablesName.USERS} as u
-        ON "as"."userId" = u."id" AND u."isActive" = true
-        WHERE "as"."deviceId" = $1 AND "as"."isActive" = true
-    `;
-    const result: AuthSessionType[] | [] = await this.dataSource.query(query, [
-      deviceId,
-    ]);
-    return result.length > 0 ? result[0] : null;
+  async getSessionByDeviceId(deviceId: string): Promise<AuthSession | null> {
+    return await this.authSessionRepository.findOne({
+      where: {
+        [AuthSessionPropertyEnum.deviceId]: deviceId,
+        [AuthSessionPropertyEnum.isActive]: true,
+      },
+    });
   }
 
-  async getSessionsByUserId(userId: number): Promise<AuthSessionType[] | null> {
-    const query = `
-      SELECT "as"."deviceId", "as"."id", "as"."deviceName", "as"."userId", "as"."issueAt", "as"."expAt"
-        FROM ${tablesName.AUTH_SESSIONS} as "as"
-        JOIN ${tablesName.USERS} as u
-        ON "as"."userId" = u."id" AND u."isActive" = true
-        WHERE "as"."userId" = $1 AND "as"."isActive" = true
-    `;
-    const result: AuthSessionType[] | [] = await this.dataSource.query(query, [
-      userId,
-    ]);
-    return result.length > 0 ? result : null;
-  }
-
-  async updateAuthSessionBySessionId(
-    iatDate: string,
-    expDate: string,
-    sessionId: number,
-  ): Promise<void> {
-    const query = `
-    UPDATE ${tablesName.AUTH_SESSIONS}
-      SET "issueAt" = $1, "expAt" = $2
-      WHERE "id" = $3
-    `;
-    await this.dataSource.query(query, [iatDate, expDate, sessionId]);
+  async getSessionsByUserId(userId: number): Promise<AuthSession[] | null> {
+    return await this.authSessionRepository.find({
+      where: {
+        [AuthSessionPropertyEnum.userId]: userId,
+        [AuthSessionPropertyEnum.isActive]: true,
+      },
+    });
   }
 }

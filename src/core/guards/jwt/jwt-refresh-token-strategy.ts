@@ -6,7 +6,7 @@ import { ConfigurationType } from '../../../settings/configuration/configuration
 import { JWTRefreshTokenPayloadType } from '../../../base/types/types';
 import { Request } from 'express';
 import { AuthSessionRepositories } from '../../../features/access-control/auth/infrastructure/auth-session-repositories';
-import { AuthSessionType } from '../../../features/access-control/auth/domain/auth-session.entity';
+import { AuthSession } from '../../../features/access-control/auth/domain/auth-session.entity';
 
 @Injectable()
 export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
@@ -36,7 +36,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   async validate(
     payload: JWTRefreshTokenPayloadType & { iat: number; exp: number },
   ): Promise<JWTRefreshTokenPayloadType & { iat: number; exp: number }> {
-    const session: AuthSessionType | null =
+    const session: AuthSession | null =
       await this.authSessionRepositories.getSessionByDeviceId(payload.deviceId);
 
     if (!session) return null;

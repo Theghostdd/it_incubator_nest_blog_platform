@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { UserConfirmation } from './user-confirm.entity';
 import { RecoveryPasswordSession } from '../../../access-control/auth/domain/recovery-session.entity';
+import { AuthSession } from '../../../access-control/auth/domain/auth-session.entity';
 
 export enum UserPropertyEnum {
   'id' = 'id',
@@ -57,6 +58,11 @@ export class User {
       recoveryPasswordSession.user,
   )
   userRecoveryPasswordSession: RecoveryPasswordSession[];
+  @OneToMany(
+    () => AuthSession,
+    (recoveryPasswordSession: AuthSession) => recoveryPasswordSession.user,
+  )
+  userAuthSessions: AuthSession[];
 
   static createUser(
     userInputModel: UserInputModel,
