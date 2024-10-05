@@ -1,6 +1,13 @@
 import { UserInputModel } from '../api/models/input/user-input.model';
-import { Column, Entity, OneToOne, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  OneToMany,
+  OneToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { UserConfirmation } from './user-confirm.entity';
+import { RecoveryPasswordSession } from '../../../access-control/auth/domain/recovery-session.entity';
 
 export enum UserPropertyEnum {
   'id' = 'id',
@@ -10,6 +17,7 @@ export enum UserPropertyEnum {
   'isActive' = 'isActive',
   'createdAt' = 'createdAt',
   'userConfirm' = 'userConfirm',
+  'userRecoveryPasswordSession' = 'userRecoveryPasswordSession',
 }
 
 export const selectUserProperty = [
@@ -43,6 +51,12 @@ export class User {
     { cascade: true },
   )
   userConfirm: UserConfirmation;
+  @OneToMany(
+    () => RecoveryPasswordSession,
+    (recoveryPasswordSession: RecoveryPasswordSession) =>
+      recoveryPasswordSession.user,
+  )
+  userRecoveryPasswordSession: RecoveryPasswordSession[];
 
   static createUser(
     userInputModel: UserInputModel,

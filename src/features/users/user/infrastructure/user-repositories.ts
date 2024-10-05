@@ -11,19 +11,18 @@ import {
   Repository,
   WhereExpressionBuilder,
 } from 'typeorm';
-import { tablesName } from '../../../../core/utils/tables/tables';
+import { selectUserConfirmationProperty } from '../domain/user-confirm.entity';
 import {
-  selectUserConfirmationProperty,
-  UserConfirmation,
-} from '../domain/user-confirm.entity';
+  selectUserRecoveryPasswordSessionProperty,
+  UserRecoveryPasswordSessionPropertyEnum,
+} from '../../../access-control/auth/domain/recovery-session.entity';
 
 @Injectable()
 export class UserRepositories {
   constructor(
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectRepository(UserConfirmation)
-    private readonly userConfirmationRepository: Repository<UserConfirmation>,
-    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectDataSource()
+    private readonly dataSource: DataSource,
   ) {}
 
   async save(user: User): Promise<number> {
@@ -59,6 +58,12 @@ export class UserRepositories {
       .select(selectUserProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
       .addSelect(selectUserConfirmationProperty)
+      .leftJoin(
+        `u.${UserPropertyEnum.userRecoveryPasswordSession}`,
+        'rps',
+        `rps.${UserRecoveryPasswordSessionPropertyEnum.isActive} = true`,
+      )
+      .addSelect(selectUserRecoveryPasswordSessionProperty)
       .where('u.email = :email', { email: email })
       .andWhere({ isActive: true })
       .getOne();
@@ -86,17 +91,5 @@ export class UserRepositories {
       )
       .andWhere({ isActive: true })
       .getOne();
-  }
-
-  async updateUserPasswordByUserId(
-    userId: number,
-    hash: string,
-  ): Promise<void> {
-    const query = `
-    UPDATE ${tablesName.USERS}
-      SET "password"=$1
-      WHERE "id" = $2;
-    `;
-    await this.dataSource.query(query, [hash, userId]);
   }
 }

@@ -3,7 +3,7 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { compareAsc } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
-import { RecoveryPasswordSessionType } from '../../domain/recovery-session.entity';
+import { RecoveryPasswordSession } from '../../domain/recovery-session.entity';
 import {
   APIErrorMessageType,
   AppResultType,
@@ -39,7 +39,7 @@ export class ChangeUserPasswordHandler
     command: ChangeUserPasswordCommand,
   ): Promise<AppResultType<null, APIErrorMessageType>> {
     const { recoveryCode, newPassword } = command.inputChangePasswordModel;
-    const recoverySession: AppResultType<RecoveryPasswordSessionType | null> =
+    const recoverySession: AppResultType<RecoveryPasswordSession | null> =
       await this.authService.getRecoveryPasswordSessionByCode(recoveryCode);
     if (recoverySession.appResult !== AppResult.Success)
       return this.applicationObjectResult.badRequest({
@@ -65,10 +65,12 @@ export class ChangeUserPasswordHandler
     const hash =
       await this.bcryptService.generatePasswordHashAndSalt(newPassword);
 
-    await this.userRepositories.updateUserPasswordByUserId(user.data.id, hash);
-    await this.recoveryPasswordSessionRepositories.delete(
-      recoverySession.data.id,
-    );
+    user.data.changePassword(hash);
+    recoverySession.data.deleteRecoveryPasswordSession();
+    await Promise.all([
+      this.userRepositories.save(user.data),
+      this.recoveryPasswordSessionRepositories.save(recoverySession.data),
+    ]);
     return this.applicationObjectResult.success(null);
   }
 }

@@ -1,30 +1,75 @@
-import { Injectable } from '@nestjs/common';
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
+import { User } from '../../../users/user/domain/user.entity';
 
-export class RecoveryPasswordSession {
-  email: string;
-  code: string;
-  expAt: string;
-  userId: number;
+export enum UserRecoveryPasswordSessionPropertyEnum {
+  'id' = 'id',
+  'email' = 'email',
+  'code' = 'code',
+  'expAt' = 'expAt',
+  'user' = 'user',
+  'userId' = 'userId',
+  'isActive' = 'isActive',
 }
 
-export type RecoveryPasswordSessionType = RecoveryPasswordSession & {
-  id: number;
-};
+export const selectUserRecoveryPasswordSessionProperty = [
+  `rps.${UserRecoveryPasswordSessionPropertyEnum.id}`,
+  `rps.${UserRecoveryPasswordSessionPropertyEnum.email}`,
+  `rps.${UserRecoveryPasswordSessionPropertyEnum.code}`,
+  `rps.${UserRecoveryPasswordSessionPropertyEnum.expAt}`,
+  `rps.${UserRecoveryPasswordSessionPropertyEnum.userId}`,
+];
 
-@Injectable()
-export class RecoveryPasswordSessionFactory {
-  constructor() {}
-  create(
+@Entity()
+export class RecoveryPasswordSession {
+  @PrimaryGeneratedColumn()
+  id: number;
+  @Column()
+  email: string;
+  @Column()
+  code: string;
+  @Column({
+    type: 'timestamp with time zone',
+    default: () => 'CURRENT_TIMESTAMP',
+  })
+  expAt: Date;
+  @Column({ default: true })
+  isActive: boolean;
+  @ManyToOne(() => User, (user: User) => user.userRecoveryPasswordSession)
+  @JoinColumn()
+  user: User;
+  @Column()
+  userId: number;
+
+  static createRecoveryPasswordSession(
     email: string,
     code: string,
-    expAt: string,
-    userId: number,
+    expAt: Date,
+    user: User,
   ): RecoveryPasswordSession {
-    const session = new RecoveryPasswordSession();
-    session.email = email;
-    session.code = code;
-    session.expAt = expAt;
-    session.userId = userId;
-    return session;
+    const recoveryPasswordSession = new this();
+    recoveryPasswordSession.email = email;
+    recoveryPasswordSession.code = code;
+    recoveryPasswordSession.expAt = expAt;
+    recoveryPasswordSession.isActive = true;
+    recoveryPasswordSession.user = user;
+    recoveryPasswordSession.userId = user.id;
+
+    if (user.userRecoveryPasswordSession) {
+      user.userRecoveryPasswordSession.push(recoveryPasswordSession);
+      return recoveryPasswordSession;
+    }
+    user.userRecoveryPasswordSession = [];
+    user.userRecoveryPasswordSession.push(recoveryPasswordSession);
+    return recoveryPasswordSession;
+  }
+
+  deleteRecoveryPasswordSession(): void {
+    this.isActive = false;
   }
 }

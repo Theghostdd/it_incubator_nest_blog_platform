@@ -4,10 +4,7 @@ import { addMinutes } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
-import {
-  RecoveryPasswordSession,
-  RecoveryPasswordSessionFactory,
-} from '../../domain/recovery-session.entity';
+import { RecoveryPasswordSession } from '../../domain/recovery-session.entity';
 import {
   AppResultType,
   MailTemplateType,
@@ -20,6 +17,7 @@ import { MailTemplateService } from '../../../../mail-template/application/templ
 import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
+import { Inject } from '@nestjs/common';
 
 export class PasswordRecoveryCommand {
   constructor(public inputPasswordRecoveryModel: PasswordRecoveryInputModel) {}
@@ -38,7 +36,8 @@ export class PasswordRecoveryHandler
     private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
     private readonly mailTemplateService: MailTemplateService,
     private readonly nodeMailerService: NodeMailerService,
-    private readonly recoveryPasswordSessionFactory: RecoveryPasswordSessionFactory,
+    @Inject(RecoveryPasswordSession.name)
+    private readonly recoveryPasswordSessionEntity: typeof RecoveryPasswordSession,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -55,14 +54,15 @@ export class PasswordRecoveryHandler
     );
 
     if (user.appResult === AppResult.Success) {
-      const dateExpired: string = addMinutes(new Date(), 20).toISOString();
+      const date: Date = new Date();
+      const dateExpired: Date = addMinutes(date, 20);
 
       const recoverySession: RecoveryPasswordSession =
-        this.recoveryPasswordSessionFactory.create(
+        this.recoveryPasswordSessionEntity.createRecoveryPasswordSession(
           command.inputPasswordRecoveryModel.email,
           confirmationCode,
           dateExpired,
-          user.data.id,
+          user.data,
         );
       await this.recoveryPasswordSessionRepositories.save(recoverySession);
     }

@@ -19,21 +19,34 @@ import { SecurityDeviceOutputModelMapper } from './security-devices/api/models/s
 import { DeleteAllDevicesExcludeCurrentHandler } from './security-devices/application/command/delete-all-devices-exclude-current.command';
 import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/command/delete-device-by-id.command';
 import { AuthSessionFactory } from './auth/domain/auth-session.entity';
-import { RecoveryPasswordSessionFactory } from './auth/domain/recovery-session.entity';
+import { RecoveryPasswordSession } from './auth/domain/recovery-session.entity';
 import { UsersModule } from '../users/users.module';
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
 import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 export const UUIDProvider = {
   provide: 'UUID',
   useValue: uuidv4,
 };
 
+export const RecoveryPasswordSessionProvider = {
+  provide: 'RecoveryPasswordSession',
+  useValue: RecoveryPasswordSession,
+};
+
 @Module({
-  imports: [NodeMailerModule, UsersModule, MailTemplateModule, BcryptModule],
+  imports: [
+    NodeMailerModule,
+    UsersModule,
+    MailTemplateModule,
+    BcryptModule,
+    TypeOrmModule.forFeature([RecoveryPasswordSession]),
+  ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
+    RecoveryPasswordSessionProvider,
     AuthService,
     RecoveryPasswordSessionRepositories,
     UUIDProvider,
@@ -52,7 +65,6 @@ export const UUIDProvider = {
     DeleteAllDevicesExcludeCurrentHandler,
     DeleteDeviceByDeviceIdHandler,
     AuthSessionFactory,
-    RecoveryPasswordSessionFactory,
   ],
   exports: [AuthService, AuthSessionRepositories],
 })

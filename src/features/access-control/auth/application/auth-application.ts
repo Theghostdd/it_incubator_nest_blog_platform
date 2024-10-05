@@ -5,7 +5,7 @@ import { ConfigService } from '@nestjs/config';
 import { format } from 'date-fns';
 import { AuthSessionType } from '../domain/auth-session.entity';
 import { AuthSessionRepositories } from '../infrastructure/auth-session-repositories';
-import { RecoveryPasswordSessionType } from '../domain/recovery-session.entity';
+import { RecoveryPasswordSession } from '../domain/recovery-session.entity';
 import { APISettings } from '../../../../settings/api-settings';
 import { ConfigurationType } from '../../../../settings/configuration/configuration';
 import { ApplicationObjectResult } from '../../../../base/application-object-result/application-object-result';
@@ -60,8 +60,8 @@ export class AuthService {
 
   async getRecoveryPasswordSessionByCode(
     code: string,
-  ): Promise<AppResultType<RecoveryPasswordSessionType | null>> {
-    const recoveryPasswordSession: RecoveryPasswordSessionType | null =
+  ): Promise<AppResultType<RecoveryPasswordSession | null>> {
+    const recoveryPasswordSession: RecoveryPasswordSession | null =
       await this.recoveryPasswordSessionRepositories.getSessionByCode(code);
 
     if (!recoveryPasswordSession)

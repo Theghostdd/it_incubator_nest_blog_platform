@@ -6,13 +6,8 @@ import {
 } from '../api/models/output/user-output.model';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import {
-  Brackets,
-  DataSource,
-  Repository,
-  WhereExpressionBuilder,
-} from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Brackets, Repository, WhereExpressionBuilder } from 'typeorm';
 import { User, UserPropertyEnum } from '../domain/user.entity';
 
 @Injectable()
@@ -21,7 +16,6 @@ export class UserQueryRepositories {
     private readonly userMapperOutputModel: UserMapperOutputModel,
     private readonly userSortingQuery: UserSortingQuery,
     @InjectRepository(User) private readonly userRepository: Repository<User>,
-    @InjectDataSource() private readonly dataSource: DataSource,
   ) {}
 
   async getUserById(id: number): Promise<UserOutputModel> {
