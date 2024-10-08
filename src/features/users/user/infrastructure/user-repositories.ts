@@ -39,7 +39,7 @@ export class UserRepositories {
       .select(selectUserProperty)
       .addSelect(selectUserConfirmationProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
-      .where(`u.${UserPropertyEnum.id}} = :id`, { id: id })
+      .where(`u.${UserPropertyEnum.id}= :id`, { id: id })
       .andWhere(`u.${UserPropertyEnum.isActive} = true`)
       .getOne();
   }

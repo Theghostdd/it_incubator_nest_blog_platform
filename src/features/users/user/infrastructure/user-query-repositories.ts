@@ -48,43 +48,38 @@ export class UserQueryRepositories {
 
     const skip: number = (pageNumber - 1) * pageSize;
 
-    const [users, count] = await Promise.all([
-      await this.userRepository
-        .createQueryBuilder('u')
-        .select([
-          `u.${UserPropertyEnum.id}`,
-          `u.${UserPropertyEnum.email}`,
-          `u.${UserPropertyEnum.login}`,
-          `u.${UserPropertyEnum.createdAt}`,
-        ])
-        .where(
-          new Brackets((qb: WhereExpressionBuilder) => {
-            if (searchLoginTerm && searchEmailTerm) {
-              qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
-                login: `%${searchLoginTerm}%`,
-              }).orWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
-                email: `%${searchEmailTerm}%`,
-              });
-            } else {
-              qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
-                login: `%${searchLoginTerm || ''}%`,
-              }).andWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
-                email: `%${searchEmailTerm || ''}%`,
-              });
-            }
-          }),
-        )
-        .andWhere({ [UserPropertyEnum.isActive]: true })
-        .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
-        .limit(pageSize)
-        .offset(skip)
-        .getMany(),
-      await this.userRepository.count({
-        where: { [UserPropertyEnum.isActive]: true },
-      }),
-    ]);
+    const users: [User[] | [], number] = await this.userRepository
+      .createQueryBuilder('u')
+      .select([
+        `u.${UserPropertyEnum.id}`,
+        `u.${UserPropertyEnum.email}`,
+        `u.${UserPropertyEnum.login}`,
+        `u.${UserPropertyEnum.createdAt}`,
+      ])
+      .where(
+        new Brackets((qb: WhereExpressionBuilder) => {
+          if (searchLoginTerm && searchEmailTerm) {
+            qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
+              login: `%${searchLoginTerm}%`,
+            }).orWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
+              email: `%${searchEmailTerm}%`,
+            });
+          } else {
+            qb.where(`u.${UserPropertyEnum.login} ILIKE :login`, {
+              login: `%${searchLoginTerm || ''}%`,
+            }).andWhere(`u.${UserPropertyEnum.email} ILIKE :email`, {
+              email: `%${searchEmailTerm || ''}%`,
+            });
+          }
+        }),
+      )
+      .andWhere({ [UserPropertyEnum.isActive]: true })
+      .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+      .limit(pageSize)
+      .offset(skip)
+      .getManyAndCount();
 
-    const totalCount: number = count;
+    const totalCount: number = users[1];
     const pagesCount: number = Math.ceil(totalCount / pageSize);
 
     return {
@@ -93,7 +88,9 @@ export class UserQueryRepositories {
       pageSize: +pageSize,
       totalCount: +totalCount,
       items:
-        users.length > 0 ? this.userMapperOutputModel.usersModel(users) : [],
+        users[0].length > 0
+          ? this.userMapperOutputModel.usersModel(users[0])
+          : [],
     };
   }
 
