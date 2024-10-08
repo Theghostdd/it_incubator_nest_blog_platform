@@ -2,7 +2,8 @@ import {
   BlogInputModel,
   BlogUpdateModel,
 } from '../api/models/input/blog-input.model';
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import { Post } from '../../post/domain/post.entity';
 
 export enum BlogPropertyEnum {
   'id' = 'id',
@@ -12,6 +13,7 @@ export enum BlogPropertyEnum {
   'createdAt' = 'createdAt',
   'isMembership' = 'isMembership',
   'isActive' = 'isActive',
+  'posts' = 'posts',
 }
 
 export const selectBlogProperty = [
@@ -42,6 +44,9 @@ export class Blog {
   isMembership: boolean;
   @Column({ default: true })
   isActive: boolean;
+
+  @OneToMany(() => Post, (post: Post) => post.blog)
+  posts: Post[];
 
   static createBlog(blogInputModel: BlogInputModel): Blog {
     const blog = new this();

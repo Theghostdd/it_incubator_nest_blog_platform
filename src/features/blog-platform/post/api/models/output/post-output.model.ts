@@ -1,9 +1,10 @@
 import { LikeStatusEnum } from '../../../../like/domain/type';
 import {
-  LastPostLikeJoinType,
   LastPostsLikeJoinType,
+  Post,
   PostLikeJoinType,
 } from '../../../domain/post.entity';
+import { PostLike } from '../../../../like/domain/like.entity';
 
 export class NewestLikesModel {
   constructor(
@@ -37,27 +38,26 @@ export class PostOutputModel {
 
 export class PostMapperOutputModel {
   constructor() {}
-  postModel(
-    post: PostLikeJoinType,
-    lastLikes: LastPostLikeJoinType[] | [],
-  ): PostOutputModel {
+  postModel(post: Post, lastLikes: PostLike[] | []): PostOutputModel {
     return {
       id: post.id.toString(),
       title: post.title,
       shortDescription: post.shortDescription,
       content: post.content,
       blogId: post.blogId.toString(),
-      blogName: post.blogName,
+      blogName: post.blog.name,
       createdAt: post.createdAt.toISOString(),
       extendedLikesInfo: {
         likesCount: post.likesCount,
         dislikesCount: post.dislikesCount,
-        myStatus: post.status,
-        newestLikes: lastLikes.map((lastLike: LastPostLikeJoinType) => {
+        myStatus: post.currentUserLike?.status
+          ? post.currentUserLike.status
+          : LikeStatusEnum.None,
+        newestLikes: lastLikes.map((lastLike: PostLike) => {
           return {
             addedAt: lastLike.lastUpdateAt.toISOString(),
             userId: lastLike.userId.toString(),
-            login: lastLike.userLogin,
+            login: lastLike.user.login,
           };
         }),
       },
@@ -65,8 +65,8 @@ export class PostMapperOutputModel {
   }
 
   postsModel(
-    posts: PostLikeJoinType[] | [],
-    lastLikes: LastPostsLikeJoinType[] | [],
+    posts: Post[] | [],
+    lastLikes: PostLike[] | [],
   ): PostOutputModel[] {
     return posts.map((post: PostLikeJoinType) => {
       return {
@@ -80,15 +80,15 @@ export class PostMapperOutputModel {
         extendedLikesInfo: {
           likesCount: post.likesCount,
           dislikesCount: post.dislikesCount,
-          myStatus: post.status,
+          myStatus: post.currentUserLike?.status
+            ? post.currentUserLike.status
+            : LikeStatusEnum.None,
           newestLikes: lastLikes
-            .filter(
-              (lastLike: LastPostsLikeJoinType) => lastLike.postId === post.id,
-            )
-            .map((lastLike: LastPostsLikeJoinType) => ({
+            .filter((lastLike: PostLike) => lastLike.parentId === post.id)
+            .map((lastLike: PostLike) => ({
               addedAt: lastLike.lastUpdateAt.toISOString(),
               userId: lastLike.userId.toString(),
-              login: lastLike.userLogin,
+              login: lastLike.user.login,
             })),
         },
       };

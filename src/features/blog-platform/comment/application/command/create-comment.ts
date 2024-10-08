@@ -3,12 +3,12 @@ import { CommentInputModel } from '../../api/model/input/comment-input.model';
 import { PostService } from '../../../post/application/post-service';
 import { CommentRepositories } from '../../infrastructure/comment-repositories';
 import { CommentFactory } from '../../domain/comment.entity';
-import { PostType } from '../../../post/domain/post.entity';
 import { UserService } from '../../../../users/user/application/user-service';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
+import { Post } from '../../../post/domain/post.entity';
 
 export class CreateCommentByPostIdCommand {
   constructor(
@@ -40,7 +40,7 @@ export class CreateCommentByPostIdHandler
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    const post: AppResultType<PostType | null> =
+    const post: AppResultType<Post | null> =
       await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
@@ -48,7 +48,6 @@ export class CreateCommentByPostIdHandler
       command.inputCommentModel,
       userId,
       postId,
-      post.data.blogId,
     );
     const result: number = await this.commentRepositories.save(comment);
     return this.applicationObjectResult.success(result);

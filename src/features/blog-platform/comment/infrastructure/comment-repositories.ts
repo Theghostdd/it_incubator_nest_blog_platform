@@ -18,7 +18,6 @@ export class CommentRepositories {
     const result: { id: number }[] = await this.dataSource.query(query, [
       comment.content,
       comment.userId,
-      comment.blogId,
       comment.postId,
       comment.likesCount,
       comment.dislikesCount,

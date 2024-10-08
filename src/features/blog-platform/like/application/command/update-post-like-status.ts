@@ -7,11 +7,11 @@ import { LikeRepositories } from '../../infrastructure/like-repositories';
 import { PostRepository } from '../../../post/infrastructure/post-repositories';
 import { LikeChangeCount } from '../../domain/models';
 import { CalculateLike } from '../../domain/calculate-like';
-import { PostType } from '../../../post/domain/post.entity';
 import { Like, LikeFactory, LikeType } from '../../domain/like.entity';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { Post } from '../../../post/domain/post.entity';
 
 export class UpdatePostLikeStatusCommand {
   constructor(
@@ -37,7 +37,7 @@ export class UpdatePostLikeStatusHandler
 
   async execute(command: UpdatePostLikeStatusCommand): Promise<AppResultType> {
     const { postId, userId } = command;
-    const post: AppResultType<PostType | null> =
+    const post: AppResultType<Post | null> =
       await this.postService.getPostById(postId);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();

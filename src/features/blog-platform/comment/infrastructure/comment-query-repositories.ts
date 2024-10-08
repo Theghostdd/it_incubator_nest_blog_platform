@@ -7,10 +7,10 @@ import { InjectDataSource } from '@nestjs/typeorm';
 import { DataSource } from 'typeorm';
 import { EntityTypeEnum } from '../../like/domain/type';
 import { CommentLikeJoinType } from '../domain/comment.entity';
-import { PostType } from '../../post/domain/post.entity';
 import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { tablesName } from '../../../../core/utils/tables/tables';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
+import { Post } from '../../post/domain/post.entity';
 
 @Injectable()
 export class CommentQueryRepositories {
@@ -56,9 +56,7 @@ export class CommentQueryRepositories {
       FROM ${tablesName.POSTS}
       WHERE "id" = $1
     `;
-    const post: PostType[] | [] = await this.dataSource.query(postQuery, [
-      postId,
-    ]);
+    const post: Post[] | [] = await this.dataSource.query(postQuery, [postId]);
     if (post.length <= 0) throw new NotFoundException('Post not found');
 
     const { sortBy, sortDirection, pageSize, pageNumber } =

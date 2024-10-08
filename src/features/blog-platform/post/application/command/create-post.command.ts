@@ -1,12 +1,13 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostInputModel } from '../../api/models/input/post-input.model';
 import { PostRepository } from '../../infrastructure/post-repositories';
-import { Post, PostFactory } from '../../domain/post.entity';
+import { Post } from '../../domain/post.entity';
 import { AppResultType } from '../../../../../base/types/types';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { BlogService } from '../../../blog/application/blog-service';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { Blog } from '../../../blog/domain/blog.entity';
+import { Inject } from '@nestjs/common';
 
 export class CreatePostCommand {
   constructor(public postInputModel: PostInputModel) {}
@@ -20,7 +21,7 @@ export class CreatePostHandler
     private readonly blogService: BlogService,
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly postRepository: PostRepository,
-    private readonly postFactory: PostFactory,
+    @Inject(Post.name) private readonly postEntity: typeof Post,
   ) {}
   async execute(command: CreatePostCommand): Promise<AppResultType<number>> {
     const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
@@ -29,8 +30,12 @@ export class CreatePostHandler
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
 
-    const post: Post = this.postFactory.create(command.postInputModel);
-
+    const date = new Date();
+    const post: Post = this.postEntity.createPost(
+      command.postInputModel,
+      date,
+      blog.data,
+    );
     const result: number = await this.postRepository.save(post);
     return this.applicationObjectResult.success(result);
   }

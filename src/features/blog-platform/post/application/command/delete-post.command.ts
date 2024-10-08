@@ -1,7 +1,7 @@
 import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostRepository } from '../../infrastructure/post-repositories';
 import { PostService } from '../post-service';
-import { PostType } from '../../domain/post.entity';
+import { Post } from '../../domain/post.entity';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResultType } from '../../../../../base/types/types';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
@@ -33,12 +33,14 @@ export class DeletePostByIdHandler
         return this.applicationObjectResult.notFound();
     }
 
-    const post: AppResultType<PostType | null> =
-      await this.postService.getPostById(command.postId);
+    const post: AppResultType<Post | null> = await this.postService.getPostById(
+      command.postId,
+    );
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    await this.postRepository.delete(post.data.id);
+    post.data.deletePost();
+    await this.postRepository.save(post.data);
     return this.applicationObjectResult.success(null);
   }
 }

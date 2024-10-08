@@ -24,9 +24,14 @@ import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
 import { CalculateLike } from './like/domain/calculate-like';
-import { PostFactory } from './post/domain/post.entity';
-import { CommentFactory } from './comment/domain/comment.entity';
-import { LikeFactory } from './like/domain/like.entity';
+import { Post } from './post/domain/post.entity';
+import { Comment, CommentFactory } from './comment/domain/comment.entity';
+import {
+  CommentLike,
+  Like,
+  LikeFactory,
+  PostLike,
+} from './like/domain/like.entity';
 import { FindBlogConstraint } from '../../core/decorators/find-blog';
 import { BlogAdminController } from './blog/api/blog-sa-controller';
 import { BlogService } from './blog/application/blog-service';
@@ -43,8 +48,26 @@ export const BlogProvider = {
   useValue: Blog,
 };
 
+export const PostProvider = {
+  provide: 'Post',
+  useValue: Post,
+};
+
+export const LikeProvider = {
+  provide: 'Like',
+  useValue: Like,
+};
+
+export const CommentProvider = {
+  provide: 'Comment',
+  useValue: Comment,
+};
+
 @Module({
-  imports: [UsersModule, TypeOrmModule.forFeature([Blog])],
+  imports: [
+    UsersModule,
+    TypeOrmModule.forFeature([Blog, Post, Comment, PostLike, CommentLike]),
+  ],
   controllers: [
     BlogController,
     PostController,
@@ -53,6 +76,8 @@ export const BlogProvider = {
   ],
   providers: [
     BlogProvider,
+    PostProvider,
+    LikeProvider,
     BlogQueryRepository,
     BlogMapperOutputModel,
     BlogSortingQuery,
@@ -76,7 +101,6 @@ export const BlogProvider = {
     LikeRepositories,
     FindBlogConstraint,
     CalculateLike,
-    PostFactory,
     CommentFactory,
     LikeFactory,
     BlogService,

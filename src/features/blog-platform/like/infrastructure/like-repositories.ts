@@ -19,7 +19,6 @@ export class LikeRepositories {
     await this.dataSource.query(query, [
       like.userId,
       like.parentId,
-      like.entityType,
       like.status,
       like.createdAt,
       like.lastUpdateAt,

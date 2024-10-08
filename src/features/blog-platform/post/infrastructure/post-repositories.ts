@@ -1,71 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { Post, PostBlogJoinType, PostType } from '../domain/post.entity';
-import { PostUpdateModel } from '../api/models/input/post-input.model';
+import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
+import { DataSource, Repository } from 'typeorm';
+import {
+  Post,
+  PostPropertyEnum,
+  selectPostProperty,
+} from '../domain/post.entity';
 import { tablesName } from '../../../../core/utils/tables/tables';
+import { BlogPropertyEnum } from '../../blog/domain/blog.entity';
+import { UserPropertyEnum } from '../../../users/user/domain/user.entity';
 
 @Injectable()
 export class PostRepository {
-  constructor(@InjectDataSource() private readonly dataSource: DataSource) {}
+  constructor(
+    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(Post) private readonly postRepository: Repository<Post>,
+  ) {}
   async save(post: Post): Promise<number> {
-    const query = `
-      INSERT INTO ${tablesName.POSTS}
-      ("title", "shortDescription", "content", "blogId", "likesCount", "dislikesCount", "createdAt", "isActive")
-      VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-      RETURNING "id"
-    `;
-    const result: { id: number }[] = await this.dataSource.query(query, [
-      post.title,
-      post.shortDescription,
-      post.content,
-      post.blogId,
-      post.likesCount,
-      post.dislikesCount,
-      post.createdAt,
-      true,
-    ]);
-    return result[0].id;
+    const postEntity = await this.postRepository.save(post);
+    return postEntity.id;
   }
 
-  async delete(postId: number): Promise<void> {
-    const query = `
-        UPDATE "${tablesName.POSTS}"
-        SET "isActive" = ${false}
-        WHERE "id" = $1 AND "isActive" = ${true}
-    `;
-    await this.dataSource.query(query, [postId]);
-  }
-
-  async getPostById(id: number): Promise<PostType | null> {
-    const query = `
-        SELECT "p"."id", "p"."title", "p"."shortDescription", "p"."content", "p"."blogId", "p"."likesCount", "p"."dislikesCount", "p"."createdAt", "b"."name" as "blogName"       
-        FROM ${tablesName.POSTS} as "p"
-        LEFT JOIN ${tablesName.BLOGS} as "b"
-        ON "p"."blogId" = "b"."id" AND "b"."isActive" = ${true}
-        WHERE "p"."id" = $1 AND "p"."isActive" = ${true}
-    `;
-    const result: PostBlogJoinType[] | [] = await this.dataSource.query(query, [
-      id,
-    ]);
-    return result.length > 0 ? result[0] : null;
-  }
-
-  async updatePostById(
-    id: number,
-    postUpdateModel: PostUpdateModel,
-  ): Promise<void> {
-    const query = `
-        UPDATE ${tablesName.POSTS}
-        SET "title" = $1, "shortDescription" = $2, "content" = $3 
-        WHERE "id" = $4 AND "isActive" = ${true}
-    `;
-    await this.dataSource.query(query, [
-      postUpdateModel.title,
-      postUpdateModel.shortDescription,
-      postUpdateModel.content,
-      id,
-    ]);
+  async getPostById(id: number): Promise<Post | null> {
+    return await this.postRepository
+      .createQueryBuilder('p')
+      .select(selectPostProperty)
+      .leftJoin(`p.${PostPropertyEnum.blog}`, 'b')
+      .addSelect(`b.${BlogPropertyEnum.name}`)
+      .where(`p.${PostPropertyEnum.id} = :id`, { id: id })
+      .andWhere(`p.${UserPropertyEnum.isActive} = :isActive`, {
+        isActive: true,
+      })
+      .getOne();
   }
 
   async updatePostLikeById(

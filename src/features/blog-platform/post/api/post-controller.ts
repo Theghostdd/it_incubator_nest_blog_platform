@@ -124,7 +124,7 @@ export class PostController {
   @UseGuards(BasicGuard)
   @HttpCode(204)
   async updatePostById(
-    @EntityId() id: number,
+    @EntityId('id') id: number,
     @Body() updateModel: PostUpdateModel,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(

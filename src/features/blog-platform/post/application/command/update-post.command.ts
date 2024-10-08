@@ -2,12 +2,12 @@ import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import { PostService } from '../post-service';
 import { PostRepository } from '../../infrastructure/post-repositories';
 import { PostUpdateModel } from '../../api/models/input/post-input.model';
-import { PostType } from '../../domain/post.entity';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { AppResultType } from '../../../../../base/types/types';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { BlogService } from '../../../blog/application/blog-service';
 import { Blog } from '../../../blog/domain/blog.entity';
+import { Post } from '../../domain/post.entity';
 export class UpdatePostByIdCommand {
   constructor(
     public id: number,
@@ -32,15 +32,14 @@ export class UpdateByIdHandler
     if (blog.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    const post: AppResultType<PostType | null> =
-      await this.postService.getPostById(command.id);
+    const post: AppResultType<Post | null> = await this.postService.getPostById(
+      command.id,
+    );
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    await this.postRepository.updatePostById(
-      command.id,
-      command.postUpdateModel,
-    );
+    post.data.updatePost(command.postUpdateModel);
+    await this.postRepository.save(post.data);
     return this.applicationObjectResult.success(null);
   }
 }

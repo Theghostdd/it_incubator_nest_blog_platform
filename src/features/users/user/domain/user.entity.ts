@@ -9,6 +9,12 @@ import {
 import { UserConfirmation } from './user-confirm.entity';
 import { RecoveryPasswordSession } from '../../../access-control/auth/domain/recovery-session.entity';
 import { AuthSession } from '../../../access-control/auth/domain/auth-session.entity';
+import {
+  CommentLike,
+  Like,
+  PostLike,
+} from '../../../blog-platform/like/domain/like.entity';
+import { Comment } from '../../../blog-platform/comment/domain/comment.entity';
 
 export enum UserPropertyEnum {
   'id' = 'id',
@@ -19,6 +25,9 @@ export enum UserPropertyEnum {
   'createdAt' = 'createdAt',
   'userConfirm' = 'userConfirm',
   'userRecoveryPasswordSession' = 'userRecoveryPasswordSession',
+  'userAuthSessions' = 'userAuthSessions',
+  'userLikes' = 'userLikes',
+  'userComments' = 'userComments',
 }
 
 export const selectUserProperty = [
@@ -63,6 +72,15 @@ export class User {
     (recoveryPasswordSession: AuthSession) => recoveryPasswordSession.user,
   )
   userAuthSessions: AuthSession[];
+
+  @OneToMany(() => PostLike, (like: PostLike) => like.user)
+  userPostLike: PostLike[];
+
+  @OneToMany(() => CommentLike, (like: CommentLike) => like.user)
+  userCommentLike: CommentLike[];
+
+  @OneToMany(() => Comment, (comment: Comment) => comment.user)
+  userComments: Comment[];
 
   static createUser(
     userInputModel: UserInputModel,
