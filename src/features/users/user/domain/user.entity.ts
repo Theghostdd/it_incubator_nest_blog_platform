@@ -9,12 +9,9 @@ import {
 import { UserConfirmation } from './user-confirm.entity';
 import { RecoveryPasswordSession } from '../../../access-control/auth/domain/recovery-session.entity';
 import { AuthSession } from '../../../access-control/auth/domain/auth-session.entity';
-import {
-  CommentLike,
-  Like,
-  PostLike,
-} from '../../../blog-platform/like/domain/like.entity';
 import { Comment } from '../../../blog-platform/comment/domain/comment.entity';
+import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
+import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 
 export enum UserPropertyEnum {
   'id' = 'id',

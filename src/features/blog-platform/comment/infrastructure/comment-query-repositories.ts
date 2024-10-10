@@ -3,47 +3,91 @@ import {
   CommentMapperOutputModel,
   CommentOutputModel,
 } from '../api/model/output/comment-output.model';
-import { InjectDataSource } from '@nestjs/typeorm';
-import { DataSource } from 'typeorm';
-import { EntityTypeEnum } from '../../like/domain/type';
-import { CommentLikeJoinType } from '../domain/comment.entity';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository, SelectQueryBuilder } from 'typeorm';
+import { LikePropertyEnum, LikeStatusEnum } from '../../like/domain/type';
+import { Comment } from '../domain/comment.entity';
 import { BaseSorting } from '../../../../base/sorting/base-sorting';
-import { tablesName } from '../../../../core/utils/tables/tables';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { Post } from '../../post/domain/post.entity';
+import { UserPropertyEnum } from '../../../users/user/domain/user.entity';
+import { CommentLike } from '../../like/domain/comment-like.entity';
+import { PostPropertyEnum } from '../../post/domain/types';
+import {
+  CommentEntityRawDataType,
+  CommentPropertyEnum,
+  selectCommentProperty,
+} from '../domain/types';
 
 @Injectable()
 export class CommentQueryRepositories {
   constructor(
     private readonly commentMapperOutputModel: CommentMapperOutputModel,
     private readonly baseSorting: BaseSorting,
-    @InjectDataSource() private readonly dataSource: DataSource,
+    @InjectRepository(Comment)
+    private readonly commentRepository: Repository<Comment>,
+    @InjectRepository(CommentLike)
+    private readonly commentLikeRepository: Repository<CommentLike>,
+    @InjectRepository(Post) private readonly postRepository: Repository<Post>,
   ) {}
 
   async getCommentById(
     id: number,
     userId?: number,
   ): Promise<CommentOutputModel> {
-    const query = `
-      SELECT "c"."id", "c"."content", "c"."userId", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", "u"."login" as "userLogin", COALESCE("l"."status", 'None') as "status"
-      FROM "${tablesName.COMMENTS}" as "c"
-      LEFT JOIN ${tablesName.LIKES} as "l"
-      ON ("l"."userId" = $1 OR "l"."userId" IS NULL)
-      AND "l"."parentId" = "c"."id"
-      AND "l"."entityType" = $2
-      AND "l"."isActive" = ${true}
-      LEFT JOIN "${tablesName.USERS}" as "u"
-      ON "c"."userId" = "u"."id" AND "u"."isActive" = ${true}  
-      WHERE "c"."id" = $3 AND "c"."isActive" = ${true}
-    `;
-    const result: CommentLikeJoinType[] | [] = await this.dataSource.query(
-      query,
-      [userId || null, EntityTypeEnum.Comment, id],
-    );
+    const comment: CommentEntityRawDataType = await this.commentRepository
+      .createQueryBuilder('c')
+      .select(selectCommentProperty)
+      .leftJoin(`c.${CommentPropertyEnum.user}`, 'u')
+      .addSelect(
+        `u.${UserPropertyEnum.login} as "${CommentPropertyEnum.userLogin}"`,
+      )
+      .where(`c.${CommentPropertyEnum.id} = :commentId`, { commentId: id })
+      .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
+        isActive: true,
+      })
+      .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
+        return subQuery
+          .select(
+            `COUNT(l.${LikePropertyEnum.id})`,
+            `${CommentPropertyEnum.likesCount}`,
+          )
+          .from(this.commentLikeRepository.target, 'l')
+          .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
+            likeStatus: LikeStatusEnum.Like,
+          })
+          .andWhere(
+            `l.${LikePropertyEnum.parentId} = c.${CommentPropertyEnum.id}`,
+          );
+      }, `${CommentPropertyEnum.likesCount}`)
+      .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
+        return subQuery
+          .select(
+            `COUNT(l.${LikePropertyEnum.id})`,
+            `${CommentPropertyEnum.dislikesCount}`,
+          )
+          .from(this.commentLikeRepository.target, 'l')
+          .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
+            dislikeStatus: LikeStatusEnum.Dislike,
+          })
+          .andWhere(`l.${LikePropertyEnum.parentId} = c.id`);
+      }, `${CommentPropertyEnum.dislikesCount}`)
+      .leftJoin(
+        `c.${CommentPropertyEnum.likes}`,
+        'cul',
+        `cul.${LikePropertyEnum.userId} = :userId AND cul.${LikePropertyEnum.parentId} = :parentId`,
+        { userId: userId || null, parentId: id },
+      )
+      .addSelect(
+        `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+      )
+      .groupBy(
+        `c.${CommentPropertyEnum.id}, u.${UserPropertyEnum.id}, cul.${LikePropertyEnum.id}`,
+      )
+      .getRawOne();
 
-    if (result.length <= 0) throw new NotFoundException('Comment not found');
-
-    return this.commentMapperOutputModel.commentModel(result[0]);
+    if (!comment) throw new NotFoundException('Comment not found');
+    return this.commentMapperOutputModel.commentModel(comment);
   }
 
   async getCommentsByPostId(
@@ -51,47 +95,89 @@ export class CommentQueryRepositories {
     postId: string,
     userId?: number,
   ): Promise<BasePagination<CommentOutputModel[] | []>> {
-    const postQuery = `
-      SELECT "id"
-      FROM ${tablesName.POSTS}
-      WHERE "id" = $1
-    `;
-    const post: Post[] | [] = await this.dataSource.query(postQuery, [postId]);
-    if (post.length <= 0) throw new NotFoundException('Post not found');
+    const post = await this.postRepository.findOne({
+      where: {
+        [PostPropertyEnum.id as string]: postId,
+        [PostPropertyEnum.isActive]: true,
+      },
+      select: [PostPropertyEnum.id],
+    });
+    if (!post) throw new NotFoundException('Post not found');
 
     const { sortBy, sortDirection, pageSize, pageNumber } =
       this.baseSorting.createBaseQuery(query);
 
-    const getTotalDocument: { count: number }[] = await this.dataSource.query(
-      `
-            SELECT COUNT(*) 
-            FROM ${tablesName.COMMENTS}
-            WHERE "postId" = $1 AND "isActive" = true
-    `,
-      [postId],
-    );
-    const totalCount: number = +getTotalDocument[0].count;
-    const pagesCount: number = Math.ceil(totalCount / pageSize);
     const skip: number = (+pageNumber - 1) * pageSize;
+    const [comments, count]: [CommentEntityRawDataType[] | [], number] =
+      await Promise.all([
+        this.commentRepository
+          .createQueryBuilder('c')
+          .select(selectCommentProperty)
+          .leftJoin(`c.${CommentPropertyEnum.user}`, 'u')
+          .addSelect(
+            `u.${UserPropertyEnum.login} as "${CommentPropertyEnum.userLogin}"`,
+          )
+          .where(`c.${CommentPropertyEnum.postId} = :postId`, {
+            postId: postId,
+          })
+          .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
+            isActive: true,
+          })
+          .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
+            return subQuery
+              .select(
+                `COUNT(l.${LikePropertyEnum.id})`,
+                `${CommentPropertyEnum.likesCount}`,
+              )
+              .from(this.commentLikeRepository.target, 'l')
+              .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
+                likeStatus: LikeStatusEnum.Like,
+              })
+              .andWhere(
+                `l.${LikePropertyEnum.parentId} = c.${CommentPropertyEnum.id}`,
+              );
+          }, `${CommentPropertyEnum.likesCount}`)
+          .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
+            return subQuery
+              .select(
+                `COUNT(l.${LikePropertyEnum.id})`,
+                `${CommentPropertyEnum.dislikesCount}`,
+              )
+              .from(this.commentLikeRepository.target, 'l')
+              .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
+                dislikeStatus: LikeStatusEnum.Dislike,
+              })
+              .andWhere(`l.${LikePropertyEnum.parentId} = c.id`);
+          }, `${CommentPropertyEnum.dislikesCount}`)
+          .leftJoin(
+            `c.${CommentPropertyEnum.likes}`,
+            'cul',
+            `cul.${LikePropertyEnum.userId} = :userId AND cul.${LikePropertyEnum.parentId} = c.${CommentPropertyEnum.id}`,
+            { userId: userId || null },
+          )
+          .addSelect(
+            `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+          )
+          .groupBy(
+            `c.${CommentPropertyEnum.id}, u.${UserPropertyEnum.id}, cul.${LikePropertyEnum.id}`,
+          )
+          .orderBy(`c."${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+          .limit(pageSize)
+          .offset(skip)
+          .getRawMany(),
+        this.commentRepository
+          .createQueryBuilder('c')
+          .where(`c.${CommentPropertyEnum.postId} = :postId`, {
+            postId: postId,
+          })
+          .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
+            isActive: true,
+          })
+          .getCount(),
+      ]);
 
-    const queryComments = `
-        SELECT "c"."id", "c"."content", "c"."userId", "c"."likesCount", "c"."dislikesCount", "c"."createdAt", "u"."login" as "userLogin", COALESCE("l"."status", 'None') as "status"
-        FROM ${tablesName.COMMENTS} as "c"
-        LEFT JOIN ${tablesName.LIKES} as "l"
-        ON ("l"."userId" = $1 OR $1 IS NULL)
-        AND "l"."parentId" = "c"."id" 
-        AND "l"."entityType" = $2 
-        AND "l"."isActive" = true
-        LEFT JOIN "${tablesName.USERS}" as "u"
-        ON "c"."userId" = "u"."id" AND "u"."isActive" = ${true}  
-        WHERE "c"."postId" = $3 AND "c"."isActive" = true
-        ORDER BY "${sortBy}" ${sortDirection}
-        LIMIT $4 OFFSET $5 
-    `;
-    const comments: CommentLikeJoinType[] | [] = await this.dataSource.query(
-      queryComments,
-      [userId || null, EntityTypeEnum.Comment, postId, pageSize, skip],
-    );
+    const totalCount: number = count;
+    const pagesCount: number = Math.ceil(totalCount / pageSize);
 
     return {
       pagesCount: +pagesCount,

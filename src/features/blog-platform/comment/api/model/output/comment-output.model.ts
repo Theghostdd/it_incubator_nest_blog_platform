@@ -1,5 +1,5 @@
 import { LikeStatusEnum } from '../../../../like/domain/type';
-import { CommentLikeJoinType } from '../../../domain/comment.entity';
+import { CommentEntityRawDataType } from '../../../domain/types';
 
 export class CommentatorInfoViewModel {
   constructor(
@@ -28,7 +28,7 @@ export class CommentOutputModel {
 
 export class CommentMapperOutputModel {
   constructor() {}
-  commentModel(comment: CommentLikeJoinType): CommentOutputModel {
+  commentModel(comment: CommentEntityRawDataType): CommentOutputModel {
     return {
       id: comment.id.toString(),
       content: comment.content,
@@ -37,16 +37,18 @@ export class CommentMapperOutputModel {
         userLogin: comment.userLogin,
       },
       likesInfo: {
-        likesCount: comment.likesCount,
-        dislikesCount: comment.dislikesCount,
-        myStatus: comment.status,
+        likesCount: comment.likesCount ? +comment.likesCount : 0,
+        dislikesCount: comment.dislikesCount ? +comment.dislikesCount : 0,
+        myStatus: comment.currentUserLikeStatus
+          ? comment.currentUserLikeStatus
+          : LikeStatusEnum.None,
       },
       createdAt: comment.createdAt.toISOString(),
     };
   }
 
-  commentsModel(comments: CommentLikeJoinType[]): CommentOutputModel[] {
-    return comments.map((comment: CommentLikeJoinType) => {
+  commentsModel(comments: CommentEntityRawDataType[]): CommentOutputModel[] {
+    return comments.map((comment: CommentEntityRawDataType) => {
       return {
         id: comment.id.toString(),
         content: comment.content,
@@ -55,9 +57,11 @@ export class CommentMapperOutputModel {
           userLogin: comment.userLogin,
         },
         likesInfo: {
-          likesCount: comment.likesCount,
-          dislikesCount: comment.dislikesCount,
-          myStatus: comment.status,
+          likesCount: comment.likesCount ? +comment.likesCount : 0,
+          dislikesCount: comment.dislikesCount ? +comment.dislikesCount : 0,
+          myStatus: comment.currentUserLikeStatus
+            ? comment.currentUserLikeStatus
+            : LikeStatusEnum.None,
         },
         createdAt: comment.createdAt.toISOString(),
       };

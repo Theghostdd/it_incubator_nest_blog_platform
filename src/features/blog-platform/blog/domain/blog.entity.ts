@@ -5,26 +5,6 @@ import {
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { Post } from '../../post/domain/post.entity';
 
-export enum BlogPropertyEnum {
-  'id' = 'id',
-  'name' = 'name',
-  'description' = 'description',
-  'websiteUrl' = 'websiteUrl',
-  'createdAt' = 'createdAt',
-  'isMembership' = 'isMembership',
-  'isActive' = 'isActive',
-  'posts' = 'posts',
-}
-
-export const selectBlogProperty = [
-  `b.${BlogPropertyEnum.id}`,
-  `b.${BlogPropertyEnum.name}`,
-  `b.${BlogPropertyEnum.description}`,
-  `b.${BlogPropertyEnum.websiteUrl}`,
-  `b.${BlogPropertyEnum.createdAt}`,
-  `b.${BlogPropertyEnum.isMembership}`,
-];
-
 @Entity()
 export class Blog {
   @PrimaryGeneratedColumn()

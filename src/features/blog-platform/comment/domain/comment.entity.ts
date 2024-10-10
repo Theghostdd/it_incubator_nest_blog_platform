@@ -1,6 +1,7 @@
-import { CommentInputModel } from '../api/model/input/comment-input.model';
-import { Injectable } from '@nestjs/common';
-import { LikeStatusEnum } from '../../like/domain/type';
+import {
+  CommentInputModel,
+  CommentUpdateModel,
+} from '../api/model/input/comment-input.model';
 import {
   Column,
   Entity,
@@ -11,7 +12,7 @@ import {
 } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 import { Post } from '../../post/domain/post.entity';
-import { CommentLike, Like } from '../../like/domain/like.entity';
+import { CommentLike } from '../../like/domain/comment-like.entity';
 
 @Entity()
 export class Comment {
@@ -26,10 +27,6 @@ export class Comment {
   createdAt: Date;
   @Column({ default: true })
   isActive: boolean;
-  @Column({ default: 0 })
-  likesCount: number;
-  @Column({ default: 0 })
-  dislikesCount: number;
 
   @ManyToOne(() => User, (user: User) => user.userComments)
   @JoinColumn()
@@ -43,31 +40,31 @@ export class Comment {
   postId: number;
   @OneToMany(() => CommentLike, (like: CommentLike) => like.parent)
   likes: CommentLike[];
-}
 
-export type CommentType = Comment & { id: number };
-
-@Injectable()
-export class CommentFactory {
-  constructor() {}
-  create(
+  static createComment(
     commentInputModel: CommentInputModel,
-    userId: number,
-    postId: number,
-  ): Comment {
-    const comment = new Comment();
+    user: User,
+    post: Post,
+    createdAt: Date,
+  ) {
+    const comment = new this();
     const { content } = commentInputModel;
     comment.content = content;
-    comment.userId = userId;
-    comment.postId = postId;
-    comment.likesCount = 0;
-    comment.dislikesCount = 0;
-    comment.createdAt = new Date();
+    comment.user = user;
+    comment.userId = user.id;
+    comment.post = post;
+    comment.postId = post.id;
+    comment.createdAt = createdAt;
+    comment.isActive = true;
     return comment;
   }
-}
 
-export type CommentLikeJoinType = CommentType & {
-  status: LikeStatusEnum;
-  userLogin: string;
-};
+  updateComment(commentUpdateModel: CommentUpdateModel): void {
+    const { content } = commentUpdateModel;
+    this.content = content;
+  }
+
+  deleteComment(): void {
+    this.isActive = false;
+  }
+}

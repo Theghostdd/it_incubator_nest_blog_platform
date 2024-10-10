@@ -1,10 +1,8 @@
 import { LikeStatusEnum } from '../../../../like/domain/type';
 import {
-  LastPostsLikeJoinType,
-  Post,
-  PostLikeJoinType,
-} from '../../../domain/post.entity';
-import { PostLike } from '../../../../like/domain/like.entity';
+  PostLastLikesRawDataType,
+  PostRawDataType,
+} from '../../../domain/types';
 
 export class NewestLikesModel {
   constructor(
@@ -38,37 +36,36 @@ export class PostOutputModel {
 
 export class PostMapperOutputModel {
   constructor() {}
-  postModel(post: Post, lastLikes: PostLike[] | []): PostOutputModel {
+  postModel(post: PostRawDataType): PostOutputModel {
     return {
       id: post.id.toString(),
       title: post.title,
       shortDescription: post.shortDescription,
       content: post.content,
       blogId: post.blogId.toString(),
-      blogName: post.blog.name,
+      blogName: post.blogName,
       createdAt: post.createdAt.toISOString(),
       extendedLikesInfo: {
-        likesCount: post.likesCount,
-        dislikesCount: post.dislikesCount,
-        myStatus: post.currentUserLike?.status
-          ? post.currentUserLike.status
+        likesCount: post.likesCount ? +post.likesCount : 0,
+        dislikesCount: post.dislikesCount ? +post.dislikesCount : 0,
+        myStatus: post.currentUserStatusLike
+          ? (post.currentUserStatusLike as LikeStatusEnum)
           : LikeStatusEnum.None,
-        newestLikes: lastLikes.map((lastLike: PostLike) => {
-          return {
-            addedAt: lastLike.lastUpdateAt.toISOString(),
-            userId: lastLike.userId.toString(),
-            login: lastLike.user.login,
-          };
-        }),
+        newestLikes: post.lastLikes
+          ? post.lastLikes.map((lastLike: PostLastLikesRawDataType) => {
+              return {
+                addedAt: lastLike.lastUpdateAt,
+                userId: lastLike.userId.toString(),
+                login: lastLike.userLogin,
+              };
+            })
+          : [],
       },
     };
   }
 
-  postsModel(
-    posts: Post[] | [],
-    lastLikes: PostLike[] | [],
-  ): PostOutputModel[] {
-    return posts.map((post: PostLikeJoinType) => {
+  postsModel(posts: PostRawDataType[] | []): PostOutputModel[] {
+    return posts.map((post: PostRawDataType) => {
       return {
         id: post.id.toString(),
         title: post.title,
@@ -78,18 +75,20 @@ export class PostMapperOutputModel {
         blogName: post.blogName,
         createdAt: post.createdAt.toISOString(),
         extendedLikesInfo: {
-          likesCount: post.likesCount,
-          dislikesCount: post.dislikesCount,
-          myStatus: post.currentUserLike?.status
-            ? post.currentUserLike.status
+          likesCount: post.likesCount ? +post.likesCount : 0,
+          dislikesCount: post.dislikesCount ? +post.dislikesCount : 0,
+          myStatus: post.currentUserStatusLike
+            ? (post.currentUserStatusLike as LikeStatusEnum)
             : LikeStatusEnum.None,
-          newestLikes: lastLikes
-            .filter((lastLike: PostLike) => lastLike.parentId === post.id)
-            .map((lastLike: PostLike) => ({
-              addedAt: lastLike.lastUpdateAt.toISOString(),
-              userId: lastLike.userId.toString(),
-              login: lastLike.user.login,
-            })),
+          newestLikes: post.lastLikes
+            ? post.lastLikes.map((lastLike: PostLastLikesRawDataType) => {
+                return {
+                  addedAt: lastLike.lastUpdateAt,
+                  userId: lastLike.userId.toString(),
+                  login: lastLike.userLogin,
+                };
+              })
+            : [],
         },
       };
     });

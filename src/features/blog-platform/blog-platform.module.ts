@@ -18,20 +18,12 @@ import { CommentService } from './comment/application/comment-service';
 import { DeleteCommentHandler } from './comment/application/command/delete-comment';
 import { UpdateCommentLikeStatusHandler } from './like/application/command/update-comment-like-status';
 import { UpdatePostLikeStatusHandler } from './like/application/command/update-post-like-status';
-import { LikeService } from './like/application/like-service';
-import { LikeRepositories } from './like/infrastructure/like-repositories';
 import { BlogController } from './blog/api/blog-controller';
 import { PostController } from './post/api/post-controller';
 import { CommentController } from './comment/api/comment-controller';
-import { CalculateLike } from './like/domain/calculate-like';
 import { Post } from './post/domain/post.entity';
-import { Comment, CommentFactory } from './comment/domain/comment.entity';
-import {
-  CommentLike,
-  Like,
-  LikeFactory,
-  PostLike,
-} from './like/domain/like.entity';
+import { Comment } from './comment/domain/comment.entity';
+import { Like } from './like/domain/like.entity';
 import { FindBlogConstraint } from '../../core/decorators/find-blog';
 import { BlogAdminController } from './blog/api/blog-sa-controller';
 import { BlogService } from './blog/application/blog-service';
@@ -42,6 +34,12 @@ import { Blog } from './blog/domain/blog.entity';
 import { UpdateBlogByIdHandler } from './blog/application/command/update-blog.command';
 import { DeleteBlogByIdHandler } from './blog/application/command/delete-blog.command';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { CommentLikeRepositories } from './like/infrastructure/comment-like-repositories';
+import { CommentLikeService } from './like/application/comment-like-service';
+import { PostLikeRepositories } from './like/infrastructure/post-like-repositories';
+import { PostLikeService } from './like/application/post-like-service';
+import { CommentLike } from './like/domain/comment-like.entity';
+import { PostLike } from './like/domain/post-like.entity';
 
 export const BlogProvider = {
   provide: 'Blog',
@@ -53,14 +51,24 @@ export const PostProvider = {
   useValue: Post,
 };
 
+export const CommentProvider = {
+  provide: 'Comment',
+  useValue: Comment,
+};
+
 export const LikeProvider = {
   provide: 'Like',
   useValue: Like,
 };
 
-export const CommentProvider = {
-  provide: 'Comment',
-  useValue: Comment,
+export const CommentLikeProvider = {
+  provide: 'CommentLike',
+  useValue: CommentLike,
+};
+
+export const PostLikeProvider = {
+  provide: 'PostLike',
+  useValue: PostLike,
 };
 
 @Module({
@@ -78,6 +86,9 @@ export const CommentProvider = {
     BlogProvider,
     PostProvider,
     LikeProvider,
+    CommentProvider,
+    CommentLikeProvider,
+    PostLikeProvider,
     BlogQueryRepository,
     BlogMapperOutputModel,
     BlogSortingQuery,
@@ -97,17 +108,16 @@ export const CommentProvider = {
     DeleteCommentHandler,
     UpdateCommentLikeStatusHandler,
     UpdatePostLikeStatusHandler,
-    LikeService,
-    LikeRepositories,
+    CommentLikeService,
     FindBlogConstraint,
-    CalculateLike,
-    CommentFactory,
-    LikeFactory,
     BlogService,
     BlogRepository,
     CreateBlogHandler,
     UpdateBlogByIdHandler,
     DeleteBlogByIdHandler,
+    CommentLikeRepositories,
+    PostLikeRepositories,
+    PostLikeService,
   ],
   exports: [],
 })

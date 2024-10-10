@@ -2,7 +2,6 @@ import {
   PostInputModel,
   PostUpdateModel,
 } from '../api/models/input/post-input.model';
-import { LikeStatusEnum } from '../../like/domain/type';
 import {
   Column,
   Entity,
@@ -13,34 +12,8 @@ import {
 } from 'typeorm';
 import { Blog } from '../../blog/domain/blog.entity';
 import { Comment } from '../../comment/domain/comment.entity';
-import { Like, PostLike } from '../../like/domain/like.entity';
-
-export enum PostPropertyEnum {
-  'id' = 'id',
-  'title' = 'title',
-  'shortDescription' = 'shortDescription',
-  'content' = 'content',
-  'createdAt' = 'createdAt',
-  'isActive' = 'isActive',
-  'blog' = 'blog',
-  'blogId' = 'blogId',
-  'likesCount' = 'likesCount',
-  'dislikesCount' = 'dislikesCount',
-  'comments' = 'comments',
-  'likes' = 'likes',
-  'currentUserStatusLike' = 'currentUserStatusLike',
-}
-
-export const selectPostProperty = [
-  `p.${PostPropertyEnum.id}`,
-  `p.${PostPropertyEnum.title}`,
-  `p.${PostPropertyEnum.shortDescription}`,
-  `p.${PostPropertyEnum.content}`,
-  `p.${PostPropertyEnum.createdAt}`,
-  `p.${PostPropertyEnum.likesCount}`,
-  `p.${PostPropertyEnum.dislikesCount}`,
-  `p.${PostPropertyEnum.blogId}`,
-];
+import { Like } from '../../like/domain/like.entity';
+import { PostLike } from '../../like/domain/post-like.entity';
 
 @Entity()
 export class Post {
@@ -59,10 +32,6 @@ export class Post {
   createdAt: Date;
   @Column({ default: true })
   isActive: boolean;
-  @Column({ default: 0 })
-  likesCount: number;
-  @Column({ default: 0 })
-  dislikesCount: number;
   @ManyToOne(() => Blog, (blog: Blog) => blog.posts)
   @JoinColumn()
   blog: Blog;
@@ -72,7 +41,7 @@ export class Post {
   comments: Comment[];
   @OneToMany(() => PostLike, (like: PostLike) => like.parent)
   likes: PostLike[];
-  currentUserLike?: Like;
+  currentUserLike?: Like<PostLike>;
 
   static createPost(
     postInputModel: PostInputModel,
@@ -87,8 +56,6 @@ export class Post {
     post.blog = blog;
     post.blogId = blog.id;
     post.createdAt = createdAt;
-    post.likesCount = 0;
-    post.dislikesCount = 0;
     post.isActive = true;
     return post;
   }
@@ -104,25 +71,3 @@ export class Post {
     this.content = content;
   }
 }
-
-export type PostLikeJoinType = Post & {
-  status: LikeStatusEnum;
-  blogName: string;
-};
-
-export type PostBlogJoinType = Post & {
-  blogName: string;
-};
-
-export type LastPostLikeJoinType = {
-  lastUpdateAt: Date;
-  userId: number;
-  userLogin: string;
-};
-
-export type LastPostsLikeJoinType = {
-  lastUpdateAt: Date;
-  userId: number;
-  userLogin: string;
-  postId: number;
-};

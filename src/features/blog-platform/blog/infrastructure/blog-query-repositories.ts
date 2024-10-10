@@ -7,11 +7,8 @@ import { BlogSortingQuery } from '../api/models/input/blog-input.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
-import {
-  Blog,
-  BlogPropertyEnum,
-  selectBlogProperty,
-} from '../domain/blog.entity';
+import { Blog } from '../domain/blog.entity';
+import { BlogPropertyEnum, selectBlogProperty } from '../domain/types';
 
 @Injectable()
 export class BlogQueryRepository {

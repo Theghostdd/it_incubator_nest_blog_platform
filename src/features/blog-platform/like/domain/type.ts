@@ -4,7 +4,24 @@ export enum LikeStatusEnum {
   'Dislike' = 'Dislike',
 }
 
-export enum EntityTypeEnum {
-  'Post' = 'Post',
-  'Comment' = 'Comment',
+export enum LikePropertyEnum {
+  'id' = 'id',
+  'entityType' = 'entityType',
+  'status' = 'status',
+  'createdAt' = 'createdAt',
+  'lastUpdateAt' = 'lastUpdateAt',
+  'user' = 'user',
+  'userId' = 'userId',
+  'userLogin' = 'userLogin',
+  'parent' = 'parent',
+  'parentId' = 'parentId',
 }
+
+export const selectLikeProperty = [
+  `l.${LikePropertyEnum.id}`,
+  `l.${LikePropertyEnum.status}`,
+  `l.${LikePropertyEnum.createdAt}`,
+  `l.${LikePropertyEnum.lastUpdateAt}`,
+  `l.${LikePropertyEnum.userId}`,
+  `l.${LikePropertyEnum.parentId}`,
+];
