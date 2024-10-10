@@ -1,4 +1,4 @@
-import { DataSource } from 'typeorm';
+import { DataSource, EntityTarget, ObjectLiteral, Repository } from 'typeorm';
 
 export class DataBase {
   constructor(private readonly dataSource: DataSource) {
@@ -20,11 +20,13 @@ export class DataBase {
     await this.dataSource.query(query);
   }
 
-  async dbConnectionClose(): Promise<void> {
-    await this.dataSource.destroy();
-  }
-
   async queryDataSource(query: string): Promise<any> {
     return await this.dataSource.query(query);
+  }
+
+  getRepository<T extends ObjectLiteral>(
+    repository: EntityTarget<T>,
+  ): Repository<T> {
+    return this.dataSource.getRepository(repository);
   }
 }

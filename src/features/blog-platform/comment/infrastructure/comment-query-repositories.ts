@@ -79,13 +79,12 @@ export class CommentQueryRepositories {
         { userId: userId || null, parentId: id },
       )
       .addSelect(
-        `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+        `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as "${CommentPropertyEnum.currentUserLikeStatus}"`,
       )
       .groupBy(
         `c.${CommentPropertyEnum.id}, u.${UserPropertyEnum.id}, cul.${LikePropertyEnum.id}`,
       )
       .getRawOne();
-
     if (!comment) throw new NotFoundException('Comment not found');
     return this.commentMapperOutputModel.commentModel(comment);
   }
@@ -156,7 +155,7 @@ export class CommentQueryRepositories {
             { userId: userId || null },
           )
           .addSelect(
-            `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+            `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as "${CommentPropertyEnum.currentUserLikeStatus}"`,
           )
           .groupBy(
             `c.${CommentPropertyEnum.id}, u.${UserPropertyEnum.id}, cul.${LikePropertyEnum.id}`,

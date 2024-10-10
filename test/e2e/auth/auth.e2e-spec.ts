@@ -13,7 +13,10 @@ import { NodeMailerService } from '../../../src/features/nodemailer/application/
 import { delay } from '../../utils/delay/delay';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
 import { APISettings } from '../../../src/settings/api-settings';
-import { tablesName } from '../../../src/core/utils/tables/tables';
+import { User } from '../../../src/features/users/user/domain/user.entity';
+import { AuthSession } from '../../../src/features/access-control/auth/domain/auth-session.entity';
+import { RecoveryPasswordSession } from '../../../src/features/access-control/auth/domain/recovery-session.entity';
+import { UserConfirmation } from '../../../src/features/users/user/domain/user-confirm.entity';
 
 describe('Auth e2e', () => {
   let testSettings: ITestSettings;
@@ -279,8 +282,10 @@ describe('Auth e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.USERS} SET "isActive"= false WHERE "id" = ${userId}`,
+      await testSettings.testManager.userTestManager.deleteUser(
+        userId,
+        adminAuthToken,
+        204,
       );
 
       await delay(1000);
@@ -360,9 +365,9 @@ describe('Auth e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.AUTH_SESSIONS} SET "deviceId" = 'did' WHERE "userId" = ${userId}`,
-      );
+      const userRepo =
+        testSettings.dataBase.getRepository<AuthSession>(AuthSession);
+      await userRepo.update({ userId: userId }, { deviceId: 'did' });
 
       await testSettings.testManager.authTestManager.updateNewPairTokens(
         login.refreshToken,
@@ -510,9 +515,9 @@ describe('Auth e2e', () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
       await authTestManager.registration(userRegistrationModel, 204);
 
-      const getCode = await testSettings.dataBase.queryDataSource(
-        `SELECT "confirmationCode" FROM ${tablesName.USERS_CONFIRMATION}`,
-      );
+      const userRepo =
+        testSettings.dataBase.getRepository<UserConfirmation>(UserConfirmation);
+      const getCode = await userRepo.find({});
 
       await authTestManager.confirmRegistration(
         { code: getCode[0].confirmationCode },
@@ -579,9 +584,13 @@ describe('Auth e2e', () => {
 
       const newDateExpire = new Date().toDateString();
 
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.USERS_CONFIRMATION} SET "dataExpire" = '${newDateExpire}', "confirmationCode" = 'code'`,
+      const userConfirmationRepo =
+        testSettings.dataBase.getRepository<UserConfirmation>(UserConfirmation);
+      await userConfirmationRepo.update(
+        {},
+        { dataExpire: newDateExpire, confirmationCode: 'code' },
       );
+
       const result = await authTestManager.confirmRegistration(
         { code: 'code' },
         400,
@@ -715,8 +724,14 @@ describe('Auth e2e', () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
       await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "code" = '${passwordChangeModel.recoveryCode}'`,
+
+      const recoveryPasswordSessionRepo =
+        testSettings.dataBase.getRepository<RecoveryPasswordSession>(
+          RecoveryPasswordSession,
+        );
+      await recoveryPasswordSessionRepo.update(
+        {},
+        { code: passwordChangeModel.recoveryCode },
       );
 
       await authTestManager.login(uesrLoginModel, 200);
@@ -796,8 +811,14 @@ describe('Auth e2e', () => {
       await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
       const newExpAt = new Date().toDateString();
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "expAt" = '${newExpAt}', "code" = '${passwordChangeModel.recoveryCode}'`,
+
+      const recoveryPasswordSessionRepo =
+        testSettings.dataBase.getRepository<RecoveryPasswordSession>(
+          RecoveryPasswordSession,
+        );
+      await recoveryPasswordSessionRepo.update(
+        {},
+        { code: passwordChangeModel.recoveryCode, expAt: newExpAt },
       );
 
       await authTestManager.login(uesrLoginModel, 200);
@@ -831,12 +852,18 @@ describe('Auth e2e', () => {
       const sendMailSpy = jest.spyOn(nodemailerMockService, 'sendMail');
       await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
       await authTestManager.recoveryPassword(userPasswordRecoveryModel, 204);
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.RECOVERY_PASSWORD_SESSIONS} SET "code" = '${passwordChangeModel.recoveryCode}'`,
+
+      const recoveryPasswordSessionRepo =
+        testSettings.dataBase.getRepository<RecoveryPasswordSession>(
+          RecoveryPasswordSession,
+        );
+      await recoveryPasswordSessionRepo.update(
+        {},
+        { code: passwordChangeModel.recoveryCode },
       );
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
-      );
+
+      const userRepo = testSettings.dataBase.getRepository<User>(User);
+      await userRepo.update({}, { isActive: false });
 
       await authTestManager.changePassword(passwordChangeModel, 400);
       await authTestManager.login(uesrLoginModel, 401);

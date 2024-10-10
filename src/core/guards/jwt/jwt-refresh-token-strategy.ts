@@ -7,6 +7,8 @@ import { JWTRefreshTokenPayloadType } from '../../../base/types/types';
 import { Request } from 'express';
 import { AuthSessionRepositories } from '../../../features/access-control/auth/infrastructure/auth-session-repositories';
 import { AuthSession } from '../../../features/access-control/auth/domain/auth-session.entity';
+import { User } from '../../../features/users/user/domain/user.entity';
+import { UserRepositories } from '../../../features/users/user/infrastructure/user-repositories';
 
 @Injectable()
 export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
@@ -16,6 +18,7 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   constructor(
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly authSessionRepositories: AuthSessionRepositories,
+    private readonly userRepository: UserRepositories,
   ) {
     super({
       jwtFromRequest: ExtractJwt.fromExtractors([
@@ -36,6 +39,11 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
   async validate(
     payload: JWTRefreshTokenPayloadType & { iat: number; exp: number },
   ): Promise<JWTRefreshTokenPayloadType & { iat: number; exp: number }> {
+    const user: User | null = await this.userRepository.getUserById(
+      payload.userId,
+    );
+    if (!user) return null;
+
     const session: AuthSession | null =
       await this.authSessionRepositories.getSessionByDeviceId(payload.deviceId);
 
@@ -45,7 +53,6 @@ export class JwtRefreshTokenStrategyStrategy extends PassportStrategy(
       new Date(payload.iat * 1000).toISOString()
     )
       return null;
-
     if (session.userId !== payload.userId) return null;
 
     return {

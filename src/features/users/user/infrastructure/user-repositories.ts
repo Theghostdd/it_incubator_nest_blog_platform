@@ -40,7 +40,9 @@ export class UserRepositories {
       .addSelect(selectUserConfirmationProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
       .where(`u.${UserPropertyEnum.id}= :id`, { id: id })
-      .andWhere(`u.${UserPropertyEnum.isActive} = true`)
+      .andWhere(`u.${UserPropertyEnum.isActive} = :isActive`, {
+        isActive: true,
+      })
       .getOne();
   }
 
@@ -53,7 +55,7 @@ export class UserRepositories {
       .where(`uc.${UserConfirmationPropertyEnum.confirmationCode} = :code`, {
         code: code,
       })
-      .andWhere({ [UserPropertyEnum.isActive]: true })
+      .andWhere(`u.${UserPropertyEnum.isActive}= :isActive`, { isActive: true })
       .getOne();
   }
 
@@ -70,7 +72,7 @@ export class UserRepositories {
       )
       .addSelect(selectUserRecoveryPasswordSessionProperty)
       .where(`u.${UserPropertyEnum.email} = :email`, { email: email })
-      .andWhere({ [UserPropertyEnum.isActive]: true })
+      .andWhere(`u.${UserPropertyEnum.isActive}= :isActive`, { isActive: true })
       .getOne();
   }
 
@@ -93,7 +95,7 @@ export class UserRepositories {
           });
         }),
       )
-      .andWhere({ [UserPropertyEnum.isActive]: true })
+      .andWhere(`u.${UserPropertyEnum.isActive}= :isActive`, { isActive: true })
       .getOne();
   }
 }

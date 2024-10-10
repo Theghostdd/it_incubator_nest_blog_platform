@@ -104,7 +104,7 @@ export class UserQueryRepositories {
         UserPropertyEnum.createdAt,
       ],
     });
-    if (user) throw new NotFoundException('User not found');
+    if (!user) throw new NotFoundException('User not found');
     return this.userMapperOutputModel.currentUserModel(user);
   }
 }

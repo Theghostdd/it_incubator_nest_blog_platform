@@ -7,6 +7,7 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Param,
+  UnauthorizedException,
   UseGuards,
 } from '@nestjs/common';
 import { SecurityDevicesOutputModel } from './models/security-devices-output.model';
@@ -53,6 +54,8 @@ export class SecurityDevicesController {
         return;
       case AppResult.NotFound:
         throw new NotFoundException();
+      case AppResult.Unauthorized:
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }
@@ -76,6 +79,8 @@ export class SecurityDevicesController {
         throw new ForbiddenException();
       case AppResult.NotFound:
         throw new NotFoundException();
+      case AppResult.Unauthorized:
+        throw new UnauthorizedException();
       default:
         throw new InternalServerErrorException();
     }

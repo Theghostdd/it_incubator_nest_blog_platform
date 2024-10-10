@@ -7,8 +7,8 @@ import { initSettings } from '../../settings/test-settings';
 import { delay } from '../../utils/delay/delay';
 import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
 import { APISettings } from '../../../src/settings/api-settings';
-import { tablesName } from '../../../src/core/utils/tables/tables';
 import { AuthService } from '../../../src/features/access-control/auth/application/auth-application';
+import { AuthSession } from '../../../src/features/access-control/auth/domain/auth-session.entity';
 
 describe('Security devices e2e', () => {
   let testSettings: ITestSettings;
@@ -187,9 +187,10 @@ describe('Security devices e2e', () => {
         200,
       );
       spy.mockRestore();
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.AUTH_SESSIONS} SET "userId" = '2' WHERE "deviceId" = '12345'`,
-      );
+
+      const authSessionRepo =
+        testSettings.dataBase.getRepository<AuthSession>(AuthSession);
+      await authSessionRepo.update({ deviceId: '12345' }, { userId: 2 });
 
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
@@ -236,9 +237,10 @@ describe('Security devices e2e', () => {
           uesrLoginModel,
           200,
         );
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.AUTH_SESSIONS} SET "issueAt"='2023-09-05T12:34:56Z'`,
-      );
+
+      const authSessionRepo =
+        testSettings.dataBase.getRepository<AuthSession>(AuthSession);
+      await authSessionRepo.update({}, { issueAt: '2023-09-05T12:34:56Z' });
 
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
@@ -248,7 +250,11 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete device by device id, user not found', async () => {
-      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
 
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
@@ -256,12 +262,14 @@ describe('Security devices e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
+      await testSettings.testManager.userTestManager.deleteUser(
+        userId,
+        adminAuthToken,
+        204,
       );
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.AUTH_SESSIONS} SET "deviceId" = '12345'`,
-      );
+      const authSessionRepo =
+        testSettings.dataBase.getRepository<AuthSession>(AuthSession);
+      await authSessionRepo.update({}, { deviceId: '12345' });
       await testSettings.testManager.securityDevicesTestManager.deleteDeviceByDeviceId(
         login.refreshToken,
         '12345',
@@ -349,7 +357,11 @@ describe('Security devices e2e', () => {
     });
 
     it('should not delete all devices exclude current, user not found', async () => {
-      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
 
       const login =
         await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
@@ -357,9 +369,12 @@ describe('Security devices e2e', () => {
           200,
         );
 
-      await testSettings.dataBase.queryDataSource(
-        `UPDATE ${tablesName.USERS} SET "isActive" = false`,
+      await testSettings.testManager.userTestManager.deleteUser(
+        userId,
+        adminAuthToken,
+        204,
       );
+
       await testSettings.testManager.securityDevicesTestManager.deleteAllDevicesExcludeCurrent(
         login.refreshToken,
         401,

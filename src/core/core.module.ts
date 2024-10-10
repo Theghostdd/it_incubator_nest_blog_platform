@@ -10,11 +10,13 @@ import { ThrottlerModule } from '@nestjs/throttler';
 import { RefreshJWTAccessGuard } from './guards/jwt/jwt-refresh-toke.guard';
 import { JwtRefreshTokenStrategyStrategy } from './guards/jwt/jwt-refresh-token-strategy';
 import { AccessControlModule } from '../features/access-control/access-control.module';
+import { UsersModule } from '../features/users/users.module';
 
 @Global()
 @Module({
   imports: [
     AccessControlModule,
+    UsersModule,
     CqrsModule,
     ThrottlerModule.forRoot([
       {

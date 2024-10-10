@@ -24,9 +24,9 @@ export class LogoutHandler
   ) {}
   async execute(command: LogoutCommand): Promise<AppResultType> {
     const { deviceId } = command.user;
+
     const session: AppResultType<AuthSession | null> =
       await this.authService.getAuthSessionByDeviceId(deviceId);
-
     if (session.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();
 

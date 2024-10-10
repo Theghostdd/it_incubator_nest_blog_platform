@@ -49,7 +49,7 @@ export class PostQueryRepository {
         { currentUserId: userId || null, postId: id },
       )
       .addSelect(
-        `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+        `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as "${PostPropertyEnum.currentUserStatusLike}"`,
       )
       .addSelect((subQuery: SelectQueryBuilder<PostLike>) => {
         return subQuery
@@ -152,7 +152,7 @@ export class PostQueryRepository {
           { currentUserId: userId || null },
         )
         .addSelect(
-          `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as ${CommentPropertyEnum.currentUserLikeStatus}`,
+          `COALESCE(cul.${LikePropertyEnum.status}, '${LikeStatusEnum.None}') as "${PostPropertyEnum.currentUserStatusLike}"`,
         )
         .addSelect((subQuery: SelectQueryBuilder<PostLike>) => {
           return subQuery
