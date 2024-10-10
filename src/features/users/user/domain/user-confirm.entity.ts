@@ -7,23 +7,6 @@ import {
 } from 'typeorm';
 import { User } from './user.entity';
 
-export enum UserConfirmationPropertyEnum {
-  'id' = 'id',
-  'isConfirm' = 'isConfirm',
-  'confirmationCode' = 'confirmationCode',
-  'dataExpire' = 'dataExpire',
-  'user' = 'user',
-  'userId' = 'userId',
-}
-
-export const selectUserConfirmationProperty = [
-  `uc.${UserConfirmationPropertyEnum.id}`,
-  `uc.${UserConfirmationPropertyEnum.userId}`,
-  `uc.${UserConfirmationPropertyEnum.isConfirm}`,
-  `uc.${UserConfirmationPropertyEnum.confirmationCode}`,
-  `uc.${UserConfirmationPropertyEnum.dataExpire}`,
-];
-
 @Entity()
 export class UserConfirmation {
   @PrimaryGeneratedColumn()

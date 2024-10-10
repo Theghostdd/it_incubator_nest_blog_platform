@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import {
-  RecoveryPasswordSession,
-  UserRecoveryPasswordSessionPropertyEnum,
-} from '../domain/recovery-session.entity';
+import { RecoveryPasswordSession } from '../domain/recovery-session.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { UserRecoveryPasswordSessionPropertyEnum } from '../domain/types';
 
 @Injectable()
 export class RecoveryPasswordSessionRepositories {

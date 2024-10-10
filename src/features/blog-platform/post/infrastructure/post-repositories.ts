@@ -2,9 +2,9 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Post } from '../domain/post.entity';
-import { UserPropertyEnum } from '../../../users/user/domain/user.entity';
 import { BlogPropertyEnum } from '../../blog/domain/types';
 import { PostPropertyEnum } from '../domain/types';
+import { UserPropertyEnum } from '../../../users/user/domain/types';
 
 @Injectable()
 export class PostRepository {

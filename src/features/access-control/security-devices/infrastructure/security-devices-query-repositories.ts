@@ -6,10 +6,8 @@ import {
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { JWTRefreshTokenPayloadType } from '../../../../base/types/types';
-import {
-  AuthSession,
-  AuthSessionPropertyEnum,
-} from '../../auth/domain/auth-session.entity';
+import { AuthSession } from '../../auth/domain/auth-session.entity';
+import { AuthSessionPropertyEnum } from '../../auth/domain/types';
 
 @Injectable()
 export class SecurityDevicesQueryRepository {

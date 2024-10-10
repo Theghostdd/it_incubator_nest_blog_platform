@@ -1,9 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import {
-  selectUserProperty,
-  User,
-  UserPropertyEnum,
-} from '../domain/user.entity';
+import { User } from '../domain/user.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
@@ -12,13 +8,15 @@ import {
   WhereExpressionBuilder,
 } from 'typeorm';
 import {
-  selectUserConfirmationProperty,
-  UserConfirmationPropertyEnum,
-} from '../domain/user-confirm.entity';
-import {
   selectUserRecoveryPasswordSessionProperty,
   UserRecoveryPasswordSessionPropertyEnum,
-} from '../../../access-control/auth/domain/recovery-session.entity';
+} from '../../../access-control/auth/domain/types';
+import {
+  selectUserConfirmationProperty,
+  selectUserProperty,
+  UserConfirmationPropertyEnum,
+  UserPropertyEnum,
+} from '../domain/types';
 
 @Injectable()
 export class UserRepositories {

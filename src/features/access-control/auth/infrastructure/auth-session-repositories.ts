@@ -1,10 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import {
-  AuthSession,
-  AuthSessionPropertyEnum,
-} from '../domain/auth-session.entity';
+import { AuthSession } from '../domain/auth-session.entity';
 import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
+import { AuthSessionPropertyEnum } from '../domain/types';
 
 @Injectable()
 export class AuthSessionRepositories {

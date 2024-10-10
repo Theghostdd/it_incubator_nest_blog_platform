@@ -1,26 +1,6 @@
 import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 
-export enum AuthSessionPropertyEnum {
-  'deviceId' = 'deviceId',
-  'ip' = 'ip',
-  'deviceName' = 'deviceName',
-  'issueAt' = 'issueAt',
-  'expAt' = 'expAt',
-  'isActive' = 'isActive',
-  'user' = 'user',
-  'userId' = 'userId',
-}
-
-export const selectAuthSessionProperty = [
-  `u.${AuthSessionPropertyEnum.deviceId}`,
-  `u.${AuthSessionPropertyEnum.ip}`,
-  `u.${AuthSessionPropertyEnum.deviceName}`,
-  `u.${AuthSessionPropertyEnum.issueAt}`,
-  `u.${AuthSessionPropertyEnum.expAt}`,
-  `u.${AuthSessionPropertyEnum.userId}`,
-];
-
 @Entity()
 export class AuthSession {
   @PrimaryColumn()

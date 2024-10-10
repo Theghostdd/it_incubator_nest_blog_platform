@@ -7,24 +7,6 @@ import {
 } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 
-export enum UserRecoveryPasswordSessionPropertyEnum {
-  'id' = 'id',
-  'email' = 'email',
-  'code' = 'code',
-  'expAt' = 'expAt',
-  'user' = 'user',
-  'userId' = 'userId',
-  'isActive' = 'isActive',
-}
-
-export const selectUserRecoveryPasswordSessionProperty = [
-  `rps.${UserRecoveryPasswordSessionPropertyEnum.id}`,
-  `rps.${UserRecoveryPasswordSessionPropertyEnum.email}`,
-  `rps.${UserRecoveryPasswordSessionPropertyEnum.code}`,
-  `rps.${UserRecoveryPasswordSessionPropertyEnum.expAt}`,
-  `rps.${UserRecoveryPasswordSessionPropertyEnum.userId}`,
-];
-
 @Entity()
 export class RecoveryPasswordSession {
   @PrimaryGeneratedColumn()

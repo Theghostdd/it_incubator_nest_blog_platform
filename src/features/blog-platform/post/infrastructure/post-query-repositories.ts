@@ -13,7 +13,6 @@ import {
 } from 'typeorm';
 import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
-import { UserPropertyEnum } from '../../../users/user/domain/user.entity';
 import { PostLike } from '../../like/domain/post-like.entity';
 import { BlogPropertyEnum } from '../../blog/domain/types';
 import {
@@ -24,6 +23,7 @@ import {
 import { LikePropertyEnum, LikeStatusEnum } from '../../like/domain/type';
 import { Blog } from '../../blog/domain/blog.entity';
 import { CommentPropertyEnum } from '../../comment/domain/types';
+import { UserPropertyEnum } from '../../../users/user/domain/types';
 
 @Injectable()
 export class PostQueryRepository {

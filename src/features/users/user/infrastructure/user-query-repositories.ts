@@ -8,7 +8,8 @@ import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { UserSortingQuery } from '../api/models/input/user-input.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, WhereExpressionBuilder } from 'typeorm';
-import { User, UserPropertyEnum } from '../domain/user.entity';
+import { User } from '../domain/user.entity';
+import { UserPropertyEnum } from '../domain/types';
 
 @Injectable()
 export class UserQueryRepositories {

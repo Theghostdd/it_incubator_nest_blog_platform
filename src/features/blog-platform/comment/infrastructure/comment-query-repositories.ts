@@ -10,7 +10,6 @@ import { Comment } from '../domain/comment.entity';
 import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { Post } from '../../post/domain/post.entity';
-import { UserPropertyEnum } from '../../../users/user/domain/user.entity';
 import { CommentLike } from '../../like/domain/comment-like.entity';
 import { PostPropertyEnum } from '../../post/domain/types';
 import {
@@ -18,6 +17,7 @@ import {
   CommentPropertyEnum,
   selectCommentProperty,
 } from '../domain/types';
+import { UserPropertyEnum } from '../../../users/user/domain/types';
 
 @Injectable()
 export class CommentQueryRepositories {

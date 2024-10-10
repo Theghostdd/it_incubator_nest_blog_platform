@@ -13,28 +13,6 @@ import { Comment } from '../../../blog-platform/comment/domain/comment.entity';
 import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 
-export enum UserPropertyEnum {
-  'id' = 'id',
-  'login' = 'login',
-  'email' = 'email',
-  'password' = 'password',
-  'isActive' = 'isActive',
-  'createdAt' = 'createdAt',
-  'userConfirm' = 'userConfirm',
-  'userRecoveryPasswordSession' = 'userRecoveryPasswordSession',
-  'userAuthSessions' = 'userAuthSessions',
-  'userLikes' = 'userLikes',
-  'userComments' = 'userComments',
-}
-
-export const selectUserProperty = [
-  `u.${UserPropertyEnum.id}`,
-  `u.${UserPropertyEnum.email}`,
-  `u.${UserPropertyEnum.login}`,
-  `u.${UserPropertyEnum.createdAt}`,
-  `u.${UserPropertyEnum.password}`,
-];
-
 @Entity()
 export class User {
   @PrimaryGeneratedColumn()
