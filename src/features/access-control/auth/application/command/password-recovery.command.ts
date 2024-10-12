@@ -1,23 +1,19 @@
 import { PasswordRecoveryInputModel } from '../../api/models/input/auth-input.models';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { addMinutes } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
 import { RecoveryPasswordSessionRepositories } from '../../infrastructure/recovery-password-session-repositories';
 import { RecoveryPasswordSession } from '../../domain/recovery-session.entity';
-import {
-  AppResultType,
-  MailTemplateType,
-} from '../../../../../base/types/types';
+import { AppResultType } from '../../../../../base/types/types';
 import { StaticOptions } from '../../../../../settings/app-static-settings';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { UserService } from '../../../../users/user/application/user-service';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
-import { MailTemplateService } from '../../../../mail-template/application/template-application';
-import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
 import { Inject } from '@nestjs/common';
+import { UserRecoveryPasswordEvent } from '../../../../users/user/application/event/user-recovery-password.event';
 
 export class PasswordRecoveryCommand {
   constructor(public inputPasswordRecoveryModel: PasswordRecoveryInputModel) {}
@@ -34,10 +30,9 @@ export class PasswordRecoveryHandler
     private readonly authService: AuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly recoveryPasswordSessionRepositories: RecoveryPasswordSessionRepositories,
-    private readonly mailTemplateService: MailTemplateService,
-    private readonly nodeMailerService: NodeMailerService,
     @Inject(RecoveryPasswordSession.name)
     private readonly recoveryPasswordSessionEntity: typeof RecoveryPasswordSession,
+    private readonly eventBus: EventBus,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -66,13 +61,9 @@ export class PasswordRecoveryHandler
         );
       await this.recoveryPasswordSessionRepositories.save(recoverySession);
     }
-
-    const template: MailTemplateType =
-      await this.mailTemplateService.getRecoveryPasswordTemplate(
-        confirmationCode,
-      );
-    this.nodeMailerService.sendMail([email], template);
-
+    this.eventBus.publish(
+      new UserRecoveryPasswordEvent(user.data.email, confirmationCode),
+    );
     return this.applicationObjectResult.success(null);
   }
 }

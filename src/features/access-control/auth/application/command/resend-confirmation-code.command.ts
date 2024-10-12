@@ -1,5 +1,5 @@
 import { ResendConfirmationCodeInputModel } from '../../api/models/input/auth-input.models';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { addDays } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
@@ -7,16 +7,14 @@ import { ApplicationObjectResult } from '../../../../../base/application-object-
 import {
   APIErrorMessageType,
   AppResultType,
-  MailTemplateType,
 } from '../../../../../base/types/types';
 import { StaticOptions } from '../../../../../settings/app-static-settings';
 import { UserService } from '../../../../users/user/application/user-service';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
-import { MailTemplateService } from '../../../../mail-template/application/template-application';
-import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { User } from '../../../../users/user/domain/user.entity';
+import { UserRegistrationEvent } from '../../../../users/user/application/event/user-registration.event';
 
 export class ResendConfirmationCodeCommand {
   constructor(
@@ -40,8 +38,7 @@ export class ResendConfirmationCodeHandler
     private readonly authService: AuthService,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly userRepositories: UserRepositories,
-    private readonly mailTemplateService: MailTemplateService,
-    private readonly nodeMailerService: NodeMailerService,
+    private readonly eventBus: EventBus,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -74,10 +71,9 @@ export class ResendConfirmationCodeHandler
     user.data.updateConfirmationCode(confirmationCode, dateExpired);
     await this.userRepositories.save(user.data);
 
-    const template: MailTemplateType =
-      await this.mailTemplateService.getConfirmationTemplate(confirmationCode);
-    this.nodeMailerService.sendMail([user.data.email], template);
-
+    this.eventBus.publish(
+      new UserRegistrationEvent(user.data.email, confirmationCode),
+    );
     return this.applicationObjectResult.success(null);
   }
 }

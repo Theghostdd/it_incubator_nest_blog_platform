@@ -11,6 +11,10 @@ import { BcryptModule } from '../bcrypt/bcrypt.module';
 import { User } from './user/domain/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserConfirmation } from './user/domain/user-confirm.entity';
+import { UserRegistrationEventHandler } from './user/application/event/user-registration.event';
+import { NodeMailerModule } from '../nodemailer/nodemailer.module';
+import { MailTemplateModule } from '../mail-template/mail-template.module';
+import { UserRecoveryPasswordEventHandler } from './user/application/event/user-recovery-password.event';
 
 export const UserProvider = {
   provide: 'User',
@@ -18,7 +22,12 @@ export const UserProvider = {
 };
 
 @Module({
-  imports: [BcryptModule, TypeOrmModule.forFeature([User, UserConfirmation])],
+  imports: [
+    NodeMailerModule,
+    MailTemplateModule,
+    BcryptModule,
+    TypeOrmModule.forFeature([User, UserConfirmation]),
+  ],
   controllers: [UserController],
   providers: [
     UserProvider,
@@ -29,6 +38,8 @@ export const UserProvider = {
     UserSortingQuery,
     DeleteUserByIdHandler,
     CreateUserCommandHandler,
+    UserRegistrationEventHandler,
+    UserRecoveryPasswordEventHandler,
   ],
   exports: [UserRepositories, UserQueryRepositories, UserService, UserProvider],
 })

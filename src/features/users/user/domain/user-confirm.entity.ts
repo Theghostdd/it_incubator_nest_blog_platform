@@ -23,6 +23,6 @@ export class UserConfirmation {
   @OneToOne(() => User, (user: User) => user.userConfirm)
   @JoinColumn({ name: 'userId' })
   user: User;
-  @Column({ unique: true })
+  @Column({ unique: true, nullable: false })
   userId: number;
 }

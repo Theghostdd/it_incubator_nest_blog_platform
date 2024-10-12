@@ -34,6 +34,8 @@ import { UsersModule } from './features/users/users.module';
           database: envSettings.DATABASE_NAME,
           autoLoadEntities: true,
           synchronize: true,
+          // logger: 'advanced-console',
+          // logging: true,
         };
       },
       inject: [ConfigService],

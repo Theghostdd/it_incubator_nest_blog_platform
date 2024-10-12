@@ -1,24 +1,22 @@
 import { RegistrationInputModel } from '../../api/models/input/auth-input.models';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { addDays } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
 import {
   APIErrorsMessageType,
   AppResultType,
-  MailTemplateType,
 } from '../../../../../base/types/types';
 import { StaticOptions } from '../../../../../settings/app-static-settings';
 import { UserService } from '../../../../users/user/application/user-service';
 import { ApplicationObjectResult } from '../../../../../base/application-object-result/application-object-result';
 import { ConfigurationType } from '../../../../../settings/configuration/configuration';
 import { UserRepositories } from '../../../../users/user/infrastructure/user-repositories';
-import { MailTemplateService } from '../../../../mail-template/application/template-application';
-import { NodeMailerService } from '../../../../nodemailer/application/nodemailer-application';
 import { BcryptService } from '../../../../bcrypt/application/bcrypt-application';
 import { User } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { Inject } from '@nestjs/common';
+import { UserRegistrationEvent } from '../../../../users/user/application/event/user-registration.event';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}
@@ -39,10 +37,9 @@ export class RegistrationHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly userRepositories: UserRepositories,
-    private readonly mailTemplateService: MailTemplateService,
-    private readonly nodeMailerService: NodeMailerService,
     private readonly bcryptService: BcryptService,
     @Inject(User.name) private readonly userEntity: typeof User,
+    private readonly eventBus: EventBus,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -81,9 +78,9 @@ export class RegistrationHandler
 
     await this.userRepositories.save(newUser);
 
-    const template: MailTemplateType =
-      await this.mailTemplateService.getConfirmationTemplate(confirmationCode);
-    this.nodeMailerService.sendMail([newUser.email], template);
+    this.eventBus.publish(
+      new UserRegistrationEvent(newUser.email, confirmationCode),
+    );
     return { appResult: AppResult.Success, data: null };
   }
 }
