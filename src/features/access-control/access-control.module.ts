@@ -20,8 +20,6 @@ import { DeleteDeviceByDeviceIdHandler } from './security-devices/application/co
 import { AuthSession } from './auth/domain/auth-session.entity';
 import { RecoveryPasswordSession } from './auth/domain/recovery-session.entity';
 import { UsersModule } from '../users/users.module';
-import { NodeMailerModule } from '../nodemailer/nodemailer.module';
-import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 
@@ -42,9 +40,7 @@ export const AuthSessionProvider = {
 
 @Module({
   imports: [
-    NodeMailerModule,
     UsersModule,
-    MailTemplateModule,
     BcryptModule,
     TypeOrmModule.forFeature([RecoveryPasswordSession, AuthSession]),
   ],
