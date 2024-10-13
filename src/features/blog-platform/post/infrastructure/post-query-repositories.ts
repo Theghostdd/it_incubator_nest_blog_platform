@@ -222,7 +222,7 @@ export class PostQueryRepository {
           `p.${CommentPropertyEnum.id}, cul.${LikePropertyEnum.id}, b.${BlogPropertyEnum.id}`,
         )
         .limit(pageSize)
-        .orderBy(`p."${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+        .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
         .offset(skip)
         .getRawMany(),
       this.postRepository
