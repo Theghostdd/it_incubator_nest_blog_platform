@@ -1,12 +1,32 @@
 import { User } from '../../../domain/user.entity';
+import { ApiProperty } from '@nestjs/swagger';
+import { BasePagination } from '../../../../../../base/pagination/base-pagination';
 
 export class UserOutputModel {
-  constructor(
-    public id: string,
-    public login: string,
-    public email: string,
-    public createdAt: Date,
-  ) {}
+  @ApiProperty({
+    description: 'User id',
+    example: '1',
+    type: String,
+  })
+  public id: string;
+  @ApiProperty({
+    description: 'Uniq user login',
+    example: 'login',
+    type: String,
+  })
+  public login: string;
+  @ApiProperty({
+    description: 'Uniq user email',
+    example: 'email@mail.com',
+    type: String,
+  })
+  public email: string;
+  @ApiProperty({
+    description: 'Creation date of the user account',
+    example: '2023-01-01T00:00:00Z',
+    type: String,
+  })
+  public createdAt: Date;
 }
 
 export class UserMeOutputModel {
@@ -43,4 +63,13 @@ export class UserMapperOutputModel {
       userId: user.id.toString(),
     };
   }
+}
+
+export class UserOutputModelForSwagger extends BasePagination<UserOutputModel> {
+  @ApiProperty({
+    description: 'Array of items for the current page',
+    isArray: true,
+    type: UserOutputModel,
+  })
+  items: UserOutputModel;
 }

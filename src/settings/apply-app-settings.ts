@@ -6,6 +6,7 @@ import cookieParser from 'cookie-parser';
 import { useContainer } from 'class-validator';
 import { AppModule } from '../app.module';
 import * as useragent from 'express-useragent';
+import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 
 export const applyAppSettings = (app: INestApplication) => {
   useContainer(app.select(AppModule), { fallbackOnErrors: true });
@@ -21,6 +22,8 @@ export const applyAppSettings = (app: INestApplication) => {
   enableCors(app);
 
   setCookieParser(app);
+
+  buildDocumentation(app);
 };
 
 const setApiPrefix = (app: INestApplication) => {
@@ -45,4 +48,16 @@ const setExceptionFilter = (app: INestApplication) => {
 
 const setCookieParser = (app: INestApplication) => {
   app.use(cookieParser());
+};
+
+const buildDocumentation = (app: INestApplication) => {
+  const config = new DocumentBuilder()
+    .setTitle('Blog platform')
+    .setDescription('The blog platform API')
+    .setVersion('1.0')
+    .addBasicAuth()
+    .addBearerAuth()
+    .build();
+  const documentFactory = () => SwaggerModule.createDocument(app, config);
+  SwaggerModule.setup('doc', app, documentFactory);
 };

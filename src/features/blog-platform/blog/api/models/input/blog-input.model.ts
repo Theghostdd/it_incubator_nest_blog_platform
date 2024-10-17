@@ -37,14 +37,8 @@ export type BlogSortQueryType = BaseSortingType & {
 };
 
 export class BlogSortingQuery extends BaseSorting {
-  constructor(
-    sortBy: string,
-    sortDirection: string,
-    pageNumber: number,
-    pageSize: number,
-    public readonly searchNameTerm: string,
-  ) {
-    super(sortBy, sortDirection, pageNumber, pageSize);
+  constructor(public readonly searchNameTerm: string) {
+    super();
   }
 
   public createBlogQuery(query: BlogSortingQuery): BlogSortQueryType {

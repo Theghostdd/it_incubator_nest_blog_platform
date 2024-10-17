@@ -17,10 +17,14 @@ import {
 } from './models/input/user-input.model';
 import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import { UserQueryRepositories } from '../infrastructure/user-query-repositories';
-import { UserOutputModel } from './models/output/user-output.model';
+import {
+  UserOutputModel,
+  UserOutputModelForSwagger,
+} from './models/output/user-output.model';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import {
+  ApiErrorsMessageModel,
   APIErrorsMessageType,
   AppResultType,
 } from '../../../../base/types/types';
@@ -29,7 +33,21 @@ import { CommandBus } from '@nestjs/cqrs';
 import { CreateUserCommand } from '../application/command/create-user.command';
 import { DeleteUserByIdCommand } from '../application/command/delete-user.command';
 import { EntityId } from '../../../../core/decorators/entityId';
+import {
+  ApiBadRequestResponse,
+  ApiBasicAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiBasicAuth()
+@ApiTags('Super admin - User')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.USER_PREFIX.user)
 export class UserController {
@@ -38,12 +56,19 @@ export class UserController {
     private readonly userQueryRepositories: UserQueryRepositories,
   ) {}
 
+  @ApiOkResponse({
+    description: 'Return all users or empty array with pagination',
+    type: UserOutputModelForSwagger,
+  })
   @Get()
   async getUsers(
     @Query() query: UserSortingQuery,
   ): Promise<BasePagination<UserOutputModel[] | []>> {
     return await this.userQueryRepositories.getUsers(query);
   }
+
+  @ApiOkResponse({ status: 201, type: UserOutputModel })
+  @ApiBadRequestResponse({ type: ApiErrorsMessageModel })
   @Post()
   async createUser(
     @Body() userInputModel: UserInputModel,
@@ -60,13 +85,18 @@ export class UserController {
     }
   }
 
+  @ApiResponse({
+    status: 204,
+    description: 'Success',
+  })
+  @ApiNotFoundResponse({ status: 404, description: 'Not found' })
+  @ApiParam({ name: 'id', description: 'Id of the user account' })
   @Delete(':id')
   @HttpCode(204)
   async deleteUser(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
       new DeleteUserByIdCommand(id),
     );
-
     switch (result.appResult) {
       case AppResult.Success:
         return;
