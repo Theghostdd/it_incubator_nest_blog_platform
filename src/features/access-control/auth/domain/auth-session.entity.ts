@@ -1,7 +1,9 @@
-import { Column, Entity, ManyToOne, PrimaryColumn } from 'typeorm';
+import { Column, Entity, Index, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 
 @Entity()
+@Index(['deviceId', 'isActive'])
+@Index(['userId', 'isActive'])
 export class AuthSession {
   @PrimaryColumn()
   deviceId: string;

@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -8,6 +9,7 @@ import {
 import { User } from '../../../users/user/domain/user.entity';
 
 @Entity()
+@Index(['code', 'isActive'])
 export class RecoveryPasswordSession {
   @PrimaryGeneratedColumn()
   id: number;
