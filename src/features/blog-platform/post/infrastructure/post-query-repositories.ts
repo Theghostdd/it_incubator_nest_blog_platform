@@ -210,9 +210,11 @@ export class PostQueryRepository {
         }, `${PostPropertyEnum.lastLikes}`)
         .where(
           new Brackets((qb: WhereExpressionBuilder) => {
-            qb.where(`p.${PostPropertyEnum.blogId} = :blogId`, {
-              blogId: blogId || null,
-            }).orWhere(`p.${PostPropertyEnum.blogId} IS NOT NULL`);
+            if (blogId) {
+              qb.where(`p.${PostPropertyEnum.blogId} = :blogId`, { blogId });
+            } else {
+              qb.where(`p.${PostPropertyEnum.blogId} IS NOT NULL`);
+            }
           }),
         )
         .andWhere(`p.${PostPropertyEnum.isActive} = :isActive`, {
@@ -229,9 +231,11 @@ export class PostQueryRepository {
         .createQueryBuilder('p')
         .where(
           new Brackets((qb: WhereExpressionBuilder) => {
-            qb.where(`p.${PostPropertyEnum.blogId} = :blogId`, {
-              blogId: blogId || null,
-            }).orWhere(`p.${PostPropertyEnum.blogId} IS NOT NULL`);
+            if (blogId) {
+              qb.where(`p.${PostPropertyEnum.blogId} = :blogId`, { blogId });
+            } else {
+              qb.where(`p.${PostPropertyEnum.blogId} IS NOT NULL`);
+            }
           }),
         )
         .andWhere(`p.${PostPropertyEnum.isActive} = :isActive`, {
