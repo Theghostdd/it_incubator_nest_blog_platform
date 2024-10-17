@@ -21,8 +21,6 @@ import { CommentLike } from '../../../blog-platform/like/domain/comment-like.ent
 @Index(['login', 'isActive'])
 @Index(['createdAt', 'isActive'])
 export class User {
-  @Column({ nullable: true })
-  testColumn: string;
   @PrimaryGeneratedColumn()
   id: number;
   @Column()
