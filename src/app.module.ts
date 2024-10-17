@@ -33,9 +33,9 @@ import { UsersModule } from './features/users/users.module';
           password: envSettings.POSTGRES_USER_PASSWORD,
           database: envSettings.DATABASE_NAME,
           autoLoadEntities: true,
-          synchronize: true,
-          // logger: 'advanced-console',
-          // logging: true,
+          synchronize: false,
+          logger: 'advanced-console',
+          logging: true,
         };
       },
       inject: [ConfigService],

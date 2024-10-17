@@ -19,7 +19,10 @@
     "test:debug": "node --inspect-brk -r tsconfig-paths/register -r ts-node/register node_modules/.bin/jest --runInBand",
     "test:e2e": "ENV=TESTING jest -i --config ./test/jest-e2e.json",
     "test:integration": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-integration.json",
-    "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json"
+    "test:unit": "set ENV-TESTING && jest -i --runInBand --detectOpenHandles --config ./test/jest-unit.json",
+    "generate-migragion": "ts-node ./src/migrations/generate-migration.ts",
+    "apply-migration": "typeorm-ts-node-commonjs migration:run -d ./src/migrations/data-source.ts",
+    "rollback-migration": "typeorm-ts-node-commonjs migration:revert -d ./src/migrations/data-source.ts"
   },
   "dependencies": {
     "@nestjs-modules/mailer": "^2.0.2",
