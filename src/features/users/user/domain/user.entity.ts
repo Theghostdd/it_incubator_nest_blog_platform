@@ -2,6 +2,7 @@ import { UserInputModel } from '../api/models/input/user-input.model';
 import {
   Column,
   Entity,
+  Index,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -14,12 +15,17 @@ import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 
 @Entity()
+@Index(['id', 'isActive'])
+@Index(['login', 'email', 'isActive'])
+@Index(['email', 'isActive'])
+@Index(['login', 'isActive'])
+@Index(['createdAt', 'isActive'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
-  @Column()
+  @Column({ unique: true })
   login: string;
-  @Column()
+  @Column({ unique: true })
   email: string;
   @Column()
   password: string;

@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToOne,
   PrimaryGeneratedColumn,
@@ -11,8 +12,10 @@ import { User } from './user.entity';
 export class UserConfirmation {
   @PrimaryGeneratedColumn()
   id: number;
+  @Index()
   @Column({ default: false })
   isConfirm: boolean;
+  @Index({ unique: true })
   @Column({ default: 'none' })
   confirmationCode: string;
   @Column({
@@ -23,6 +26,7 @@ export class UserConfirmation {
   @OneToOne(() => User, (user: User) => user.userConfirm)
   @JoinColumn({ name: 'userId' })
   user: User;
+  @Index()
   @Column({ unique: true, nullable: false })
   userId: number;
 }
