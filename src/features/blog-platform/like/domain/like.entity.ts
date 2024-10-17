@@ -1,11 +1,14 @@
 import { LikeStatusEnum } from './type';
 import { LikeInputModel } from '../api/models/input/like-input-model';
-import { Column, PrimaryGeneratedColumn } from 'typeorm';
+import { Column, Index, PrimaryGeneratedColumn } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 import { Post } from '../../post/domain/post.entity';
 import { Comment } from '../../comment/domain/comment.entity';
 
+@Index(['createdAt', 'status'])
+@Index(['lastUpdateAt', 'status'])
 export class Like<P> {
+  @Index()
   @PrimaryGeneratedColumn()
   id: number;
   @Column({ enum: LikeStatusEnum })
@@ -21,9 +24,11 @@ export class Like<P> {
   })
   lastUpdateAt: Date;
   user: User;
+  @Index()
   @Column()
   userId: number;
   parent: P;
+  @Index()
   @Column()
   parentId: number;
 

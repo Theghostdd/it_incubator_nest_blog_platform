@@ -5,6 +5,7 @@ import {
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -15,6 +16,8 @@ import { Post } from '../../post/domain/post.entity';
 import { CommentLike } from '../../like/domain/comment-like.entity';
 
 @Entity()
+@Index(['id', 'isActive'])
+@Index(['createdAt', 'isActive'])
 export class Comment {
   @PrimaryGeneratedColumn()
   id: number;
@@ -31,11 +34,13 @@ export class Comment {
   @ManyToOne(() => User, (user: User) => user.userComments)
   @JoinColumn()
   user: User;
+  @Index()
   @Column()
   userId: number;
   @ManyToOne(() => Post, (post: Post) => post.comments)
   @JoinColumn()
   post: Post;
+  @Index()
   @Column()
   postId: number;
   @OneToMany(() => CommentLike, (like: CommentLike) => like.parent)

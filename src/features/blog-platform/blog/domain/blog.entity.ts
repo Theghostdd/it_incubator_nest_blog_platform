@@ -2,10 +2,19 @@ import {
   BlogInputModel,
   BlogUpdateModel,
 } from '../api/models/input/blog-input.model';
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { Post } from '../../post/domain/post.entity';
 
 @Entity()
+@Index(['id', 'isActive'])
+@Index(['createdAt', 'isActive'])
+@Index(['name', 'isActive'])
 export class Blog {
   @PrimaryGeneratedColumn()
   id: number;
