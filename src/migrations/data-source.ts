@@ -1,5 +1,7 @@
 import { DataSource } from 'typeorm';
 import { EnvSettings } from '../settings/env-settings';
+import * as dotenv from 'dotenv';
+dotenv.config({ path: '.env.development' });
 
 const envSettings = new EnvSettings(process.env);
 const dataSource = new DataSource({

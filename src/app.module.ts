@@ -12,6 +12,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { BlogPlatformModule } from './features/blog-platform/blog-platform.module';
 import { AccessControlModule } from './features/access-control/access-control.module';
 import { UsersModule } from './features/users/users.module';
+import { EnvState } from './settings/types/enum';
 
 @Module({
   imports: [
@@ -31,11 +32,19 @@ import { UsersModule } from './features/users/users.module';
           port: envSettings.POSTGRES_PORT,
           username: envSettings.POSTGRES_USER,
           password: envSettings.POSTGRES_USER_PASSWORD,
-          database: envSettings.DATABASE_NAME,
+          database:
+            envSettings.ENV === EnvState.TESTING
+              ? 'blog_platform_test'
+              : envSettings.DATABASE_NAME,
           autoLoadEntities: true,
-          synchronize: false,
+          synchronize: !(
+            envSettings.ENV === EnvState.PRODUCTION ||
+            envSettings.ENV === EnvState.DEVELOPMENT
+          ),
           logger: 'advanced-console',
-          logging: true,
+          logging:
+            envSettings.ENV !== EnvState.PRODUCTION &&
+            envSettings.ENV !== EnvState.TESTING,
         };
       },
       inject: [ConfigService],

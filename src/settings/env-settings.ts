@@ -74,7 +74,7 @@ export class EnvSettings {
     );
     this.POSTGRES_USER = envVariable.POSTGRES_USER || 'postgres';
     this.POSTGRES_USER_PASSWORD = envVariable.POSTGRES_USER_PASSWORD || 'sa';
-    this.DATABASE_NAME = envVariable.DATABASE_NAME || 'blog_platform';
+    this.DATABASE_NAME = envVariable.DATABASE_NAME || 'blog_platform_test';
     this.PASSWORD_MAIL_AGENT = envVariable.PASSWORD_MAIL_AGENT;
     this.LOGIN_MAIL_AGENT = envVariable.LOGIN_MAIL_AGENT;
     this.JWT_ACCESS_TOKEN_SECRET = envVariable.JWT_ACCESS_TOKEN_SECRET;

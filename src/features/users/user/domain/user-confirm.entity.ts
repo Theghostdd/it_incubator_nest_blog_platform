@@ -15,7 +15,7 @@ export class UserConfirmation {
   @Index()
   @Column({ default: false })
   isConfirm: boolean;
-  @Index({ unique: true })
+  @Index()
   @Column({ default: 'none' })
   confirmationCode: string;
   @Column({

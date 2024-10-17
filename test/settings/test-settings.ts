@@ -28,7 +28,6 @@ export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
     imports: [AppModule],
   });
-
   setGlobalMock(testingModuleBuilder);
   const testingAppModule: TestingModule = await testingModuleBuilder.compile();
   const app: INestApplication = testingAppModule.createNestApplication();
