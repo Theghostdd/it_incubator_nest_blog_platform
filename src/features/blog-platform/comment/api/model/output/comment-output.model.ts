@@ -1,29 +1,80 @@
 import { LikeStatusEnum } from '../../../../like/domain/type';
 import { CommentEntityRawDataType } from '../../../domain/types';
+import { ApiProperty } from '@nestjs/swagger';
+import { BasePagination } from '../../../../../../base/pagination/base-pagination';
 
 export class CommentatorInfoViewModel {
-  constructor(
-    public userId: string,
-    public userLogin: string,
-  ) {}
+  @ApiProperty({
+    description: 'Unique identifier of the user who commented',
+    example: '123456',
+    type: String,
+  })
+  public userId: string;
+
+  @ApiProperty({
+    description: 'Login of the user who commented',
+    example: 'user123',
+    type: String,
+  })
+  public userLogin: string;
 }
 
 export class CommentLikesInfoViewModel {
-  constructor(
-    public likesCount: number,
-    public dislikesCount: number,
-    public myStatus: LikeStatusEnum,
-  ) {}
+  @ApiProperty({
+    description: 'Total number of likes on the comment',
+    example: 150,
+    type: Number,
+  })
+  public likesCount: number;
+
+  @ApiProperty({
+    description: 'Total number of dislikes on the comment',
+    example: 10,
+    type: Number,
+  })
+  public dislikesCount: number;
+
+  @ApiProperty({
+    description: 'The current status of the user regarding the comment',
+    enum: LikeStatusEnum,
+    example: LikeStatusEnum.Like,
+  })
+  public myStatus: LikeStatusEnum;
 }
 
 export class CommentOutputModel {
-  constructor(
-    public id: string,
-    public content: string,
-    public commentatorInfo: CommentatorInfoViewModel,
-    public likesInfo: CommentLikesInfoViewModel,
-    public createdAt: string,
-  ) {}
+  @ApiProperty({
+    description: 'Unique identifier of the comment',
+    example: '123456',
+    type: String,
+  })
+  public id: string;
+
+  @ApiProperty({
+    description: 'Content of the comment',
+    example: 'This is a very insightful post!',
+    type: String,
+  })
+  public content: string;
+
+  @ApiProperty({
+    description: 'Information about the commentator',
+    type: CommentatorInfoViewModel,
+  })
+  public commentatorInfo: CommentatorInfoViewModel;
+
+  @ApiProperty({
+    description: 'Likes information for the comment',
+    type: CommentLikesInfoViewModel,
+  })
+  public likesInfo: CommentLikesInfoViewModel;
+
+  @ApiProperty({
+    description: 'Date and time when the comment was created',
+    example: '2024-10-18T12:00:00Z',
+    type: String,
+  })
+  public createdAt: string;
 }
 
 export class CommentMapperOutputModel {
@@ -67,4 +118,13 @@ export class CommentMapperOutputModel {
       };
     });
   }
+}
+
+export class CommentOutputModelForSwagger extends BasePagination<CommentOutputModel> {
+  @ApiProperty({
+    description: 'Array of items for the current page',
+    isArray: true,
+    type: CommentOutputModel,
+  })
+  items: CommentOutputModel;
 }

@@ -36,9 +36,9 @@ import { EntityId } from '../../../../core/decorators/entityId';
 import {
   ApiBadRequestResponse,
   ApiBasicAuth,
-  ApiCreatedResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
+  ApiOperation,
   ApiParam,
   ApiResponse,
   ApiTags,
@@ -60,6 +60,9 @@ export class UserController {
     description: 'Return all users or empty array with pagination',
     type: UserOutputModelForSwagger,
   })
+  @ApiOperation({
+    summary: 'Get all users',
+  })
   @Get()
   async getUsers(
     @Query() query: UserSortingQuery,
@@ -69,6 +72,9 @@ export class UserController {
 
   @ApiOkResponse({ status: 201, type: UserOutputModel })
   @ApiBadRequestResponse({ type: ApiErrorsMessageModel })
+  @ApiOperation({
+    summary: 'Create new user',
+  })
   @Post()
   async createUser(
     @Body() userInputModel: UserInputModel,
@@ -91,6 +97,9 @@ export class UserController {
   })
   @ApiNotFoundResponse({ status: 404, description: 'Not found' })
   @ApiParam({ name: 'id', description: 'Id of the user account' })
+  @ApiOperation({
+    summary: 'Delete user by id',
+  })
   @Delete(':id')
   @HttpCode(204)
   async deleteUser(@EntityId() id: number): Promise<void> {

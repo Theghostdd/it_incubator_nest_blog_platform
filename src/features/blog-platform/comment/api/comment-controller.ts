@@ -23,12 +23,26 @@ import { VerifyUserGuard } from '../../../../core/guards/jwt/jwt-verify-user';
 import { EntityId } from '../../../../core/decorators/entityId';
 import { CurrentUser } from '../../../../core/decorators/current-user';
 import {
+  ApiErrorsMessageModel,
   AppResultType,
   JWTAccessTokenPayloadType,
 } from '../../../../base/types/types';
 import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { AppResult } from '../../../../base/enum/app-result.enum';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Comments')
 @Controller(apiPrefixSettings.COMMENT.comments)
 export class CommentController {
   constructor(
@@ -36,6 +50,17 @@ export class CommentController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @ApiParam({ name: 'id' })
+  @ApiOkResponse({
+    description: 'Get comment by id',
+    type: CommentOutputModel,
+  })
+  @ApiNotFoundResponse({ description: 'If the comment not found' })
+  @ApiOperation({
+    summary: 'Get comment by id',
+    description:
+      'The refresh token is stored in cookies: "refreshToken" and is used for verify current user and check like status.',
+  })
   @Get(':id')
   @UseGuards(VerifyUserGuard)
   async getCommentById(
@@ -45,6 +70,25 @@ export class CommentController {
     return await this.commentQueryRepository.getCommentById(id, user.userId);
   }
 
+  @ApiParam({ name: 'id' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 204,
+    description: 'Success',
+  })
+  @ApiNotFoundResponse({ description: 'If the comment not found' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Token not found or invalid',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiForbiddenResponse({ description: 'Forbidden: comment not current user' })
+  @ApiOperation({
+    summary: 'Update comment by id',
+    description: 'The access token is stored in headers: "accessToken".',
+  })
   @Put(':id')
   @UseGuards(AuthJWTAccessGuard)
   @HttpCode(204)
@@ -69,6 +113,21 @@ export class CommentController {
     }
   }
 
+  @ApiParam({ name: 'id' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 204,
+    description: 'Comment was delete',
+  })
+  @ApiNotFoundResponse({ description: 'If the comment not found' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Token not found or invalid',
+  })
+  @ApiForbiddenResponse({ description: 'Forbidden: comment not current user' })
+  @ApiOperation({
+    summary: 'Delete comment by id',
+    description: 'The access token is stored in headers: "accessToken".',
+  })
   @Delete(':id')
   @UseGuards(AuthJWTAccessGuard)
   @HttpCode(204)
@@ -92,6 +151,24 @@ export class CommentController {
     }
   }
 
+  @ApiParam({ name: 'id' })
+  @ApiBearerAuth()
+  @ApiResponse({
+    status: 204,
+    description: 'Like was update or create',
+  })
+  @ApiNotFoundResponse({ description: 'If the comment not found' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Token not found or invalid',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiOperation({
+    summary: 'Update like or create for comment by comment id',
+    description: 'The access token is stored in headers: "accessToken".',
+  })
   @Put(`:id/${apiPrefixSettings.COMMENT.like_status}`)
   @HttpCode(204)
   @UseGuards(AuthJWTAccessGuard)
