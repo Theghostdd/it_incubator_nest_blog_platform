@@ -1,5 +1,7 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Injectable } from '@nestjs/common';
 
+@Injectable()
 export class BasePagination<T> {
   @ApiProperty({
     description: 'Total number of pages available',

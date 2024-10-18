@@ -1,4 +1,5 @@
 import { ApiProperty } from '@nestjs/swagger';
+import { Injectable } from '@nestjs/common';
 
 export enum SortDirectionEnum {
   'ASC' = 'ASC',
@@ -14,6 +15,7 @@ export type BaseSortingType = {
   pageSize: number;
 };
 
+@Injectable()
 export class BaseSorting {
   private sortByParams: string[] = [
     'createdAt',

@@ -40,6 +40,13 @@ export type ClientInfoType = {
   userAgent: string | null;
 };
 
+export class AuthorizationUserResponseModel {
+  @ApiProperty({
+    description: 'JWT Access token',
+    type: String,
+  })
+  accessToken: string;
+}
 export class ApiErrorMessageModel {
   @ApiProperty({
     description: 'Error message providing details about the issue',

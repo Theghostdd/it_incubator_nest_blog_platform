@@ -11,7 +11,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { PostOutputModel } from '../../post/api/models/output/post-output.model';
+import {
+  PostOutputModel,
+  PostOutputModelForSwagger,
+} from '../../post/api/models/output/post-output.model';
 import {
   PostInputModel,
   PostUpdateModel,
@@ -29,6 +32,7 @@ import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { EntityId } from '../../../../core/decorators/entityId';
 import { CurrentUser } from '../../../../core/decorators/current-user';
 import {
+  ApiErrorsMessageModel,
   AppResultType,
   JWTAccessTokenPayloadType,
 } from '../../../../base/types/types';
@@ -40,12 +44,29 @@ import {
   BlogUpdateModel,
   PostBlogInputModel,
 } from './models/input/blog-input.model';
-import { BlogOutputModel } from './models/output/blog-output.model';
+import {
+  BlogOutputModel,
+  BlogOutputModelForSwagger,
+} from './models/output/blog-output.model';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { UpdateBlogByIdCommand } from '../application/command/update-blog.command';
 import { DeleteBlogByIdCommand } from '../application/command/delete-blog.command';
 import { CreateBlogCommand } from '../application/command/create-blog.command';
+import {
+  ApiBadRequestResponse,
+  ApiBasicAuth,
+  ApiCreatedResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiResponse,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Blog super admin api')
+@ApiBasicAuth()
 @Controller(apiPrefixSettings.BLOG.sa_blogs)
 @UseGuards(BasicGuard)
 export class BlogAdminController {
@@ -55,6 +76,20 @@ export class BlogAdminController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @ApiParam({ name: 'blogId' })
+  @ApiOkResponse({
+    description: 'Return posts array or empty array',
+    type: PostOutputModelForSwagger,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiOperation({
+    summary: 'Get all posts by blog id',
+    description:
+      'The refresh token is stored in cookies: "refreshToken" and is used for check user like status, only verify user.',
+  })
   @Get(`:id/${apiPrefixSettings.BLOG.posts}`)
   @UseGuards(VerifyUserGuard)
   async getPostByBlogId(
@@ -69,6 +104,17 @@ export class BlogAdminController {
     );
   }
 
+  @ApiOkResponse({
+    description: 'Return all blogs or empty array',
+    type: BlogOutputModelForSwagger,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiOperation({
+    summary: 'Get all blogs',
+  })
   @Get()
   async getBlogs(
     @Query() query: BlogSortingQuery,
@@ -76,6 +122,22 @@ export class BlogAdminController {
     return await this.blogQueryRepository.getBlogs(query);
   }
 
+  @ApiParam({ name: 'blogId' })
+  @ApiCreatedResponse({
+    description: 'Create and return new post by blog id',
+    type: PostOutputModel,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiOperation({
+    summary: 'Create post by blog id',
+  })
   @Post(`:id/${apiPrefixSettings.BLOG.posts}`)
   async createPostByBlogId(
     @EntityId() id: number,
@@ -95,6 +157,21 @@ export class BlogAdminController {
     }
   }
 
+  @ApiResponse({
+    status: 201,
+    description: 'Create and return new blog',
+    type: BlogOutputModel,
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiOperation({
+    summary: 'Create new blog by super admin',
+  })
   @Post()
   async createBlog(
     @Body() inputModel: BlogInputModel,
@@ -110,6 +187,19 @@ export class BlogAdminController {
     }
   }
 
+  @ApiParam({ name: 'id' })
+  @ApiParam({ name: 'postId' })
+  @ApiResponse({
+    status: 204,
+    description: 'Delete the post by post and blog ids',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiNotFoundResponse({ description: 'If the blog or the post not found' })
+  @ApiOperation({
+    summary: 'Delete the post by post and blog ids',
+  })
   @Delete(`:id/${apiPrefixSettings.BLOG.posts}/:postId`)
   @HttpCode(204)
   async deletePostById(
@@ -129,6 +219,18 @@ export class BlogAdminController {
     }
   }
 
+  @ApiParam({ name: 'blogId' })
+  @ApiResponse({
+    status: 204,
+    description: 'Delete blog by id success',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiOperation({
+    summary: 'Delete blog by id',
+  })
   @Delete(':id')
   @HttpCode(204)
   async deleteBlogById(@EntityId() id: number): Promise<void> {
@@ -145,6 +247,23 @@ export class BlogAdminController {
     }
   }
 
+  @ApiParam({ name: 'id' })
+  @ApiParam({ name: 'postId' })
+  @ApiResponse({
+    status: 204,
+    description: 'Update the post by post and blog ids',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog or the post not found' })
+  @ApiOperation({
+    summary: 'Update the post by post and blog ids',
+  })
   @Put(`:id/${apiPrefixSettings.BLOG.posts}/:postId`)
   @HttpCode(204)
   async updatePostById(
@@ -166,6 +285,22 @@ export class BlogAdminController {
     }
   }
 
+  @ApiParam({ name: 'blogId' })
+  @ApiResponse({
+    status: 204,
+    description: 'Update the blog by id',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized: Login and password incorrect',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiOperation({
+    summary: 'Update the blog by id',
+  })
   @Put(':id')
   @HttpCode(204)
   async updateBlogById(

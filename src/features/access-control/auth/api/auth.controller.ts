@@ -35,8 +35,10 @@ import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { CurrentUser } from '../../../../core/decorators/current-user';
 import {
   APIErrorMessageType,
+  ApiErrorsMessageModel,
   APIErrorsMessageType,
   AppResultType,
+  AuthorizationUserResponseModel,
   AuthorizationUserResponseType,
   ClientInfoType,
   JWTAccessTokenPayloadType,
@@ -46,7 +48,18 @@ import { UserMeOutputModel } from '../../../users/user/api/models/output/user-ou
 import { ClientInfo } from '../../../../core/decorators/client-info';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { RefreshJWTAccessGuard } from '../../../../core/guards/jwt/jwt-refresh-toke.guard';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiOkResponse,
+  ApiOperation,
+  ApiResponse,
+  ApiTags,
+  ApiTooManyRequestsResponse,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Auth')
 @Controller(apiPrefixSettings.AUTH.auth)
 export class AuthController {
   constructor(
@@ -54,6 +67,15 @@ export class AuthController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @ApiOkResponse({
+    description: 'Return current user info',
+    type: UserMeOutputModel,
+  })
+  @ApiBearerAuth()
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiOperation({
+    summary: 'Get info about current user by access token',
+  })
   @Get(apiPrefixSettings.AUTH.me)
   @UseGuards(AuthJWTAccessGuard)
   async getCurrentUser(
@@ -62,6 +84,20 @@ export class AuthController {
     return await this.userQueryRepositories.getUserByIdAuthMe(user.userId);
   }
 
+  @ApiOkResponse({
+    description:
+      'Return JWT accessToken in body and JWT refreshToken in cookie (http-only, secure).',
+    type: AuthorizationUserResponseModel,
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Login',
+  })
   @Post(`/${apiPrefixSettings.AUTH.login}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(200)
@@ -95,6 +131,19 @@ export class AuthController {
     }
   }
 
+  @ApiResponse({
+    status: 204,
+    description:
+      'Input data is accepted. Email with confirmation code will be send to passed email address',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Registration only with uniq login and email',
+  })
   @Post(`/${apiPrefixSettings.AUTH.registration}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(204)
@@ -115,6 +164,15 @@ export class AuthController {
     }
   }
 
+  @ApiResponse({ status: 204, description: 'Confirm user registration' })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Confirm user registration',
+  })
   @Post(`/${apiPrefixSettings.AUTH.registration_confirmation}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(204)
@@ -135,6 +193,19 @@ export class AuthController {
     }
   }
 
+  @ApiResponse({
+    status: 204,
+    description:
+      'Input data is accepted.Email with confirmation code will be send to passed email address.',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Get new code for confirmation registration user',
+  })
   @Post(`/${apiPrefixSettings.AUTH.registration_email_resending}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(204)
@@ -154,6 +225,20 @@ export class AuthController {
         throw new InternalServerErrorException();
     }
   }
+
+  @ApiResponse({
+    status: 204,
+    description:
+      'Email was send, if email not correct success too, but will not send email',
+  })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Get email for change user password',
+  })
   @Post(`/${apiPrefixSettings.AUTH.password_recovery}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(204)
@@ -172,6 +257,15 @@ export class AuthController {
     }
   }
 
+  @ApiResponse({ status: 204, description: 'Success' })
+  @ApiBadRequestResponse({
+    description: 'Bad request',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiTooManyRequestsResponse({ description: 'Too many requests' })
+  @ApiOperation({
+    summary: 'Change user password',
+  })
   @Post(`/${apiPrefixSettings.AUTH.new_password}`)
   @UseGuards(ThrottlerGuard)
   @HttpCode(204)
@@ -192,6 +286,14 @@ export class AuthController {
     }
   }
 
+  @ApiBearerAuth()
+  @ApiResponse({ status: 204, description: 'Success' })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiOperation({
+    summary: 'Logout',
+    description:
+      'Logout the user. The refresh token is stored in cookies: "refreshToken" and is used for logout. Clear cookies after logout.',
+  })
   @Post(apiPrefixSettings.AUTH.logout)
   @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(204)
@@ -214,6 +316,18 @@ export class AuthController {
     }
   }
 
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description:
+      'Return JWT accessToken in body and JWT refreshToken in cookie (http-only, secure).',
+    type: AuthorizationUserResponseModel,
+  })
+  @ApiUnauthorizedResponse({ description: 'Unauthorized' })
+  @ApiOperation({
+    summary: 'Generate new tokens pair',
+    description:
+      'The refresh token is stored in cookies: "refreshToken" and is used for get new tokens pair.',
+  })
   @Post(apiPrefixSettings.AUTH.refresh_token)
   @UseGuards(RefreshJWTAccessGuard)
   @HttpCode(200)

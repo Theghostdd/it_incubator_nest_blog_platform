@@ -30,8 +30,23 @@ export class UserOutputModel {
 }
 
 export class UserMeOutputModel {
+  @ApiProperty({
+    description: 'Uniq user login',
+    example: 'login',
+    type: String,
+  })
   public login: string;
+  @ApiProperty({
+    description: 'Uniq user email',
+    example: 'email@mail.com',
+    type: String,
+  })
   public email: string;
+  @ApiProperty({
+    description: 'User id',
+    example: '1',
+    type: String,
+  })
   public userId: string;
 }
 
