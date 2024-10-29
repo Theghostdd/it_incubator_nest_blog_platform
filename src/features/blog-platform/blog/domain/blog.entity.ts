@@ -12,18 +12,17 @@ import {
 import { Post } from '../../post/domain/post.entity';
 
 @Entity()
-@Index(['id', 'isActive'])
-@Index(['createdAt', 'isActive'])
-@Index(['name', 'isActive'])
 export class Blog {
   @PrimaryGeneratedColumn()
   id: number;
+  @Index()
   @Column()
   name: string;
   @Column()
   description: string;
   @Column()
   websiteUrl: string;
+  @Index()
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',

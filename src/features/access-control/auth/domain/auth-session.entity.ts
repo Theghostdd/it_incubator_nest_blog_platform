@@ -2,9 +2,8 @@ import { Column, Entity, Index, ManyToOne, PrimaryColumn } from 'typeorm';
 import { User } from '../../../users/user/domain/user.entity';
 
 @Entity()
-@Index(['deviceId', 'isActive'])
-@Index(['userId', 'isActive'])
 export class AuthSession {
+  @Index()
   @PrimaryColumn()
   deviceId: string;
   @Column()
@@ -25,6 +24,7 @@ export class AuthSession {
   isActive: boolean;
   @ManyToOne(() => User, (user: User) => user.userAuthSessions)
   user: User;
+  @Index()
   @Column()
   userId: number;
 

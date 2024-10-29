@@ -15,16 +15,14 @@ import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 
 @Entity()
-@Index(['id', 'isActive'])
-@Index(['login', 'email', 'isActive'])
-@Index(['email', 'isActive'])
-@Index(['login', 'isActive'])
-@Index(['createdAt', 'isActive'])
+@Index(['login', 'email'])
 export class User {
   @PrimaryGeneratedColumn()
   id: number;
+  @Index()
   @Column()
   login: string;
+  @Index()
   @Column()
   email: string;
   @Column()

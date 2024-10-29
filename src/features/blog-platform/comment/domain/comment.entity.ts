@@ -16,13 +16,12 @@ import { Post } from '../../post/domain/post.entity';
 import { CommentLike } from '../../like/domain/comment-like.entity';
 
 @Entity()
-@Index(['id', 'isActive'])
-@Index(['createdAt', 'isActive'])
 export class Comment {
   @PrimaryGeneratedColumn()
   id: number;
   @Column()
   content: string;
+  @Index()
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',

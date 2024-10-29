@@ -5,19 +5,18 @@ import { User } from '../../../users/user/domain/user.entity';
 import { Post } from '../../post/domain/post.entity';
 import { Comment } from '../../comment/domain/comment.entity';
 
-@Index(['createdAt', 'status'])
-@Index(['lastUpdateAt', 'status'])
 export class Like<P> {
-  @Index()
   @PrimaryGeneratedColumn()
   id: number;
   @Column({ enum: LikeStatusEnum })
   status: LikeStatusEnum;
+  @Index()
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date;
+  @Index()
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',

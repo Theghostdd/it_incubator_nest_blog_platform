@@ -17,18 +17,17 @@ import { Like } from '../../like/domain/like.entity';
 import { PostLike } from '../../like/domain/post-like.entity';
 
 @Entity()
-@Index(['id', 'isActive'])
-@Index(['title', 'isActive'])
-@Index(['createdAt', 'isActive'])
 export class Post {
   @PrimaryGeneratedColumn()
   id: number;
+  @Index()
   @Column()
   title: string;
   @Column()
   shortDescription: string;
   @Column()
   content: string;
+  @Index()
   @Column({
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',
