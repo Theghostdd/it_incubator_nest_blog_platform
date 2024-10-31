@@ -42,4 +42,12 @@ export class ApplicationObjectResult {
       errorField: error,
     };
   }
+
+  internalServerError() {
+    return {
+      appResult: AppResult.InternalError,
+      data: null,
+      errorField: null,
+    };
+  }
 }

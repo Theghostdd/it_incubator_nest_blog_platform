@@ -37,4 +37,10 @@ export const apiPrefixSettings = {
     security: 'security',
     devices: 'devices',
   },
+  QUIZ_GAME: {
+    sa: {
+      game_question: 'sa/quiz/questions',
+      publish: 'publish',
+    },
+  },
 };

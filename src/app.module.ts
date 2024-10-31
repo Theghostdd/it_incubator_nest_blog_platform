@@ -13,6 +13,7 @@ import { BlogPlatformModule } from './features/blog-platform/blog-platform.modul
 import { AccessControlModule } from './features/access-control/access-control.module';
 import { UsersModule } from './features/users/users.module';
 import { EnvState } from './settings/types/enum';
+import { QuizGameModule } from './features/quiz-game/quiz-game.module';
 
 @Module({
   imports: [
@@ -37,14 +38,11 @@ import { EnvState } from './settings/types/enum';
               ? 'blog_platform_test'
               : envSettings.DATABASE_NAME,
           autoLoadEntities: true,
-          synchronize: !(
-            envSettings.ENV === EnvState.PRODUCTION ||
-            envSettings.ENV === EnvState.DEVELOPMENT
-          ),
-          logger: 'advanced-console',
-          logging:
+          synchronize:
             envSettings.ENV !== EnvState.PRODUCTION &&
-            envSettings.ENV !== EnvState.TESTING,
+            envSettings.ENV !== EnvState.DEVELOPMENT,
+          logger: 'advanced-console',
+          logging: envSettings.ENV === EnvState.DEVELOPMENT,
         };
       },
       inject: [ConfigService],
@@ -74,6 +72,7 @@ import { EnvState } from './settings/types/enum';
     BlogPlatformModule,
     AccessControlModule,
     UsersModule,
+    QuizGameModule,
     TestingModule,
   ],
   controllers: [],

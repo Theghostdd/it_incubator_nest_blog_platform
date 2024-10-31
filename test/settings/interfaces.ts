@@ -15,6 +15,7 @@ import { ConfigurationType } from '../../src/settings/configuration/configuratio
 import { ConfigService } from '@nestjs/config';
 import { LikeTestModel } from '../models/like/likes.model';
 import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
+import { QuizGameTestManager } from '../utils/request-test-manager/quiz-test-manager';
 
 export interface ITestSettings {
   app: INestApplication;
@@ -41,4 +42,5 @@ export interface ITestManger {
   commentTestManager: CommentTestManager;
   authTestManager: AuthTestManager;
   securityDevicesTestManager: SecurityDevicesTestManager;
+  quizGameTestManager: QuizGameTestManager;
 }

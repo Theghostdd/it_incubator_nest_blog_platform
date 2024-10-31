@@ -27,6 +27,8 @@ export class BaseSorting {
     'email',
     'content',
     'blogName',
+    'body',
+    'published',
   ];
   private defaultSortParams: BaseSortingType = {
     sortBy: 'createdAt',

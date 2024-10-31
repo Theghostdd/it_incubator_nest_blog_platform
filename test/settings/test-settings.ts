@@ -23,6 +23,7 @@ import { ThrottlerMock } from '../mock/throttler-mock';
 import { ThrottlerGuard } from '@nestjs/throttler';
 import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
 import { DataSource } from 'typeorm';
+import { QuizGameTestManager } from '../utils/request-test-manager/quiz-test-manager';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -84,6 +85,7 @@ const getTestManagers = (app: INestApplication): ITestManger => {
   const authTestManager: AuthTestManager = new AuthTestManager(app);
   const securityDevicesTestManager: SecurityDevicesTestManager =
     new SecurityDevicesTestManager(app);
+  const quizGameTestManager: QuizGameTestManager = new QuizGameTestManager(app);
 
   return {
     userTestManager: userTestManager,
@@ -92,6 +94,7 @@ const getTestManagers = (app: INestApplication): ITestManger => {
     commentTestManager: commentTestManager,
     authTestManager: authTestManager,
     securityDevicesTestManager: securityDevicesTestManager,
+    quizGameTestManager: quizGameTestManager,
   };
 };
 
