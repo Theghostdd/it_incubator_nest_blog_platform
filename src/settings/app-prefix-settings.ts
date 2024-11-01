@@ -42,5 +42,12 @@ export const apiPrefixSettings = {
       game_question: 'sa/quiz/questions',
       publish: 'publish',
     },
+    public: {
+      pair_game_quiz: 'pair-game-quiz',
+      pairs: 'pairs',
+      connection: 'connection',
+      my_current: 'my-current',
+      answers: 'answers',
+    },
   },
 };

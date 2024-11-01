@@ -1,5 +1,5 @@
 import { UserInputModel } from '../../api/models/input/user-input.model';
-import { CommandHandler, ICommandHandler } from '@nestjs/cqrs';
+import { CommandBus, CommandHandler, ICommandHandler } from '@nestjs/cqrs';
 import {
   APIErrorsMessageType,
   AppResultType,
@@ -11,6 +11,7 @@ import { BcryptService } from '../../../../bcrypt/application/bcrypt-application
 import { User } from '../../domain/user.entity';
 import { Inject } from '@nestjs/common';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
+import { CreatePlayerCommand } from '../../../../quiz-game/player/application/command/create-player.command';
 
 export class CreateUserCommand {
   constructor(public userInputModel: UserInputModel) {}
@@ -30,6 +31,7 @@ export class CreateUserCommandHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
     private readonly bcryptService: BcryptService,
     @Inject(User.name) private readonly userEntity: typeof User,
+    private readonly commandBus: CommandBus,
   ) {}
   async execute(
     command: CreateUserCommand,
@@ -52,6 +54,8 @@ export class CreateUserCommandHandler
     );
 
     const result: number = await this.userRepositories.save(newUser);
+    newUser.id = result;
+    await this.commandBus.execute(new CreatePlayerCommand(newUser));
     return this.applicationObjectResult.success(result);
   }
 }

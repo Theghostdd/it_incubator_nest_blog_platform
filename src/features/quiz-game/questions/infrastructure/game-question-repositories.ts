@@ -73,4 +73,15 @@ export class GameQuestionRepository {
       await queryRunner.release();
     }
   }
+
+  async getFiveRandomQuestions(): Promise<QuizQuestions[]> {
+    return await this.quizQuestionsRepository
+      .createQueryBuilder('q')
+      .orderBy('RANDOM()')
+      .where(`q.${QuizQuestionsPropertyEnum.published} = :status`, {
+        status: true,
+      })
+      .take(5)
+      .getMany();
+  }
 }

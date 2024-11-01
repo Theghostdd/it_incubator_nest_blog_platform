@@ -4,6 +4,7 @@ import {
   QuestionsInputModel,
   QuestionsUpdateInputModel,
 } from '../api/models/input/questions-input.model';
+import { GameQuestions } from '../../game-questions/domain/game-questions.entity';
 
 @Entity()
 export class QuizQuestions {
@@ -29,6 +30,13 @@ export class QuizQuestions {
     { cascade: ['remove', 'insert'] },
   )
   answers: QuizQuestionAnswer[];
+
+  @OneToMany(
+    () => GameQuestions,
+    (gameQuestions: GameQuestions) => gameQuestions.question,
+    { cascade: ['remove', 'insert'] },
+  )
+  gameQuestions: GameQuestions[];
 
   static createQuestion(
     questionInputModel: QuestionsInputModel,
