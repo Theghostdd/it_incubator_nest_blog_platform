@@ -271,7 +271,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -376,7 +376,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -439,7 +439,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -486,7 +486,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -509,7 +509,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -560,7 +560,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -632,7 +632,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -701,7 +701,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -794,7 +794,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -827,7 +827,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -854,7 +854,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -904,7 +904,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -930,7 +930,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -954,7 +954,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -979,7 +979,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -1004,7 +1004,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -1083,7 +1083,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
     });
@@ -1108,7 +1108,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -1217,7 +1217,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 
@@ -1392,7 +1392,7 @@ describe('Quiz questions e2e', () => {
           correctAnswers: body.correctAnswers,
           published: false,
           createdAt: expect.any(String),
-          updatedAt: expect.any(String),
+          updatedAt: null,
         },
       ]);
 

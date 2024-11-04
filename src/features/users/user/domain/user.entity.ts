@@ -13,6 +13,7 @@ import { AuthSession } from '../../../access-control/auth/domain/auth-session.en
 import { Comment } from '../../../blog-platform/comment/domain/comment.entity';
 import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
+import { Player } from '../../../quiz-game/player/domain/quiz-game-player.entity';
 
 @Entity()
 @Index(['login', 'email'])
@@ -61,6 +62,9 @@ export class User {
   @OneToMany(() => Comment, (comment: Comment) => comment.user)
   userComments: Comment[];
 
+  @OneToOne(() => Player, (player: Player) => player.user, { cascade: true })
+  player: Player;
+
   static createUser(
     userInputModel: UserInputModel,
     createdAt: Date,
@@ -68,7 +72,10 @@ export class User {
   ): User {
     const user = new this();
     const userConfirm = new UserConfirmation();
+    const player = new Player();
     const { login, email } = userInputModel;
+    player.user = user;
+    user.player = player;
     user.login = login;
     user.email = email;
     user.password = hash;
@@ -91,8 +98,11 @@ export class User {
     dataExpire: Date,
   ): User {
     const user = new this();
+    const player = new Player();
     const userConfirm = new UserConfirmation();
     const { login, email } = userInputModel;
+    player.user = user;
+    user.player = player;
     user.login = login;
     user.email = email;
     user.password = hash;

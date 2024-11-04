@@ -12,7 +12,7 @@ export class GamPlayerAnswerOutputModel {
 export class GamPlayerAnswerOutputModelMapper {
   mapAnswer(answer: GameUserAnswer): GamPlayerAnswerOutputModel {
     return {
-      questionId: answer.question.questionId.toString(),
+      questionId: answer.gameQuestion.questionId.toString(),
       answerStatus: answer.isTrue
         ? QuizCurrentGameAnswerStatusEnum.Correct
         : QuizCurrentGameAnswerStatusEnum.Incorrect,

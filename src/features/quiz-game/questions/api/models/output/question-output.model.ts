@@ -21,7 +21,7 @@ export class QuestionMapperOutputModel {
       correctAnswers: question.answers.map((a: QuizQuestionAnswer) => a.body),
       published: question.published,
       createdAt: question.createdAt.toISOString(),
-      updatedAt: question.updatedAt.toISOString(),
+      updatedAt: question.updatedAt?.toISOString() ?? null,
     };
   }
 
@@ -33,7 +33,7 @@ export class QuestionMapperOutputModel {
         correctAnswers: question.answers.map((a: QuizQuestionAnswer) => a.body),
         published: question.published,
         createdAt: question.createdAt.toISOString(),
-        updatedAt: question.updatedAt.toISOString(),
+        updatedAt: question.updatedAt?.toISOString() ?? null,
       };
     });
   }

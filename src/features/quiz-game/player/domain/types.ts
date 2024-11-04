@@ -3,5 +3,5 @@ export enum PlayerPropertyEnum {
   'user' = 'user',
   'userId' = 'userId',
   'gamePlayers' = 'gamePlayers',
-  'userAnswers' = 'userAnswers',
+  'playerAnswers' = 'playerAnswers',
 }

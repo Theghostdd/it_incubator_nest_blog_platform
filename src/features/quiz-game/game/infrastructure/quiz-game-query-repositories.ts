@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   ForbiddenException,
   Injectable,
   NotFoundException,
@@ -11,11 +12,11 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, WhereExpressionBuilder } from 'typeorm';
 import { QuizGamePropertyEnum, QuizGameStatusEnum } from '../domain/types';
-import { QuizGamePlayer } from '../../player/domain/quiz-game-player.entity';
+import { Player } from '../../player/domain/quiz-game-player.entity';
 import { PlayerPropertyEnum } from '../../player/domain/types';
 import { GamePlayerPropertyEnum } from '../../game-player/domain/types';
 import { GameSpecifyQuestionsPropertyEnum } from '../../game-questions/domain/types';
-import { GameUserAnswerPropertyEnum } from '../../game-answer/domain/types';
+import { GamePlayerAnswerPropertyEnum } from '../../game-answer/domain/types';
 import { GamePlayers } from '../../game-player/domain/game-players.entity';
 
 @Injectable()
@@ -23,8 +24,8 @@ export class QuizGameQueryRepository {
   constructor(
     @InjectRepository(QuizGame)
     private readonly quizGameRepository: Repository<QuizGame>,
-    @InjectRepository(QuizGamePlayer)
-    private readonly quizGamePlayerRepository: Repository<QuizGamePlayer>,
+    @InjectRepository(Player)
+    private readonly quizGamePlayerRepository: Repository<Player>,
     private readonly quizGameMapperOutputModel: QuizGameMapperOutputModel,
   ) {}
 
@@ -32,6 +33,12 @@ export class QuizGameQueryRepository {
     gameId: number,
     currentUserId: number,
   ): Promise<QuizGameOutputModel> {
+    if (gameId === 0)
+      throw new BadRequestException({
+        message: 'Id is not correct',
+        field: 'id',
+      });
+
     const game: QuizGame | null = await this.quizGameRepository
       .createQueryBuilder('g')
       .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
@@ -39,12 +46,14 @@ export class QuizGameQueryRepository {
       .leftJoinAndSelect(`p.${PlayerPropertyEnum.user}`, 'u')
       .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gameQuestions}`, 'gq')
       .leftJoinAndSelect(
-        `p.${PlayerPropertyEnum.userAnswers}`,
+        `p.${PlayerPropertyEnum.playerAnswers}`,
         'qa',
-        `qa."${GameUserAnswerPropertyEnum.questionId}" = gq.id`,
+        `qa."${GamePlayerAnswerPropertyEnum.gameQuestionId}" = gq.id`,
       )
       .leftJoinAndSelect(`gq.${GameSpecifyQuestionsPropertyEnum.question}`, 'q')
       .where(`g.${QuizGamePropertyEnum.id} = :gameId`, { gameId })
+      .orderBy(`gq.${GameSpecifyQuestionsPropertyEnum.position}`, 'ASC')
+      .addOrderBy(`qa.${GamePlayerAnswerPropertyEnum.position}`, 'ASC')
       .getOne();
 
     if (!game) throw new NotFoundException(`Game does not exist`);
@@ -54,13 +63,13 @@ export class QuizGameQueryRepository {
     );
 
     if (!isParticipant) throw new ForbiddenException();
-    return this.quizGameMapperOutputModel.mapQuizGame(game, currentUserId);
+    return this.quizGameMapperOutputModel.mapQuizGame(game);
   }
 
   async getGameCurrentUser(
     currentUserId: number,
   ): Promise<QuizGameOutputModel> {
-    const player: QuizGamePlayer = await this.quizGamePlayerRepository.findOne({
+    const player: Player = await this.quizGamePlayerRepository.findOne({
       where: { userId: currentUserId },
     });
     const playerId = player.id;
@@ -92,14 +101,16 @@ export class QuizGameQueryRepository {
       .leftJoinAndSelect(`p.${PlayerPropertyEnum.user}`, 'u')
       .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gameQuestions}`, 'gq')
       .leftJoinAndSelect(
-        `p.${PlayerPropertyEnum.userAnswers}`,
+        `p.${PlayerPropertyEnum.playerAnswers}`,
         'qa',
-        `qa."${GameUserAnswerPropertyEnum.questionId}" = gq.id`,
+        `qa."${GamePlayerAnswerPropertyEnum.gameQuestionId}" = gq.id`,
       )
       .leftJoinAndSelect(`gq.${GameSpecifyQuestionsPropertyEnum.question}`, 'q')
       .where(`g.${QuizGamePropertyEnum.id} = :gameId`, { gameId })
+      .orderBy(`gq.${GameSpecifyQuestionsPropertyEnum.position}`, 'ASC')
+      .addOrderBy(`qa.${GamePlayerAnswerPropertyEnum.position}`, 'ASC')
       .getOne();
 
-    return this.quizGameMapperOutputModel.mapQuizGame(game, currentUserId);
+    return this.quizGameMapperOutputModel.mapQuizGame(game);
   }
 }

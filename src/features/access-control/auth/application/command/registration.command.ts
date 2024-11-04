@@ -1,10 +1,5 @@
 import { RegistrationInputModel } from '../../api/models/input/auth-input.models';
-import {
-  CommandBus,
-  CommandHandler,
-  EventBus,
-  ICommandHandler,
-} from '@nestjs/cqrs';
+import { CommandHandler, EventBus, ICommandHandler } from '@nestjs/cqrs';
 import { addDays } from 'date-fns';
 import { AuthService } from '../auth-application';
 import { ConfigService } from '@nestjs/config';
@@ -22,7 +17,6 @@ import { User } from '../../../../users/user/domain/user.entity';
 import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { Inject } from '@nestjs/common';
 import { UserRegistrationEvent } from '../../../../users/user/application/event/user-registration.event';
-import { CreatePlayerCommand } from '../../../../quiz-game/player/application/command/create-player.command';
 
 export class RegistrationCommand {
   constructor(public registrationInputModel: RegistrationInputModel) {}
@@ -46,7 +40,6 @@ export class RegistrationHandler
     private readonly bcryptService: BcryptService,
     @Inject(User.name) private readonly userEntity: typeof User,
     private readonly eventBus: EventBus,
-    private readonly commandBus: CommandBus,
   ) {
     this.staticOptions = this.configService.get('staticSettings', {
       infer: true,
@@ -83,8 +76,7 @@ export class RegistrationHandler
       dateExpired,
     );
 
-    newUser.id = await this.userRepositories.save(newUser);
-    await this.commandBus.execute(new CreatePlayerCommand(newUser));
+    await this.userRepositories.save(newUser);
     this.eventBus.publish(
       new UserRegistrationEvent(newUser.email, confirmationCode),
     );

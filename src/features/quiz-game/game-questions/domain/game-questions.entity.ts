@@ -18,12 +18,14 @@ export class GameQuestions {
   @Column()
   position: number;
 
+  // The game for which the question was created
   @ManyToOne(() => QuizGame, (quizGame: QuizGame) => quizGame.gameQuestions)
   @JoinColumn({ name: 'gameId' })
   game: QuizGame;
   @Column({ nullable: false })
   gameId: number;
 
+  // Parent question
   @ManyToOne(
     () => QuizQuestions,
     (quizQuestions: QuizQuestions) => quizQuestions.gameQuestions,
@@ -33,9 +35,10 @@ export class GameQuestions {
   @Column({ nullable: false })
   questionId: number;
 
+  // Player`s answers for this question for specify game
   @OneToMany(
     () => GameUserAnswer,
-    (gameUserAnswer: GameUserAnswer) => gameUserAnswer.question,
+    (gameUserAnswer: GameUserAnswer) => gameUserAnswer.gameQuestion,
   )
-  userAnswer: GameUserAnswer[];
+  playerAnswer: GameUserAnswer[];
 }

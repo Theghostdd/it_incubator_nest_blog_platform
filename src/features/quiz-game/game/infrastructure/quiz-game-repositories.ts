@@ -2,10 +2,11 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import { QuizGame } from '../domain/quiz-game.entity';
 import { DataSource, QueryRunner, Repository } from 'typeorm';
 import { QuizGamePropertyEnum, QuizGameStatusEnum } from '../domain/types';
-import { GameSpecifyQuestionsPropertyEnum } from '../../game-questions/domain/types';
-import { QuizQuestionsPropertyEnum } from '../../questions/domain/types';
+import { GamePlayerAnswerPropertyEnum } from '../../game-answer/domain/types';
 import { GamePlayerPropertyEnum } from '../../game-player/domain/types';
 import { PlayerPropertyEnum } from '../../player/domain/types';
+import { GameSpecifyQuestionsPropertyEnum } from '../../game-questions/domain/types';
+import { QuizQuestionsPropertyEnum } from '../../questions/domain/types';
 
 export class QuizGameRepositories {
   constructor(
@@ -50,24 +51,28 @@ export class QuizGameRepositories {
           gamePlayers: { playerId },
         },
       ],
-      relations: [
-        QuizGamePropertyEnum.gamePlayers,
-        QuizGamePropertyEnum.gameQuestions,
-      ],
     });
   }
 
   async getCurrentPlayerGameByIdWithAnswers(
     gameId: number,
   ): Promise<QuizGame | null> {
-    return await this.quizGameRepository.findOne({
-      where: [{ status: QuizGameStatusEnum.Active, id: gameId }],
-      relations: [
-        QuizGamePropertyEnum.gamePlayers,
-        `${QuizGamePropertyEnum.gamePlayers}.${GamePlayerPropertyEnum.player}.${PlayerPropertyEnum.userAnswers}`,
-        QuizGamePropertyEnum.gameQuestions,
-        `${QuizGamePropertyEnum.gameQuestions}.${GameSpecifyQuestionsPropertyEnum.question}.${QuizQuestionsPropertyEnum.answers}`,
-      ],
-    });
+    return await this.quizGameRepository
+      .createQueryBuilder('g')
+      .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
+      .leftJoinAndSelect(`gp.${GamePlayerPropertyEnum.player}`, 'p')
+      .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gameQuestions}`, 'gq')
+      .leftJoinAndSelect(
+        `p.${PlayerPropertyEnum.playerAnswers}`,
+        'pa',
+        `pa.${GamePlayerAnswerPropertyEnum.gameQuestionId} = gq.${GameSpecifyQuestionsPropertyEnum.id}`,
+      )
+      .leftJoinAndSelect(`gq.${GameSpecifyQuestionsPropertyEnum.question}`, 'q')
+      .leftJoinAndSelect(`q.${QuizQuestionsPropertyEnum.answers}`, 'qa')
+      .where(`g.${QuizGamePropertyEnum.status} = :status`, {
+        status: QuizGameStatusEnum.Active,
+      })
+      .andWhere(`g.${QuizGamePropertyEnum.id} = :gameId`, { gameId })
+      .getOne();
   }
 }

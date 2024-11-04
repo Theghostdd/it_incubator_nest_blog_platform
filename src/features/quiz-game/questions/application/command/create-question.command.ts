@@ -27,7 +27,7 @@ export class CreateQuestionCommandHandler
       command.questionsInputModel,
     );
 
-    const result = await this.gameQuestionRepository.save(question);
+    const result: number = await this.gameQuestionRepository.save(question);
     if (!result) this.applicationObjectResult.internalServerError();
     return this.applicationObjectResult.success(result);
   }

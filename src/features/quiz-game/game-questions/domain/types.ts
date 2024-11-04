@@ -5,5 +5,5 @@ export enum GameSpecifyQuestionsPropertyEnum {
   'gameId' = 'gameId',
   'question' = 'question',
   'questionId' = 'questionId',
-  'userAnswer' = 'userAnswer',
+  'playerAnswer' = 'playerAnswer',
 }

@@ -1,7 +1,7 @@
 import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
 import { QuizGameStatusEnum } from './types';
 import { GameQuestions } from '../../game-questions/domain/game-questions.entity';
-import { QuizGamePlayer } from '../../player/domain/quiz-game-player.entity';
+import { Player } from '../../player/domain/quiz-game-player.entity';
 import { GamePlayers } from '../../game-player/domain/game-players.entity';
 import { QuizQuestions } from '../../questions/domain/questions.entity';
 
@@ -31,6 +31,7 @@ export class QuizGame {
   })
   finishGameAt: Date;
 
+  // Questions for specify game (THIS GAME)
   @OneToMany(
     () => GameQuestions,
     (gameQuestions: GameQuestions) => gameQuestions.game,
@@ -38,6 +39,7 @@ export class QuizGame {
   )
   gameQuestions: GameQuestions[];
 
+  // Players for specify game (THIS GAME)
   @OneToMany(
     () => GamePlayers,
     (gamePlayers: GamePlayers) => gamePlayers.games,
@@ -45,10 +47,7 @@ export class QuizGame {
   )
   gamePlayers: GamePlayers[];
 
-  static createGame(
-    player: QuizGamePlayer,
-    questions: QuizQuestions[],
-  ): QuizGame {
+  static createGame(player: Player): QuizGame {
     const game: QuizGame = new this();
     const date: Date = new Date();
 
@@ -56,6 +55,7 @@ export class QuizGame {
     gamePlayer.playerNumber = 1;
     gamePlayer.player = player;
     gamePlayer.playerId = player.id;
+    gamePlayer.isFirst = false;
 
     game.status = QuizGameStatusEnum.PendingSecondPlayer;
     game.createdAt = date;
@@ -63,29 +63,36 @@ export class QuizGame {
     game.finishGameAt = null;
     game.gamePlayers = [];
     game.gamePlayers.push(gamePlayer);
-    game.gameQuestions = [];
-
-    let position: number = 1;
-    questions.map((question: QuizQuestions) => {
-      const gameQuestion: GameQuestions = new GameQuestions();
-      gameQuestion.position = position;
-      gameQuestion.questionId = question.id;
-      gameQuestion.game = game;
-      ++position;
-      game.gameQuestions.push(gameQuestion);
-    });
     return game;
   }
 
-  connectToGame(player: QuizGamePlayer): void {
+  connectToGame(player: Player, questions: QuizQuestions[]): void {
     const gamePlayer: GamePlayers = new GamePlayers();
     const date: Date = new Date();
     gamePlayer.playerNumber = 2;
     gamePlayer.player = player;
     gamePlayer.playerId = player.id;
     gamePlayer.gameId = this.id;
+    gamePlayer.isFirst = false;
     this.gamePlayers.push(gamePlayer);
     this.startGameAt = date;
     this.status = QuizGameStatusEnum.Active;
+    this.gameQuestions = [];
+
+    let position: number = 1;
+    questions.forEach((question: QuizQuestions) => {
+      const gameQuestion: GameQuestions = new GameQuestions();
+      gameQuestion.position = position;
+      gameQuestion.questionId = question.id;
+      gameQuestion.game = this;
+      gameQuestion.gameId = this.id;
+      ++position;
+      this.gameQuestions.push(gameQuestion);
+    });
+  }
+
+  finishGame(): void {
+    this.finishGameAt = new Date();
+    this.status = QuizGameStatusEnum.Finished;
   }
 }

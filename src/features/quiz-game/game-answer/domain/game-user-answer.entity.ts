@@ -6,7 +6,7 @@ import {
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { GameQuestions } from '../../game-questions/domain/game-questions.entity';
-import { QuizGamePlayer } from '../../player/domain/quiz-game-player.entity';
+import { Player } from '../../player/domain/quiz-game-player.entity';
 import { QuizQuestionAnswer } from '../../question-answer/domain/question-answer.entity';
 
 @Entity()
@@ -21,7 +21,7 @@ export class GameUserAnswer {
   isTrue: boolean;
 
   @Column()
-  isFirst: boolean;
+  position: number;
 
   @Column({
     type: 'timestamp with time zone',
@@ -29,47 +29,42 @@ export class GameUserAnswer {
   })
   createdAt: Date;
 
+  // Answer for specify game`s questions
   @ManyToOne(
     () => GameQuestions,
-    (gameQuestions: GameQuestions) => gameQuestions.userAnswer,
+    (gameQuestions: GameQuestions) => gameQuestions.playerAnswer,
   )
-  @JoinColumn({ name: 'questionId' })
-  question: GameQuestions;
+  @JoinColumn({ name: 'gameQuestionId' })
+  gameQuestion: GameQuestions;
   @Column()
-  questionId: number;
+  gameQuestionId: number;
 
+  // The player who gave the answer to the question
   @ManyToOne(
-    () => QuizGamePlayer,
-    (quizGamePlayer: QuizGamePlayer) => quizGamePlayer.userAnswers,
+    () => Player,
+    (quizGamePlayer: Player) => quizGamePlayer.playerAnswers,
   )
   @JoinColumn({ name: 'playerId' })
-  player: QuizGamePlayer;
+  player: Player;
   @Column({ nullable: false })
   playerId: number;
 
   static createAnswer(
     playerAnswer: string,
     playerAnswers: GameUserAnswer[],
-    secondPlayerAnswers: GameUserAnswer[],
     questions: GameQuestions[],
-    player: QuizGamePlayer,
+    player: Player,
   ): GameUserAnswer {
     const answer = new this();
     const date: Date = new Date();
     answer.body = playerAnswer;
     answer.createdAt = date;
-    answer.isFirst = false;
     answer.player = player;
     answer.playerId = player.id;
 
     let currentQuestionPosition: number = 1;
     switch (playerAnswers.length) {
       case 0:
-        if (secondPlayerAnswers.length === 0) {
-          answer.isFirst = true;
-        } else {
-          answer.isFirst = false;
-        }
         break;
       case 1:
         currentQuestionPosition = 2;
@@ -90,8 +85,9 @@ export class GameUserAnswer {
     const currentQuestion: GameQuestions = questions.find(
       (q: GameQuestions): boolean => q.position === currentQuestionPosition,
     );
-    answer.question = currentQuestion;
-    answer.questionId = currentQuestion.id;
+    answer.gameQuestion = currentQuestion;
+    answer.gameQuestionId = currentQuestion.id;
+    answer.position = currentQuestionPosition;
 
     answer.isTrue = currentQuestion.question.answers.some(
       (answer: QuizQuestionAnswer): boolean => answer.body === playerAnswer,

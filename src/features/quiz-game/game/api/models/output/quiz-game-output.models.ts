@@ -5,6 +5,7 @@ import { QuizGame } from '../../../domain/quiz-game.entity';
 import { GamePlayers } from '../../../../game-player/domain/game-players.entity';
 import { GameQuestions } from '../../../../game-questions/domain/game-questions.entity';
 import { GamPlayerAnswerOutputModel } from '../../../../game-answer/api/model/output/gam-player-answer-output.model';
+import { GameUserAnswer } from '../../../../game-answer/domain/game-user-answer.entity';
 
 export class QuizGameCurrentQuestionsModel {
   id: string;
@@ -41,7 +42,7 @@ export class QuizGameAnswerResult {
 
 @Injectable()
 export class QuizGameMapperOutputModel {
-  mapQuizGame(game: QuizGame, currentUserId: number): QuizGameOutputModel {
+  mapQuizGame(game: QuizGame): QuizGameOutputModel {
     const firstPlayer: GamePlayers = game.gamePlayers.find(
       (p: GamePlayers): boolean => p.playerNumber === 1,
     );
@@ -49,58 +50,38 @@ export class QuizGameMapperOutputModel {
       (p: GamePlayers): boolean => p.playerNumber === 2,
     );
 
-    const currentPlayer: GamePlayers =
-      firstPlayer.player.userId === currentUserId ? firstPlayer : secondPlayer;
-
-    const currentPlayerAnswers = currentPlayer.player.userAnswers;
-
-    let questionPosition = 1;
-    switch (currentPlayerAnswers.length) {
-      case 0:
-        break;
-      case 1:
-        questionPosition = 2;
-        break;
-      case 2:
-        questionPosition = 3;
-        break;
-      case 3:
-        questionPosition = 4;
-        break;
-      case 4:
-        questionPosition = 5;
-        break;
-      default:
-        questionPosition = 1;
-    }
-
     let firstPlayerScore: number = 0;
-    const playerFirstAnswers = firstPlayer.player.userAnswers.map((answer) => {
-      const question: GameQuestions = game.gameQuestions.find(
-        (question: GameQuestions): boolean => question.id <= answer.questionId,
-      );
-      if (game.status === QuizGameStatusEnum.Finished)
-        answer.isFirst ? ++firstPlayerScore : +0;
+    if (game.status === QuizGameStatusEnum.Finished)
+      firstPlayer.isFirst ? ++firstPlayerScore : +0;
 
-      answer.isTrue ? ++firstPlayerScore : +0;
-      return {
-        questionId: question.questionId.toString(),
-        answerStatus: answer.isTrue
-          ? QuizCurrentGameAnswerStatusEnum.Correct
-          : QuizCurrentGameAnswerStatusEnum.Incorrect,
-        addedAt: answer.createdAt.toISOString(),
-      };
-    });
+    const playerFirstAnswers = firstPlayer.player.playerAnswers.map(
+      (answer: GameUserAnswer) => {
+        const question: GameQuestions = game.gameQuestions.find(
+          (question: GameQuestions): boolean =>
+            question.id === answer.gameQuestionId,
+        );
+        answer.isTrue ? ++firstPlayerScore : +0;
+        return {
+          questionId: question.questionId.toString(),
+          answerStatus: answer.isTrue
+            ? QuizCurrentGameAnswerStatusEnum.Correct
+            : QuizCurrentGameAnswerStatusEnum.Incorrect,
+          addedAt: answer.createdAt.toISOString(),
+        };
+      },
+    );
 
     let secondPlayerScore: number = 0;
+    if (game.status === QuizGameStatusEnum.Finished)
+      secondPlayer.isFirst ? ++secondPlayerScore : +0;
+
     const playerSecondAnswers = secondPlayer
-      ? secondPlayer.player.userAnswers.map((answer) => {
+      ? secondPlayer.player.playerAnswers.map((answer: GameUserAnswer) => {
           const question: GameQuestions = game.gameQuestions.find(
             (question: GameQuestions): boolean =>
-              question.id <= answer.questionId,
+              question.id === answer.gameQuestionId,
           );
-          if (game.status === QuizGameStatusEnum.Finished)
-            answer.isFirst ? ++secondPlayerScore : +0;
+
           answer.isTrue ? ++secondPlayerScore : +0;
           return {
             questionId: question.questionId.toString(),
@@ -110,7 +91,8 @@ export class QuizGameMapperOutputModel {
             addedAt: answer.createdAt.toISOString(),
           };
         })
-      : [];
+      : null;
+
     return {
       id: game.id.toString(),
       firstPlayerProgress: {
@@ -133,22 +115,19 @@ export class QuizGameMapperOutputModel {
         : null,
       questions:
         game.status === QuizGameStatusEnum.PendingSecondPlayer
-          ? []
-          : game.gameQuestions
-              .filter(
-                (question: GameQuestions) =>
-                  question.position <= questionPosition,
-              )
-              .map((question: GameQuestions): QuizGameCurrentQuestionsModel => {
+          ? null
+          : game.gameQuestions.map(
+              (question: GameQuestions): QuizGameCurrentQuestionsModel => {
                 return {
                   id: question.question.id.toString(),
                   body: question.question.body,
                 };
-              }),
+              },
+            ),
       status: game.status,
       pairCreatedDate: game.createdAt.toISOString(),
-      startGameDate: game.startGameAt?.toISOString() || null,
-      finishGameDate: game.finishGameAt?.toISOString() || null,
+      startGameDate: game.startGameAt?.toISOString() ?? null,
+      finishGameDate: game.finishGameAt?.toISOString() ?? null,
     };
   }
 }

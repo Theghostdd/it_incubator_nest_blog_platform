@@ -3,10 +3,14 @@ export enum QuizCurrentGameAnswerStatusEnum {
   'Incorrect' = 'Incorrect',
 }
 
-export enum GameUserAnswerPropertyEnum {
+export enum GamePlayerAnswerPropertyEnum {
   'id' = 'id',
-  'question' = 'question',
-  'questionId' = 'questionId',
+  'body' = 'body',
+  'isTrue' = 'isTrue',
+  'position' = 'position',
+  'createdAt' = 'createdAt',
+  'gameQuestion' = 'gameQuestion',
+  'gameQuestionId' = 'gameQuestionId',
   'player' = 'player',
   'playerId' = 'playerId',
 }

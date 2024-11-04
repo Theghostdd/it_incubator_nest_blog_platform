@@ -11,7 +11,7 @@ import { GamePlayers } from '../../game-player/domain/game-players.entity';
 import { GameUserAnswer } from '../../game-answer/domain/game-user-answer.entity';
 
 @Entity()
-export class QuizGamePlayer {
+export class Player {
   @PrimaryGeneratedColumn()
   id: number;
 
@@ -21,20 +21,22 @@ export class QuizGamePlayer {
   @Column({ nullable: false })
   userId: number;
 
+  // The player is involved in some kind of game
   @OneToMany(
     () => GamePlayers,
-    (gamePlayers: GamePlayers) => gamePlayers.gameId,
+    (gamePlayers: GamePlayers) => gamePlayers.player,
   )
   gamePlayers: GamePlayers[];
 
+  // Player`s answers
   @OneToMany(
     () => GameUserAnswer,
     (gameUserAnswer: GameUserAnswer) => gameUserAnswer.player,
   )
-  userAnswers: GameUserAnswer[];
+  playerAnswers: GameUserAnswer[];
 
-  static createPlayer(user: User): QuizGamePlayer {
-    const player: QuizGamePlayer = new this();
+  static createPlayer(user: User): Player {
+    const player: Player = new this();
     player.user = user;
     player.userId = user.id;
     return player;

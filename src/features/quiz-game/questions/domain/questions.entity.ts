@@ -21,7 +21,7 @@ export class QuizQuestions {
   createdAt: Date;
   @Column({
     type: 'timestamp with time zone',
-    default: () => 'CURRENT_TIMESTAMP',
+    nullable: true,
   })
   updatedAt: Date;
   @OneToMany(
@@ -58,8 +58,7 @@ export class QuizQuestions {
     question.published = false;
     question.answers = answers;
     question.createdAt = date;
-    question.updatedAt = date;
-
+    question.updatedAt = null;
     return question;
   }
 
