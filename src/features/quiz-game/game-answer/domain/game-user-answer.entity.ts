@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -37,6 +38,7 @@ export class GameUserAnswer {
   @JoinColumn({ name: 'gameQuestionId' })
   gameQuestion: GameQuestions;
   @Column()
+  @Index()
   gameQuestionId: number;
 
   // The player who gave the answer to the question
@@ -46,6 +48,7 @@ export class GameUserAnswer {
   )
   @JoinColumn({ name: 'playerId' })
   player: Player;
+  @Index()
   @Column({ nullable: false })
   playerId: number;
 

@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { QuizGameStatusEnum } from './types';
 import { GameQuestions } from '../../game-questions/domain/game-questions.entity';
 import { Player } from '../../player/domain/quiz-game-player.entity';
@@ -10,6 +16,7 @@ export class QuizGame {
   @PrimaryGeneratedColumn()
   id: number;
 
+  @Index()
   @Column({ enum: QuizGameStatusEnum })
   status: QuizGameStatusEnum;
 

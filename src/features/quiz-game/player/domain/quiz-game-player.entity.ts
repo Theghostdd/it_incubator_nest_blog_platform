@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
@@ -18,6 +19,7 @@ export class Player {
   @OneToOne(() => User, (user: User) => user.id)
   @JoinColumn({ name: 'userId' })
   user: User;
+  @Index()
   @Column({ nullable: false })
   userId: number;
 

@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
@@ -20,6 +21,7 @@ export class QuizQuestionAnswer {
   )
   @JoinColumn({ name: 'questionId' })
   question: QuizQuestions;
+  @Index()
   @Column({ nullable: false })
   questionId: number;
 }

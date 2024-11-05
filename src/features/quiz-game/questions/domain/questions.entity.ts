@@ -1,4 +1,10 @@
-import { Column, Entity, OneToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+  Column,
+  Entity,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
+} from 'typeorm';
 import { QuizQuestionAnswer } from '../../question-answer/domain/question-answer.entity';
 import {
   QuestionsInputModel,
@@ -10,6 +16,7 @@ import { GameQuestions } from '../../game-questions/domain/game-questions.entity
 export class QuizQuestions {
   @PrimaryGeneratedColumn()
   id: number;
+  @Index()
   @Column({ type: 'text' })
   body: string;
   @Column({ default: false })

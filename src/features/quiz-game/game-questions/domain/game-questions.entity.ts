@@ -1,6 +1,7 @@
 import {
   Column,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
@@ -22,6 +23,7 @@ export class GameQuestions {
   @ManyToOne(() => QuizGame, (quizGame: QuizGame) => quizGame.gameQuestions)
   @JoinColumn({ name: 'gameId' })
   game: QuizGame;
+  @Index()
   @Column({ nullable: false })
   gameId: number;
 
@@ -32,6 +34,7 @@ export class GameQuestions {
   )
   @JoinColumn({ name: 'questionId' })
   question: QuizQuestions;
+  @Index()
   @Column({ nullable: false })
   questionId: number;
 
