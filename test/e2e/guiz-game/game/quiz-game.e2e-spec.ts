@@ -632,6 +632,7 @@ describe('Quiz game e2e', () => {
     });
 
     it('Should create new game, and should not connect from second player to game, unauthorized', async () => {
+      await createQuestions();
       const { id: userId1 } = await userTestManager.createUser(
         userCreateModel,
         adminAuthToken,
@@ -713,6 +714,18 @@ describe('Quiz game e2e', () => {
       await quizGameTestManager.createOrConnectToGame(
         `Bearer ${accessTokenUser1}`,
         403,
+      );
+    });
+
+    it('Should not create new pair game, questions not found, 500', async () => {
+      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
+      const authUser1: AuthorizationUserResponseModel =
+        await authTestManager.loginAndCheckCookie(userLoginModel, 200);
+      const accessTokenUser1 = authUser1.accessToken;
+
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        500,
       );
     });
   });

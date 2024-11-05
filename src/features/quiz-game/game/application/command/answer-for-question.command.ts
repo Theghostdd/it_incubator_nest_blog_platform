@@ -20,79 +20,6 @@ export class AnswerForQuestionCommand {
   ) {}
 }
 
-// @CommandHandler(AnswerForQuestionCommand)
-// export class AnswerForQuestionHandler
-//   implements ICommandHandler<AnswerForQuestionCommand, AppResultType<number>>
-// {
-//   constructor(
-//     private readonly applicationObjectResult: ApplicationObjectResult,
-//     private readonly quizGameRepositories: QuizGameRepositories,
-//     @Inject(GameUserAnswer.name)
-//     private readonly gameUserAnswer: typeof GameUserAnswer,
-//     private readonly gamePlayerAnswerRepositories: GamePlayerAnswerRepositories,
-//     private readonly playerRepository: PlayerRepository,
-//   ) {}
-//   async execute(
-//     command: AnswerForQuestionCommand,
-//   ): Promise<AppResultType<number>> {
-//     const { answer: playerAnswer } = command.inputModel;
-//     const { userId } = command;
-//
-//     const player: Player =
-//       await this.playerRepository.getPlayerByUserId(userId);
-//
-//     const currentPlayerGame: QuizGame | null =
-//       await this.quizGameRepositories.getCurrentPlayerGame(player.id);
-//
-//     if (!currentPlayerGame) return this.applicationObjectResult.forbidden();
-//     if (
-//       currentPlayerGame.status === QuizGameStatusEnum.Finished ||
-//       currentPlayerGame.status === QuizGameStatusEnum.PendingSecondPlayer
-//     )
-//       return this.applicationObjectResult.forbidden();
-//
-//     const game: QuizGame =
-//       await this.quizGameRepositories.getCurrentPlayerGameByIdWithAnswers(
-//         currentPlayerGame.id,
-//       );
-//
-//     const currentPlayerAnswers: GameUserAnswer[] = game.gamePlayers.find(
-//       (p: GamePlayers): boolean => p.playerId === player.id,
-//     ).player.playerAnswers;
-//
-//     if (currentPlayerAnswers.length === 5)
-//       return this.applicationObjectResult.forbidden();
-//
-//     const secondPlayerAnswers: GameUserAnswer[] = game.gamePlayers.find(
-//       (p: GamePlayers): boolean => p.playerId !== player.id,
-//     ).player.playerAnswers;
-//
-//     const answer: GameUserAnswer = this.gameUserAnswer.createAnswer(
-//       playerAnswer,
-//       currentPlayerAnswers,
-//       secondPlayerAnswers,
-//       game.gameQuestions,
-//       player,
-//     );
-//
-//     let result: number;
-//     if (
-//       currentPlayerAnswers.length + 1 === 5 &&
-//       secondPlayerAnswers.length === 5
-//     ) {
-//       game.finishGame();
-//       result = await this.quizGameRepositories.saveLastAnswerAndFinishGame(
-//         game,
-//         answer,
-//       );
-//     } else {
-//       result = await this.gamePlayerAnswerRepositories.save(answer);
-//     }
-//
-//     return this.applicationObjectResult.success(result);
-//   }
-// }
-
 @CommandHandler(AnswerForQuestionCommand)
 export class AnswerForQuestionHandler
   implements ICommandHandler<AnswerForQuestionCommand, AppResultType<number>>
@@ -123,23 +50,12 @@ export class AnswerForQuestionHandler
     try {
       await queryRunner.startTransaction();
 
-      const currentPlayerGame: QuizGame | null =
-        await queryRunner.manager.findOne(this.quizGameRepository.target, {
-          where: [
-            { status: QuizGameStatusEnum.Active, gamePlayers: { playerId } },
-            {
-              status: QuizGameStatusEnum.PendingSecondPlayer,
-              gamePlayers: { playerId },
-            },
-          ],
-          lock: { mode: 'pessimistic_write' },
-        });
+      const currentPlayerGame: QuizGame | null = await this.getCurrentGame(
+        queryRunner,
+        playerId,
+      );
 
-      if (!currentPlayerGame) return this.applicationObjectResult.forbidden();
-      if (
-        currentPlayerGame.status === QuizGameStatusEnum.Finished ||
-        currentPlayerGame.status === QuizGameStatusEnum.PendingSecondPlayer
-      )
+      if (!this.isGameValid(currentPlayerGame))
         return this.applicationObjectResult.forbidden();
 
       const game: QuizGame =
@@ -147,15 +63,15 @@ export class AnswerForQuestionHandler
           currentPlayerGame.id,
         );
 
-      const currentPlayerAnswers: GameUserAnswer[] = game.gamePlayers.find(
-        (p: GamePlayers): boolean => p.playerId === player.id,
+      const currentPlayerAnswers: GameUserAnswer[] | [] = game.gamePlayers.find(
+        (p: GamePlayers): boolean => p.playerId === playerId,
       ).player.playerAnswers;
 
       if (currentPlayerAnswers.length === 5)
         return this.applicationObjectResult.forbidden();
 
       const secondPlayerAnswers: GameUserAnswer[] = game.gamePlayers.find(
-        (p: GamePlayers): boolean => p.playerId !== player.id,
+        (p: GamePlayers): boolean => p.playerId !== playerId,
       ).player.playerAnswers;
 
       const answer: GameUserAnswer = this.gameUserAnswer.createAnswer(
@@ -165,33 +81,65 @@ export class AnswerForQuestionHandler
         player,
       );
 
-      if (
-        currentPlayerAnswers.length + 1 === 5 &&
-        secondPlayerAnswers.length === 5
-      ) {
-        game.finishGame();
-        await queryRunner.manager.save(game);
-      }
-
-      if (
-        currentPlayerAnswers.length + 1 === 5 &&
-        secondPlayerAnswers.length < 5
-      ) {
-        const curPlayer: GamePlayers = game.gamePlayers.find(
-          (p) => p.playerId === player.id,
-        );
-        curPlayer.setFirst();
-        await queryRunner.manager.save(curPlayer);
-      }
+      await this.handleGameProgress(
+        game,
+        currentPlayerAnswers.length,
+        secondPlayerAnswers.length,
+        queryRunner,
+        playerId,
+      );
 
       const result: GameUserAnswer = await queryRunner.manager.save(answer);
       await queryRunner.commitTransaction();
       return this.applicationObjectResult.success(result.id);
     } catch (e) {
       await queryRunner.rollbackTransaction();
-      return e;
+      return this.applicationObjectResult.internalServerError();
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  private async getCurrentGame(
+    queryRunner: QueryRunner,
+    playerId: number,
+  ): Promise<QuizGame | null> {
+    return await queryRunner.manager.findOne(this.quizGameRepository.target, {
+      where: [
+        { status: QuizGameStatusEnum.Active, gamePlayers: { playerId } },
+        {
+          status: QuizGameStatusEnum.PendingSecondPlayer,
+          gamePlayers: { playerId },
+        },
+      ],
+      lock: { mode: 'pessimistic_write' },
+    });
+  }
+
+  // If game has Pending or Finished status or game not exist throw false
+  private isGameValid(game: QuizGame | null): boolean {
+    return !!game && game.status === QuizGameStatusEnum.Active;
+  }
+
+  private async handleGameProgress(
+    game: QuizGame,
+    currentPlayerAnswersCount: number,
+    secondPlayerAnswersCount: number,
+    queryRunner: QueryRunner,
+    playerId: number,
+  ): Promise<void> {
+    if (currentPlayerAnswersCount + 1 === 5 && secondPlayerAnswersCount === 5) {
+      game.finishGame();
+      await queryRunner.manager.save(game);
+    } else if (
+      currentPlayerAnswersCount + 1 === 5 &&
+      secondPlayerAnswersCount < 5
+    ) {
+      const currentPlayer: GamePlayers = game.gamePlayers.find(
+        (p: GamePlayers): boolean => p.playerId === playerId,
+      );
+      currentPlayer.setFirst();
+      await queryRunner.manager.save(currentPlayer);
     }
   }
 }

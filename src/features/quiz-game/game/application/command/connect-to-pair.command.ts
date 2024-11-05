@@ -37,6 +37,11 @@ export class ConnectToPairGameHandler
 
     if (currentPlayerGame) return this.applicationObjectResult.forbidden();
 
+    const randomQuestions: QuizQuestions[] | [] =
+      await this.gameQuestionRepository.getFiveRandomQuestions();
+    if (!randomQuestions || randomQuestions.length < 5)
+      return this.applicationObjectResult.internalServerError();
+
     const pendingGame: QuizGame | null =
       await this.quizGameRepositories.getRandomPendingGame();
     if (!pendingGame) {
@@ -45,8 +50,6 @@ export class ConnectToPairGameHandler
       return this.applicationObjectResult.success(result);
     }
 
-    const randomQuestions: QuizQuestions[] =
-      await this.gameQuestionRepository.getFiveRandomQuestions();
     pendingGame.connectToGame(player, randomQuestions);
 
     const result: number = await this.quizGameRepositories.save(pendingGame);

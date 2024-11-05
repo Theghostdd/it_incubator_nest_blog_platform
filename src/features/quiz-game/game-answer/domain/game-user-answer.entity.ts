@@ -51,7 +51,7 @@ export class GameUserAnswer {
 
   static createAnswer(
     playerAnswer: string,
-    playerAnswers: GameUserAnswer[],
+    playerAnswers: GameUserAnswer[] | [],
     questions: GameQuestions[],
     player: Player,
   ): GameUserAnswer {
