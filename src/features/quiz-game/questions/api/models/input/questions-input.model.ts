@@ -12,8 +12,14 @@ import { IsStringArray } from '../../../../../../core/decorators/validation/stri
 import { BaseSorting } from '../../../../../../base/sorting/base-sorting';
 import { QuizQuestionPublishedPropertyEnum } from '../../../domain/types';
 import { Injectable } from '@nestjs/common';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class QuestionsInputModel {
+  @ApiProperty({
+    description: 'Question body',
+    example: 'This is question',
+    type: String,
+  })
   @Trim()
   @IsNotEmpty()
   @IsString()
@@ -22,6 +28,11 @@ export class QuestionsInputModel {
     validationRules.quizGameQuestionBody.MAX_LENGTH,
   )
   body: string;
+  @ApiProperty({
+    description: 'The answers for question',
+    example: ['Answer 1', 'Answer 2', 'Answer 3'],
+    type: Array,
+  })
   @Trim()
   @IsNotEmpty()
   @IsStringArray()
@@ -29,6 +40,11 @@ export class QuestionsInputModel {
 }
 
 export class QuestionsUpdateInputModel {
+  @ApiProperty({
+    description: 'Question body',
+    example: 'This is question',
+    type: String,
+  })
   @Trim()
   @IsNotEmpty()
   @IsString()
@@ -37,6 +53,11 @@ export class QuestionsUpdateInputModel {
     validationRules.quizGameQuestionBody.MAX_LENGTH,
   )
   body: string;
+  @ApiProperty({
+    description: 'The answers for question',
+    example: ['Answer 1', 'Answer 2', 'Answer 3'],
+    type: Array,
+  })
   @Trim()
   @IsNotEmpty()
   @IsStringArray()
@@ -44,6 +65,11 @@ export class QuestionsUpdateInputModel {
 }
 
 export class QuestionsPublishInputModel {
+  @ApiProperty({
+    description: 'The publish status',
+    example: true,
+    type: Boolean,
+  })
   @Trim()
   @IsNotEmpty()
   @IsBoolean()
@@ -52,7 +78,19 @@ export class QuestionsPublishInputModel {
 
 @Injectable()
 export class QuestionQuery extends BaseSorting {
+  @ApiProperty({
+    description: 'Find question by body',
+    example: 'How many?',
+    required: false,
+    type: String,
+  })
   public readonly bodySearchTerm: string;
+  @ApiProperty({
+    description: 'Question`s status',
+    enum: QuizQuestionPublishedPropertyEnum,
+    required: false,
+    type: QuizQuestionPublishedPropertyEnum,
+  })
   @IsOptional()
   @IsEnum(QuizQuestionPublishedPropertyEnum)
   public readonly publishedStatus?: QuizQuestionPublishedPropertyEnum;

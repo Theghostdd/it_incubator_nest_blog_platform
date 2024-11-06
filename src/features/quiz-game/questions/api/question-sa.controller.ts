@@ -14,9 +14,13 @@ import {
 } from '@nestjs/common';
 import { GameQuestionQueryRepositories } from '../infrastructure/game-question-query-repositories';
 import { EntityId } from '../../../../core/decorators/entityId';
-import { QuestionOutputModel } from './models/output/question-output.model';
+import {
+  QuestionOutputModel,
+  QuestionOutputModelForSwagger,
+} from './models/output/question-output.model';
 import {
   ApiErrorMessageModel,
+  ApiErrorsMessageModel,
   AppResultType,
 } from '../../../../base/types/types';
 import { CommandBus } from '@nestjs/cqrs';
@@ -34,7 +38,22 @@ import { DeleteQuestionByIdCommand } from '../application/command/delete-questio
 import { BasePagination } from '../../../../base/pagination/base-pagination';
 import { PublishQuestionByIdCommand } from '../application/command/publish-question-by-id.command';
 import { UpdateQuestionByIdCommand } from '../application/command/update-question-by-id.command';
+import {
+  ApiBadRequestResponse,
+  ApiBasicAuth,
+  ApiCreatedResponse,
+  ApiNoContentResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiBasicAuth()
+@ApiTags('Super admin - Question for quiz game')
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @UseGuards(BasicGuard)
 @Controller(apiPrefixSettings.QUIZ_GAME.sa.game_question)
 export class QuestionSaController {
@@ -43,6 +62,13 @@ export class QuestionSaController {
     private readonly commandBus: CommandBus,
   ) {}
 
+  @ApiOperation({
+    summary: 'Return all questions with pagination',
+  })
+  @ApiOkResponse({
+    description: 'Success',
+    type: QuestionOutputModelForSwagger,
+  })
   @Get()
   async getQuestions(
     @Query() query: QuestionQuery,
@@ -50,6 +76,17 @@ export class QuestionSaController {
     return await this.gameQuestionQueryRepositories.getQuestions(query);
   }
 
+  @ApiCreatedResponse({
+    description: 'Return question created output model',
+    type: QuestionOutputModel,
+  })
+  @ApiBadRequestResponse({
+    description: 'If input model not correct',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiOperation({
+    summary: 'Create and return question model',
+  })
   @Post()
   async createQuestion(
     @Body() inputModel: QuestionsInputModel,
@@ -70,6 +107,16 @@ export class QuestionSaController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Delete the question by id',
+  })
+  @ApiParam({ name: 'id' })
+  @ApiNoContentResponse({
+    description: 'Question was delete',
+  })
+  @ApiNotFoundResponse({
+    description: 'If the question not found',
+  })
   @Delete(':id')
   @HttpCode(204)
   async deleteQuestionById(@EntityId() id: number): Promise<void> {
@@ -87,6 +134,20 @@ export class QuestionSaController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Publish/unpublish question by id',
+  })
+  @ApiParam({ name: 'id' })
+  @ApiNoContentResponse({
+    description: 'Question was publish/unpublish',
+  })
+  @ApiBadRequestResponse({
+    description: 'If input model not correct',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({
+    description: 'Question not found',
+  })
   @Put(`:id/${apiPrefixSettings.QUIZ_GAME.sa.publish}`)
   @HttpCode(204)
   async publishQuestionById(
@@ -107,6 +168,20 @@ export class QuestionSaController {
     }
   }
 
+  @ApiOperation({
+    summary: 'Update question by id',
+  })
+  @ApiParam({ name: 'id' })
+  @ApiNoContentResponse({
+    description: 'Question was update',
+  })
+  @ApiBadRequestResponse({
+    description: 'If input model not correct',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({
+    description: 'Question not found',
+  })
   @Put(`:id`)
   @HttpCode(204)
   async updateQuestionById(

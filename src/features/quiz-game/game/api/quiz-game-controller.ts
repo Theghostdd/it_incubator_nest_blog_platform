@@ -14,6 +14,7 @@ import { apiPrefixSettings } from '../../../../settings/app-prefix-settings';
 import { QuizGameQueryRepository } from '../infrastructure/quiz-game-query-repositories';
 import { EntityId } from '../../../../core/decorators/entityId';
 import {
+  ApiErrorsMessageModel,
   AppResultType,
   JWTAccessTokenPayloadType,
 } from '../../../../base/types/types';
@@ -25,7 +26,21 @@ import { QuizGameAnswerQuestionInputModel } from './models/input/quiz-game-input
 import { AnswerForQuestionCommand } from '../application/command/answer-for-question.command';
 import { GamPlayerAnswerOutputModel } from '../../game-answer/api/model/output/gam-player-answer-output.model';
 import { GamePlayerAnswerQueryRepository } from '../../game-answer/infrastructure/game-player-answer-query-repositories';
+import {
+  ApiBadRequestResponse,
+  ApiBearerAuth,
+  ApiForbiddenResponse,
+  ApiNotFoundResponse,
+  ApiOkResponse,
+  ApiOperation,
+  ApiParam,
+  ApiTags,
+  ApiUnauthorizedResponse,
+} from '@nestjs/swagger';
 
+@ApiTags('Quiz game')
+@ApiBearerAuth()
+@ApiUnauthorizedResponse({ description: 'Unauthorized' })
 @Controller(apiPrefixSettings.QUIZ_GAME.public.pair_game_quiz)
 @UseGuards(AuthJWTAccessGuard)
 export class QuizGameController {
@@ -35,6 +50,16 @@ export class QuizGameController {
     private readonly gamePlayerAnswerQueryRepository: GamePlayerAnswerQueryRepository,
   ) {}
 
+  @ApiOkResponse({
+    description: 'Return current user game',
+    type: QuizGameOutputModel,
+  })
+  @ApiNotFoundResponse({
+    description: 'If game does not exist',
+  })
+  @ApiOperation({
+    summary: 'Get current user game',
+  })
   @Get(
     `${apiPrefixSettings.QUIZ_GAME.public.pairs}/${apiPrefixSettings.QUIZ_GAME.public.my_current}`,
   )
@@ -44,6 +69,25 @@ export class QuizGameController {
     return this.quizGameQueryRepository.getGameCurrentUser(user.userId);
   }
 
+  @ApiOkResponse({
+    description: 'Return game by id',
+    type: QuizGameOutputModel,
+  })
+  @ApiNotFoundResponse({
+    description: 'If game does not exist',
+  })
+  @ApiForbiddenResponse({
+    description:
+      'If current user tries to get pair in which user is not participant',
+  })
+  @ApiBadRequestResponse({
+    description: 'If id is not correct',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiOperation({
+    summary: 'Get game by id',
+  })
+  @ApiParam({ name: 'id', description: 'Question`s id' })
   @Get(`${apiPrefixSettings.QUIZ_GAME.public.pairs}/:id`)
   async getGameById(
     @EntityId() id: number,
@@ -52,6 +96,16 @@ export class QuizGameController {
     return this.quizGameQueryRepository.getGameById(id, user.userId);
   }
 
+  @ApiOkResponse({
+    description: 'Connect to pending random game or create new game',
+    type: QuizGameOutputModel,
+  })
+  @ApiForbiddenResponse({
+    description: 'If current user is already participating in active pair',
+  })
+  @ApiOperation({
+    summary: 'Connect to pending random game or create new game',
+  })
   @Post(
     `${apiPrefixSettings.QUIZ_GAME.public.pairs}/${apiPrefixSettings.QUIZ_GAME.public.connection}`,
   )
@@ -76,6 +130,16 @@ export class QuizGameController {
     }
   }
 
+  @ApiOkResponse({
+    description: 'Answer for current player game for next question for player',
+    type: GamPlayerAnswerOutputModel,
+  })
+  @ApiForbiddenResponse({
+    description: 'If current user is already participating in active pair',
+  })
+  @ApiOperation({
+    summary: 'Answer for current player game for next question for player',
+  })
   @Post(
     `${apiPrefixSettings.QUIZ_GAME.public.pairs}/${apiPrefixSettings.QUIZ_GAME.public.my_current}/${apiPrefixSettings.QUIZ_GAME.public.answers}`,
   )
