@@ -10,8 +10,8 @@ import { GameUserAnswer } from '../../../game-answer/domain/game-user-answer.ent
 import { Inject } from '@nestjs/common';
 import { GamePlayers } from '../../../game-player/domain/game-players.entity';
 import { PlayerRepository } from '../../../player/infrastructure/player-repositories';
-import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
-import { DataSource, QueryRunner, Repository } from 'typeorm';
+import { InjectDataSource } from '@nestjs/typeorm';
+import { DataSource, QueryRunner } from 'typeorm';
 
 export class AnswerForQuestionCommand {
   constructor(
@@ -31,8 +31,6 @@ export class AnswerForQuestionHandler
     private readonly gameUserAnswer: typeof GameUserAnswer,
     private readonly playerRepository: PlayerRepository,
     @InjectDataSource() private readonly dataSource: DataSource,
-    @InjectRepository(QuizGame)
-    private readonly quizGameRepository: Repository<QuizGame>,
   ) {}
   async execute(
     command: AnswerForQuestionCommand,
@@ -50,10 +48,8 @@ export class AnswerForQuestionHandler
     try {
       await queryRunner.startTransaction();
 
-      const currentPlayerGame: QuizGame | null = await this.getCurrentGame(
-        queryRunner,
-        playerId,
-      );
+      const currentPlayerGame: QuizGame | null =
+        await this.quizGameRepositories.getCurrentGame(playerId, queryRunner);
 
       if (!this.isGameValid(currentPlayerGame))
         return this.applicationObjectResult.forbidden();
@@ -98,22 +94,6 @@ export class AnswerForQuestionHandler
     } finally {
       await queryRunner.release();
     }
-  }
-
-  private async getCurrentGame(
-    queryRunner: QueryRunner,
-    playerId: number,
-  ): Promise<QuizGame | null> {
-    return await queryRunner.manager.findOne(this.quizGameRepository.target, {
-      where: [
-        { status: QuizGameStatusEnum.Active, gamePlayers: { playerId } },
-        {
-          status: QuizGameStatusEnum.PendingSecondPlayer,
-          gamePlayers: { playerId },
-        },
-      ],
-      lock: { mode: 'pessimistic_write' },
-    });
   }
 
   // If game has Pending or Finished status or game not exist throw false

@@ -42,7 +42,22 @@ export class QuizGameRepositories {
       .getOne();
   }
 
-  async getCurrentPlayerGame(playerId: number): Promise<QuizGame | null> {
+  async getCurrentGame(
+    playerId: number,
+    queryRunner?: QueryRunner,
+  ): Promise<QuizGame | null> {
+    if (queryRunner) {
+      return await queryRunner.manager.findOne(this.quizGameRepository.target, {
+        where: [
+          { status: QuizGameStatusEnum.Active, gamePlayers: { playerId } },
+          {
+            status: QuizGameStatusEnum.PendingSecondPlayer,
+            gamePlayers: { playerId },
+          },
+        ],
+        lock: { mode: 'pessimistic_write' },
+      });
+    }
     return await this.quizGameRepository.findOne({
       where: [
         { status: QuizGameStatusEnum.Active, gamePlayers: { playerId } },

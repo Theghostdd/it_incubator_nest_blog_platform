@@ -33,7 +33,7 @@ export class ConnectToPairGameHandler
       await this.playerRepository.getPlayerByUserId(userId);
 
     const currentPlayerGame: QuizGame | null =
-      await this.quizGameRepositories.getCurrentPlayerGame(player.id);
+      await this.quizGameRepositories.getCurrentGame(player.id);
 
     if (currentPlayerGame) return this.applicationObjectResult.forbidden();
 
