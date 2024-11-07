@@ -24,19 +24,19 @@ export class QuizGame {
     type: 'timestamp with time zone',
     default: () => 'CURRENT_TIMESTAMP',
   })
-  createdAt: Date;
+  pairCreatedDate: Date;
 
   @Column({
     type: 'timestamp with time zone',
     nullable: true,
   })
-  startGameAt: Date;
+  startGameDate: Date;
 
   @Column({
     type: 'timestamp with time zone',
     nullable: true,
   })
-  finishGameAt: Date;
+  finishGameDate: Date;
 
   // Questions for specify game (THIS GAME)
   @OneToMany(
@@ -65,9 +65,9 @@ export class QuizGame {
     gamePlayer.isFirst = false;
 
     game.status = QuizGameStatusEnum.PendingSecondPlayer;
-    game.createdAt = date;
-    game.startGameAt = null;
-    game.finishGameAt = null;
+    game.pairCreatedDate = date;
+    game.startGameDate = null;
+    game.finishGameDate = null;
     game.gamePlayers = [];
     game.gamePlayers.push(gamePlayer);
     return game;
@@ -82,7 +82,7 @@ export class QuizGame {
     gamePlayer.gameId = this.id;
     gamePlayer.isFirst = false;
     this.gamePlayers.push(gamePlayer);
-    this.startGameAt = date;
+    this.startGameDate = date;
     this.status = QuizGameStatusEnum.Active;
     this.gameQuestions = [];
 
@@ -99,7 +99,7 @@ export class QuizGame {
   }
 
   finishGame(): void {
-    this.finishGameAt = new Date();
+    this.finishGameDate = new Date();
     this.status = QuizGameStatusEnum.Finished;
   }
 }

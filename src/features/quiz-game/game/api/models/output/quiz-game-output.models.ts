@@ -7,6 +7,46 @@ import { GameQuestions } from '../../../../game-questions/domain/game-questions.
 import { GamPlayerAnswerOutputModel } from '../../../../game-answer/api/model/output/gam-player-answer-output.model';
 import { GameUserAnswer } from '../../../../game-answer/domain/game-user-answer.entity';
 import { ApiProperty } from '@nestjs/swagger';
+import { BasePagination } from '../../../../../../base/pagination/base-pagination';
+
+export class QuizGameStatisticModel {
+  @ApiProperty({
+    description: 'Sum scores of all games',
+    example: '1',
+    type: Number,
+  })
+  sumScore: number;
+  @ApiProperty({
+    description: 'Average score of all games rounded to 2 decimal places',
+    example: '1',
+    type: Number,
+  })
+  avgScores: number;
+  @ApiProperty({
+    description: 'All played games count',
+    example: '1',
+    type: Number,
+  })
+  gamesCount: number;
+  @ApiProperty({
+    description: 'All won games count',
+    example: '1',
+    type: Number,
+  })
+  winsCount: number;
+  @ApiProperty({
+    description: 'All lose games count',
+    example: '1',
+    type: Number,
+  })
+  lossesCount: number;
+  @ApiProperty({
+    description: 'All draw games count',
+    example: '1',
+    type: Number,
+  })
+  drawsCount: number;
+}
 
 export class QuizGameCurrentQuestionsModel {
   @ApiProperty({
@@ -215,9 +255,22 @@ export class QuizGameMapperOutputModel {
               },
             ),
       status: game.status,
-      pairCreatedDate: game.createdAt.toISOString(),
-      startGameDate: game.startGameAt?.toISOString() ?? null,
-      finishGameDate: game.finishGameAt?.toISOString() ?? null,
+      pairCreatedDate: game.pairCreatedDate.toISOString(),
+      startGameDate: game.startGameDate?.toISOString() ?? null,
+      finishGameDate: game.finishGameDate?.toISOString() ?? null,
     };
   }
+
+  mapQuizGames(games: QuizGame[]): QuizGameOutputModel[] {
+    return games.map((game: QuizGame) => this.mapQuizGame(game));
+  }
+}
+
+export class QuizGameOutputModelForSwagger extends BasePagination<QuizGameOutputModel> {
+  @ApiProperty({
+    description: 'The all current player games',
+    isArray: true,
+    type: QuizGameOutputModel,
+  })
+  items: QuizGameOutputModel;
 }

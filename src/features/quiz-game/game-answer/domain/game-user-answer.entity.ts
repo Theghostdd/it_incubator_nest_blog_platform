@@ -88,6 +88,7 @@ export class GameUserAnswer {
     const currentQuestion: GameQuestions = questions.find(
       (q: GameQuestions): boolean => q.position === currentQuestionPosition,
     );
+
     answer.gameQuestion = currentQuestion;
     answer.gameQuestionId = currentQuestion.id;
     answer.position = currentQuestionPosition;

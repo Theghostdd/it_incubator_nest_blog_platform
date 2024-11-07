@@ -7,7 +7,10 @@ import {
   QuestionsPublishInputModel,
   QuestionsUpdateInputModel,
 } from '../../../src/features/quiz-game/questions/api/models/input/questions-input.model';
-import { QuizGameAnswerQuestionInputModel } from '../../../src/features/quiz-game/game/api/models/input/quiz-game-input.model';
+import {
+  QuizGameAnswerQuestionInputModel,
+  QuizGameQuery,
+} from '../../../src/features/quiz-game/game/api/models/input/quiz-game-input.model';
 
 export class QuizGameTestManager {
   private readonly apiPrefix: string;
@@ -18,6 +21,9 @@ export class QuizGameTestManager {
   private readonly pairGameQuizPairsConnection: string;
   private readonly pairGameQuizPairsMyCurrent: string;
   private readonly pairGameQuizPairsMyCurrentAnswer: string;
+  private readonly pairGameQuizPairsMy: string;
+  private readonly pairGameQuizPairsUsers: string;
+  private readonly pairGameQuizPairsMyStatistic: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
@@ -28,6 +34,9 @@ export class QuizGameTestManager {
     this.pairGameQuizPairsConnection = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.connection}`;
     this.pairGameQuizPairsMyCurrent = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my_current}`;
     this.pairGameQuizPairsMyCurrentAnswer = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my_current}/${apiPrefixSettings.QUIZ_GAME.public.answers}`;
+    this.pairGameQuizPairsMy = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my}`;
+    this.pairGameQuizPairsUsers = `${this.pairGameQuiz}/${apiPrefixSettings.QUIZ_GAME.public.users}`;
+    this.pairGameQuizPairsMyStatistic = `${this.pairGameQuizPairs}/${this.pairGameQuizPairsUsers}/${apiPrefixSettings.QUIZ_GAME.public.my_statistic}`;
   }
   async createQuestion(
     authorizationToken: string,
@@ -134,6 +143,30 @@ export class QuizGameTestManager {
       .post(`${this.pairGameQuizPairsMyCurrentAnswer}`)
       .set({ authorization: authorizationToken })
       .send(inputModel)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async getAllGamesCurrentUser(
+    authorizationToken: string,
+    query: QuizGameQuery | {},
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .get(`${this.pairGameQuizPairsMy}`)
+      .set({ authorization: authorizationToken })
+      .query(query)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async getStatisticCurrentUser(
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .get(`${this.pairGameQuizPairsMy}`)
+      .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
   }

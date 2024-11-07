@@ -7,9 +7,9 @@ export enum QuizGameStatusEnum {
 export enum QuizGamePropertyEnum {
   'id' = 'id',
   'status' = 'status',
-  'createdAt' = 'createdAt',
-  'startGameAt' = 'startGameAt',
-  'finishGameAt' = 'finishGameAt',
+  'pairCreatedDate' = 'pairCreatedDate',
+  'startGameDate' = 'startGameDate',
+  'finishGameDate' = 'finishGameDate',
   'gameQuestions' = 'gameQuestions',
   'gamePlayers' = 'gamePlayers',
 }

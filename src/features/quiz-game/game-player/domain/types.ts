@@ -1,3 +1,9 @@
+export enum WinStatusEnum {
+  'win' = 'win',
+  'lose' = 'lose',
+  'draw' = 'draw',
+}
+
 export enum GamePlayerPropertyEnum {
   'id' = 'id',
   'playerNumber' = 'playerNumber',

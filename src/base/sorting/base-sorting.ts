@@ -29,6 +29,10 @@ export class BaseSorting {
     'blogName',
     'body',
     'published',
+    'pairCreatedDate',
+    'startGameDate',
+    'finishGameDate',
+    'status',
   ];
   private defaultSortParams: BaseSortingType = {
     sortBy: 'createdAt',

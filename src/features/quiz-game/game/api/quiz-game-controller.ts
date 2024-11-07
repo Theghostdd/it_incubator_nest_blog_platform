@@ -6,6 +6,7 @@ import {
   HttpCode,
   InternalServerErrorException,
   Post,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { CommandBus } from '@nestjs/cqrs';
@@ -21,8 +22,15 @@ import {
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { AuthJWTAccessGuard } from '../../../../core/guards/jwt/jwt.guard';
 import { CurrentUser } from '../../../../core/decorators/current-user';
-import { QuizGameOutputModel } from './models/output/quiz-game-output.models';
-import { QuizGameAnswerQuestionInputModel } from './models/input/quiz-game-input.model';
+import {
+  QuizGameOutputModel,
+  QuizGameOutputModelForSwagger,
+  QuizGameStatisticModel,
+} from './models/output/quiz-game-output.models';
+import {
+  QuizGameAnswerQuestionInputModel,
+  QuizGameQuery,
+} from './models/input/quiz-game-input.model';
 import { AnswerForQuestionCommand } from '../application/command/answer-for-question.command';
 import { GamPlayerAnswerOutputModel } from '../../game-answer/api/model/output/gam-player-answer-output.model';
 import { GamePlayerAnswerQueryRepository } from '../../game-answer/infrastructure/game-player-answer-query-repositories';
@@ -37,6 +45,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { BasePagination } from '../../../../base/pagination/base-pagination';
 
 @ApiTags('Quiz game')
 @ApiBearerAuth()
@@ -67,6 +76,42 @@ export class QuizGameController {
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<QuizGameOutputModel> {
     return this.quizGameQueryRepository.getGameCurrentUser(user.userId);
+  }
+
+  @ApiOkResponse({
+    description: 'Return games current player with pagination',
+    type: QuizGameOutputModelForSwagger,
+  })
+  @ApiOperation({
+    summary: 'Get all current player game, closed and current',
+  })
+  @Get(
+    `${apiPrefixSettings.QUIZ_GAME.public.pairs}/${apiPrefixSettings.QUIZ_GAME.public.my}`,
+  )
+  async getAllGamesCurrentUser(
+    @Query() query: QuizGameQuery,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<BasePagination<QuizGameOutputModel[] | []>> {
+    return await this.quizGameQueryRepository.getAllCurrentPlayerGames(
+      user.userId,
+      query,
+    );
+  }
+
+  @ApiOkResponse({
+    description: 'Return current user statistic',
+    type: QuizGameStatisticModel,
+  })
+  @ApiOperation({
+    summary: 'Get statistic current player user',
+  })
+  @Get(
+    `${apiPrefixSettings.QUIZ_GAME.public.users}/${apiPrefixSettings.QUIZ_GAME.public.my_statistic}`,
+  )
+  async getStatisticCurrentUser(
+    @CurrentUser() user: JWTAccessTokenPayloadType,
+  ): Promise<QuizGameStatisticModel | []> {
+    return [];
   }
 
   @ApiOkResponse({

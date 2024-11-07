@@ -30,7 +30,7 @@ export class BasePagination<T> {
   @ApiProperty({
     description: 'Array of items for the current page',
     isArray: true,
-    type: Object,
+    type: Array,
   })
   public readonly items: T;
 }

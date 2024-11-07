@@ -80,12 +80,12 @@ export class AnswerForQuestionHandler
 
       await this.handleGameProgress(
         game,
-        currentPlayerAnswers.length,
-        secondPlayerAnswers.length,
+        currentPlayerAnswers,
+        answer,
+        secondPlayerAnswers,
         queryRunner,
         playerId,
       );
-
       const result: GameUserAnswer = await queryRunner.manager.save(answer);
       await queryRunner.commitTransaction();
       return this.applicationObjectResult.success(result.id);
@@ -104,21 +104,30 @@ export class AnswerForQuestionHandler
 
   private async handleGameProgress(
     game: QuizGame,
-    currentPlayerAnswersCount: number,
-    secondPlayerAnswersCount: number,
+    currentPlayerAnswers: GameUserAnswer[],
+    newAnswerCurrentPlayer: GameUserAnswer,
+    secondPlayerAnswers: GameUserAnswer[],
     queryRunner: QueryRunner,
     playerId: number,
   ): Promise<void> {
+    const currentPlayerAnswersCount = currentPlayerAnswers.length;
+    const secondPlayerAnswersCount = secondPlayerAnswers.length;
+    const currentPlayer: GamePlayers = game.gamePlayers.find(
+      (p: GamePlayers): boolean => p.playerId === playerId,
+    );
+    const secondPlayer: GamePlayers = game.gamePlayers.find(
+      (p: GamePlayers): boolean => p.playerId !== playerId,
+    );
     if (currentPlayerAnswersCount + 1 === 5 && secondPlayerAnswersCount === 5) {
       game.finishGame();
+
+      currentPlayerAnswers.push(newAnswerCurrentPlayer);
+      currentPlayer.setWinStatus(currentPlayer, secondPlayer);
       await queryRunner.manager.save(game);
     } else if (
       currentPlayerAnswersCount + 1 === 5 &&
       secondPlayerAnswersCount < 5
     ) {
-      const currentPlayer: GamePlayers = game.gamePlayers.find(
-        (p: GamePlayers): boolean => p.playerId === playerId,
-      );
       currentPlayer.setFirst();
       await queryRunner.manager.save(currentPlayer);
     }

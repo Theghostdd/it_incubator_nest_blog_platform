@@ -48,6 +48,9 @@ export const apiPrefixSettings = {
       connection: 'connection',
       my_current: 'my-current',
       answers: 'answers',
+      my: 'my',
+      users: 'users',
+      my_statistic: 'my-statistic',
     },
   },
 };
