@@ -71,7 +71,30 @@ export class QuizGameRepositories {
 
   async getCurrentPlayerGameByIdWithAnswers(
     gameId: number,
+    queryRunner?: QueryRunner,
   ): Promise<QuizGame | null> {
+    if (queryRunner) {
+      return await queryRunner.manager
+        .createQueryBuilder(this.quizGameRepository.target, 'g')
+        .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
+        .leftJoinAndSelect(`gp.${GamePlayerPropertyEnum.player}`, 'p')
+        .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gameQuestions}`, 'gq')
+        .leftJoinAndSelect(
+          `p.${PlayerPropertyEnum.playerAnswers}`,
+          'pa',
+          `pa.${GamePlayerAnswerPropertyEnum.gameQuestionId} = gq.${GameSpecifyQuestionsPropertyEnum.id}`,
+        )
+        .leftJoinAndSelect(
+          `gq.${GameSpecifyQuestionsPropertyEnum.question}`,
+          'q',
+        )
+        .leftJoinAndSelect(`q.${QuizQuestionsPropertyEnum.answers}`, 'qa')
+        .where(`g.${QuizGamePropertyEnum.status} = :status`, {
+          status: QuizGameStatusEnum.Active,
+        })
+        .andWhere(`g.${QuizGamePropertyEnum.id} = :gameId`, { gameId })
+        .getOne();
+    }
     return await this.quizGameRepository
       .createQueryBuilder('g')
       .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')

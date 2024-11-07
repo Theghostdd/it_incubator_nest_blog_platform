@@ -57,6 +57,7 @@ export class AnswerForQuestionHandler
       const game: QuizGame =
         await this.quizGameRepositories.getCurrentPlayerGameByIdWithAnswers(
           currentPlayerGame.id,
+          queryRunner,
         );
 
       const currentPlayerAnswers: GameUserAnswer[] | [] = game.gamePlayers.find(
