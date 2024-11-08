@@ -10,7 +10,10 @@ import {
 } from '../../../models/user/interfaces';
 import { AuthTestManager } from '../../../utils/request-test-manager/auth-test-manager';
 import { AuthorizationUserResponseModel } from '../../../../src/base/types/types';
-import { QuizGameOutputModel } from '../../../../src/features/quiz-game/game/api/models/output/quiz-game-output.models';
+import {
+  QuizGameOutputModel,
+  QuizGameStatisticModel,
+} from '../../../../src/features/quiz-game/game/api/models/output/quiz-game-output.models';
 import { QuizGameStatusEnum } from '../../../../src/features/quiz-game/game/domain/types';
 import {
   QuestionsInputModel,
@@ -3858,8 +3861,16 @@ describe('Quiz game e2e', () => {
 
     it('Should create new pair game, connect to game, and both users should take answer, second player must be winner', async () => {
       await createQuestions();
-      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
-      await userTestManager.createUser(userTwoCreateModel, adminAuthToken, 201);
+      const { id: userId1 } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: userId2 } = await userTestManager.createUser(
+        userTwoCreateModel,
+        adminAuthToken,
+        201,
+      );
       const authUser1: AuthorizationUserResponseModel =
         await authTestManager.loginAndCheckCookie(userLoginModel, 200);
       const accessTokenUser1 = authUser1.accessToken;
@@ -3874,10 +3885,11 @@ describe('Quiz game e2e', () => {
         answer: gameTestModel.unCorrectAnswerForCurrentQuestion,
       };
       // Start game 1
-      await quizGameTestManager.createOrConnectToGame(
+      const game = await quizGameTestManager.createOrConnectToGame(
         `Bearer ${accessTokenUser1}`,
         200,
       );
+      const gameId = game.id;
       // Connect game 1
       await quizGameTestManager.createOrConnectToGame(
         `Bearer ${accessTokenUser2}`,
@@ -3885,67 +3897,155 @@ describe('Quiz game e2e', () => {
       );
 
       // Answer by player 1
-      await Promise.all([
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser1}`,
-          answerInCorrectBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser1}`,
-          answerInCorrectBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser1}`,
-          answerBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser1}`,
-          answerBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser1}`,
-          answerBody,
-          200,
-        ),
-      ]);
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerInCorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerInCorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+
       // Answer by player 2
-      await Promise.all([
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser2}`,
-          answerBody,
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      const getCurrentGameResult1User1: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId,
           200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser2}`,
-          answerBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser2}`,
-          answerBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser2}`,
-          answerBody,
-          200,
-        ),
-        quizGameTestManager.answerForCurrentGameQuestions(
-          `Bearer ${accessTokenUser2}`,
-          answerBody,
-          200,
-        ),
-      ]);
+        );
+
+      expect(getCurrentGameResult1User1).toEqual({
+        id: gameId,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 4,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 5,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
     });
 
     it('Should create new pair game, connect to game, and both users should take answer, must be draw', async () => {
       await createQuestions();
-      await userTestManager.createUser(userCreateModel, adminAuthToken, 201);
-      await userTestManager.createUser(userTwoCreateModel, adminAuthToken, 201);
+      const { id: userId1 } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: userId2 } = await userTestManager.createUser(
+        userTwoCreateModel,
+        adminAuthToken,
+        201,
+      );
       const authUser1: AuthorizationUserResponseModel =
         await authTestManager.loginAndCheckCookie(userLoginModel, 200);
       const accessTokenUser1 = authUser1.accessToken;
@@ -3960,10 +4060,184 @@ describe('Quiz game e2e', () => {
         answer: gameTestModel.unCorrectAnswerForCurrentQuestion,
       };
       // Start game 1
-      await quizGameTestManager.createOrConnectToGame(
+      const game = await quizGameTestManager.createOrConnectToGame(
         `Bearer ${accessTokenUser1}`,
         200,
       );
+      const gameId = game.id;
+      // Connect game 1
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser2}`,
+        200,
+      );
+
+      // Answer by player 1
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerInCorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerInCorrectBody,
+        200,
+      ),
+        await quizGameTestManager.answerForCurrentGameQuestions(
+          `Bearer ${accessTokenUser1}`,
+          answerBody,
+          200,
+        );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      // Answer by player 2
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerInCorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+
+      // Check result by player 1
+      const getCurrentGameResult1User1: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId,
+          200,
+        );
+
+      expect(getCurrentGameResult1User1).toEqual({
+        id: gameId,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 4,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 4,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+    });
+
+    it('Should create new pair game, connect to game, and both users should take incorrect answer, must be draw, score 0', async () => {
+      await createQuestions();
+      const { id: userId1 } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: userId2 } = await userTestManager.createUser(
+        userTwoCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const authUser1: AuthorizationUserResponseModel =
+        await authTestManager.loginAndCheckCookie(userLoginModel, 200);
+      const accessTokenUser1 = authUser1.accessToken;
+      const authUser2: AuthorizationUserResponseModel =
+        await authTestManager.loginAndCheckCookie(userTwoLoginModel, 200);
+      const accessTokenUser2 = authUser2.accessToken;
+
+      const answerInCorrectBody: QuizGameAnswerQuestionInputModel = {
+        answer: gameTestModel.unCorrectAnswerForCurrentQuestion,
+      };
+      // Start game 1
+      const game = await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        200,
+      );
+      const gameId = game.id;
       // Connect game 1
       await quizGameTestManager.createOrConnectToGame(
         `Bearer ${accessTokenUser2}`,
@@ -3984,17 +4258,17 @@ describe('Quiz game e2e', () => {
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser1}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser1}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser1}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
       ]);
@@ -4007,25 +4281,193 @@ describe('Quiz game e2e', () => {
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser2}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser2}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser2}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
         quizGameTestManager.answerForCurrentGameQuestions(
           `Bearer ${accessTokenUser2}`,
-          answerBody,
+          answerInCorrectBody,
           200,
         ),
       ]);
+
+      // Check result by player 1
+      const getCurrentGameResult1User1: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId,
+          200,
+        );
+      expect(getCurrentGameResult1User1).toEqual({
+        id: gameId,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 0,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 0,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+
+      // Check result by player 2
+      const getCurrentGameResult1User2: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId,
+          200,
+        );
+      expect(getCurrentGameResult1User2).toEqual({
+        id: gameId,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 0,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 0,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
     });
   });
 
@@ -5110,6 +5552,1014 @@ describe('Quiz game e2e', () => {
             finishGameDate: null,
           },
         ],
+      });
+    });
+  });
+
+  describe('Get current player statistic', () => {
+    it('Should create game, finish game, and again 3 times. Game 1 won - Player 1, 2 correct answers and first, Player 2, 1 correct answer. Game 2 won - Player 2, 5 correct answers, Player 1, 0 correct answer and first. Game 3 won - Player 1, 1 correct answer and first, Player 2, 0 correct answers. Game 4 draw, Player 1 correct answer 1, and first, Player 2 correct answers 2. Get correct static for each user', async () => {
+      await createQuestions();
+      const { id: userId1 } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const { id: userId2 } = await userTestManager.createUser(
+        userTwoCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const authUser1: AuthorizationUserResponseModel =
+        await authTestManager.loginAndCheckCookie(userLoginModel, 200);
+      const accessTokenUser1 = authUser1.accessToken;
+      const authUser2: AuthorizationUserResponseModel =
+        await authTestManager.loginAndCheckCookie(userTwoLoginModel, 200);
+      const accessTokenUser2 = authUser2.accessToken;
+
+      const answerBody: QuizGameAnswerQuestionInputModel = {
+        answer: gameTestModel.answerForCurrentQuestion1,
+      };
+      const answerIncorrectBody: QuizGameAnswerQuestionInputModel = {
+        answer: gameTestModel.unCorrectAnswerForCurrentQuestion,
+      };
+
+      // Create game 1 for user 1 and 2
+      const game1 = await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        200,
+      );
+      const gameId1 = game1.id;
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser2}`,
+        200,
+      );
+
+      // Answer by player 1
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      // Answer by player 2
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+
+      // Check result by player 1
+      const getCurrentGameByUser1Result1: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId1,
+          200,
+        );
+
+      expect(getCurrentGameByUser1Result1).toEqual({
+        id: gameId1,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 3,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 1,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+      // Check result by player 2
+      const getCurrentGameByUser2Result1: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser2}`,
+          gameId1,
+          200,
+        );
+
+      expect(getCurrentGameByUser2Result1).toEqual({
+        id: gameId1,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 3,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 1,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+
+      // Create game 2 for user 1 and 2
+      const game2 = await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        200,
+      );
+      const gameId2 = game2.id;
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser2}`,
+        200,
+      );
+
+      // Answer by player 1
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      // Answer by player 2
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+
+      // Check result by player 1
+      const getCurrentGameByUser1Result2: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId2,
+          200,
+        );
+
+      expect(getCurrentGameByUser1Result2).toEqual({
+        id: gameId2,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 0,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 5,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+      // Check result by player 2
+      const getCurrentGameByUser2Result2: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser2}`,
+          gameId2,
+          200,
+        );
+      expect(getCurrentGameByUser2Result2).toEqual({
+        id: gameId2,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 0,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 5,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+
+      // Create game 3 for user 1 and 2
+      const game3 = await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        200,
+      );
+      const gameId3 = game3.id;
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser2}`,
+        200,
+      );
+
+      // Answer by player 1
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      // Answer by player 2
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+
+      // Check result by player 1
+      const getCurrentGameByUser1Result3: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId3,
+          200,
+        );
+
+      expect(getCurrentGameByUser1Result3).toEqual({
+        id: gameId3,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 2,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 0,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+      // Check result by player 2
+      const getCurrentGameByUser2Result3: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser2}`,
+          gameId3,
+          200,
+        );
+      expect(getCurrentGameByUser2Result3).toEqual({
+        id: gameId3,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 2,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 0,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+
+      // Create game 4 for user 1 and 2
+      const game4 = await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser1}`,
+        200,
+      );
+      const gameId4 = game4.id;
+      await quizGameTestManager.createOrConnectToGame(
+        `Bearer ${accessTokenUser2}`,
+        200,
+      );
+
+      // Answer by player 1
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser1}`,
+        answerIncorrectBody,
+        200,
+      );
+      // Answer by player 2
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+      await quizGameTestManager.answerForCurrentGameQuestions(
+        `Bearer ${accessTokenUser2}`,
+        answerIncorrectBody,
+        200,
+      );
+
+      // Check result by player 1
+      const getCurrentGameByUser1Result4: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser1}`,
+          gameId4,
+          200,
+        );
+
+      expect(getCurrentGameByUser1Result4).toEqual({
+        id: gameId4,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 2,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 2,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+      // Check result by player 2
+      const getCurrentGameByUser2Result4: QuizGameOutputModel =
+        await quizGameTestManager.getGameByID(
+          `Bearer ${accessTokenUser2}`,
+          gameId4,
+          200,
+        );
+      expect(getCurrentGameByUser2Result4).toEqual({
+        id: gameId4,
+        firstPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId1,
+            login: userCreateModel.login,
+          },
+          score: 2,
+        },
+        secondPlayerProgress: {
+          answers: [
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Correct,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+            {
+              questionId: expect.any(String),
+              answerStatus: QuizCurrentGameAnswerStatusEnum.Incorrect,
+              addedAt: expect.any(String),
+            },
+          ],
+          player: {
+            id: userId2,
+            login: userTwoCreateModel.login,
+          },
+          score: 2,
+        },
+        questions: expect.any(Array),
+        status: QuizGameStatusEnum.Finished,
+        pairCreatedDate: expect.any(String),
+        startGameDate: expect.any(String),
+        finishGameDate: expect.any(String),
+      });
+
+      /*
+      Correct static for user 1:
+            sumScore: 7,
+            avgScores: 1.75,
+            gamesCount: 4,
+            winsCount: 2,
+            lossesCount: 1,
+            drawsCount: 1,
+       */
+
+      /*
+      Correct static for user 2:
+            sumScore: 8,
+            avgScores: 2,
+            gamesCount: 4,
+            winsCount: 1,
+            lossesCount: 2,
+            drawsCount: 1,
+       */
+      const getStaticUser1: QuizGameStatisticModel =
+        await quizGameTestManager.getStatisticCurrentUser(
+          `Bearer ${accessTokenUser1}`,
+          200,
+        );
+
+      expect(getStaticUser1).toEqual({
+        sumScore: 7,
+        avgScores: 1.75,
+        gamesCount: 4,
+        winsCount: 2,
+        lossesCount: 1,
+        drawsCount: 1,
+      });
+
+      const getStaticUser2: QuizGameStatisticModel =
+        await quizGameTestManager.getStatisticCurrentUser(
+          `Bearer ${accessTokenUser2}`,
+          200,
+        );
+
+      expect(getStaticUser2).toEqual({
+        sumScore: 8,
+        avgScores: 2,
+        gamesCount: 4,
+        winsCount: 1,
+        lossesCount: 2,
+        drawsCount: 1,
       });
     });
   });

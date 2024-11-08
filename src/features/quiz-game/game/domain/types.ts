@@ -12,4 +12,16 @@ export enum QuizGamePropertyEnum {
   'finishGameDate' = 'finishGameDate',
   'gameQuestions' = 'gameQuestions',
   'gamePlayers' = 'gamePlayers',
+  'gamesCount' = 'gamesCount',
+  'sumScore' = 'sumScore',
+  'avgScores' = 'avgScores',
 }
+
+export type UserStatisticType = {
+  gamesCount: number;
+  winsCount: number;
+  lossesCount: number;
+  drawsCount: number;
+  sumScore: number;
+  avgScores: number;
+};

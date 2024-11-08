@@ -12,4 +12,9 @@ export enum GamePlayerPropertyEnum {
   'playerId' = 'playerId',
   'games' = 'games',
   'gameId' = 'gameId',
+  'winStatus' = 'winStatus',
+  'score' = 'score',
+  'winsCount' = 'winsCount',
+  'lossesCount' = 'lossesCount',
+  'drawsCount' = 'drawsCount',
 }

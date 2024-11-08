@@ -36,7 +36,7 @@ export class QuizGameTestManager {
     this.pairGameQuizPairsMyCurrentAnswer = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my_current}/${apiPrefixSettings.QUIZ_GAME.public.answers}`;
     this.pairGameQuizPairsMy = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my}`;
     this.pairGameQuizPairsUsers = `${this.pairGameQuiz}/${apiPrefixSettings.QUIZ_GAME.public.users}`;
-    this.pairGameQuizPairsMyStatistic = `${this.pairGameQuizPairs}/${this.pairGameQuizPairsUsers}/${apiPrefixSettings.QUIZ_GAME.public.my_statistic}`;
+    this.pairGameQuizPairsMyStatistic = `${this.pairGameQuizPairsUsers}/${apiPrefixSettings.QUIZ_GAME.public.my_statistic}`;
   }
   async createQuestion(
     authorizationToken: string,
@@ -165,7 +165,7 @@ export class QuizGameTestManager {
     statusCode: number,
   ) {
     const result = await request(this.app.getHttpServer())
-      .get(`${this.pairGameQuizPairsMy}`)
+      .get(`${this.pairGameQuizPairsMyStatistic}`)
       .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;

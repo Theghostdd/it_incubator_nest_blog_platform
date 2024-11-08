@@ -86,6 +86,9 @@ export class AnswerForQuestionHandler
         queryRunner,
         playerId,
       );
+
+      await this.upScore(answer, queryRunner, game);
+
       const result: GameUserAnswer = await queryRunner.manager.save(answer);
       await queryRunner.commitTransaction();
       return this.applicationObjectResult.success(result.id);
@@ -122,13 +125,28 @@ export class AnswerForQuestionHandler
       game.finishGame();
 
       currentPlayerAnswers.push(newAnswerCurrentPlayer);
-      currentPlayer.setWinStatus(currentPlayer, secondPlayer);
+      currentPlayer.setWinStatus(secondPlayer);
+      currentPlayer.setFinallyScore(secondPlayer);
       await queryRunner.manager.save(game);
     } else if (
       currentPlayerAnswersCount + 1 === 5 &&
       secondPlayerAnswersCount < 5
     ) {
       currentPlayer.setFirst();
+      await queryRunner.manager.save(currentPlayer);
+    }
+  }
+
+  private async upScore(
+    answer: GameUserAnswer,
+    queryRunner: QueryRunner,
+    game: QuizGame,
+  ): Promise<void> {
+    if (answer.isTrue) {
+      const currentPlayer: GamePlayers = game.gamePlayers.find(
+        (p: GamePlayers): boolean => p.playerId === answer.playerId,
+      );
+      currentPlayer.setScore();
       await queryRunner.manager.save(currentPlayer);
     }
   }

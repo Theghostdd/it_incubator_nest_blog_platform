@@ -22,6 +22,9 @@ export class GamePlayers {
   @Column({ default: false })
   isFirst: boolean;
 
+  @Column({ default: 0 })
+  score: number;
+
   @Index()
   @Column({ enum: WinStatusEnum, nullable: true })
   winStatus: WinStatusEnum;
@@ -49,8 +52,34 @@ export class GamePlayers {
     this.isFirst = true;
   }
 
-  setWinStatus(currentPlayer: GamePlayers, secondPlayer: GamePlayers) {
-    let currentPlayerScore = currentPlayer.player.playerAnswers.reduce(
+  setScore(): void {
+    ++this.score;
+  }
+
+  setFinallyScore(secondPlayer: GamePlayers): void {
+    const isTrueCurrentPlayer: boolean = this.player.playerAnswers.some(
+      (a: GameUserAnswer) => a.isTrue,
+    );
+    const isTrueSecondPlayer: boolean = secondPlayer.player.playerAnswers.some(
+      (a: GameUserAnswer) => a.isTrue,
+    );
+
+    if (this.isFirst) {
+      isTrueCurrentPlayer ? ++this.score : this.score;
+    } else {
+      isTrueSecondPlayer ? ++secondPlayer.score : secondPlayer.score;
+    }
+  }
+
+  setWinStatus(secondPlayer: GamePlayers) {
+    const isTrueCurrentPlayer: boolean = this.player.playerAnswers.some(
+      (a: GameUserAnswer) => a.isTrue,
+    );
+    const isTrueSecondPlayer: boolean = secondPlayer.player.playerAnswers.some(
+      (a: GameUserAnswer) => a.isTrue,
+    );
+
+    let currentPlayerScore = this.player.playerAnswers.reduce(
       (acc: number, a: GameUserAnswer) => acc + (a?.isTrue ? 1 : 0),
       0,
     );
@@ -59,8 +88,11 @@ export class GamePlayers {
       0,
     );
 
-    this.isFirst ? ++currentPlayerScore : currentPlayerScore;
-    secondPlayer.isFirst ? ++secondPlayerScore : secondPlayerScore;
+    if (this.isFirst) {
+      isTrueCurrentPlayer ? ++currentPlayerScore : currentPlayerScore;
+    } else {
+      isTrueSecondPlayer ? ++secondPlayerScore : secondPlayerScore;
+    }
 
     if (currentPlayerScore > secondPlayerScore) {
       this.winStatus = WinStatusEnum.win;

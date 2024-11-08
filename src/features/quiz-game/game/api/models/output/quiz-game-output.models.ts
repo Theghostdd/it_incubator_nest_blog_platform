@@ -1,4 +1,4 @@
-import { QuizGameStatusEnum } from '../../../domain/types';
+import { QuizGameStatusEnum, UserStatisticType } from '../../../domain/types';
 import { QuizCurrentGameAnswerStatusEnum } from '../../../../game-answer/domain/types';
 import { Injectable } from '@nestjs/common';
 import { QuizGame } from '../../../domain/quiz-game.entity';
@@ -180,17 +180,12 @@ export class QuizGameMapperOutputModel {
       (p: GamePlayers): boolean => p.playerNumber === 2,
     );
 
-    let firstPlayerScore: number = 0;
-    if (game.status === QuizGameStatusEnum.Finished)
-      firstPlayer.isFirst ? ++firstPlayerScore : +0;
-
     const playerFirstAnswers = firstPlayer.player.playerAnswers.map(
       (answer: GameUserAnswer) => {
         const question: GameQuestions = game.gameQuestions.find(
           (question: GameQuestions): boolean =>
             question.id === answer.gameQuestionId,
         );
-        answer.isTrue ? ++firstPlayerScore : +0;
         return {
           questionId: question.questionId.toString(),
           answerStatus: answer.isTrue
@@ -201,10 +196,6 @@ export class QuizGameMapperOutputModel {
       },
     );
 
-    let secondPlayerScore: number = 0;
-    if (game.status === QuizGameStatusEnum.Finished)
-      secondPlayer.isFirst ? ++secondPlayerScore : +0;
-
     const playerSecondAnswers = secondPlayer
       ? secondPlayer.player.playerAnswers.map((answer: GameUserAnswer) => {
           const question: GameQuestions = game.gameQuestions.find(
@@ -212,7 +203,6 @@ export class QuizGameMapperOutputModel {
               question.id === answer.gameQuestionId,
           );
 
-          answer.isTrue ? ++secondPlayerScore : +0;
           return {
             questionId: question.questionId.toString(),
             answerStatus: answer.isTrue
@@ -231,7 +221,7 @@ export class QuizGameMapperOutputModel {
           login: firstPlayer.player.user.login,
         },
         answers: playerFirstAnswers,
-        score: firstPlayerScore,
+        score: firstPlayer.score,
       },
       secondPlayerProgress: secondPlayer
         ? {
@@ -240,7 +230,7 @@ export class QuizGameMapperOutputModel {
               login: secondPlayer.player.user.login,
             },
             answers: playerSecondAnswers,
-            score: secondPlayerScore,
+            score: secondPlayer.score,
           }
         : null,
       questions:
@@ -263,6 +253,19 @@ export class QuizGameMapperOutputModel {
 
   mapQuizGames(games: QuizGame[]): QuizGameOutputModel[] {
     return games.map((game: QuizGame) => this.mapQuizGame(game));
+  }
+
+  mapQuizGamePlayerStatistic(
+    statistic: UserStatisticType,
+  ): QuizGameStatisticModel {
+    return {
+      sumScore: +statistic.sumScore,
+      avgScores: +(+statistic.avgScores).toFixed(2),
+      gamesCount: +statistic.gamesCount,
+      winsCount: +statistic.winsCount,
+      lossesCount: +statistic.lossesCount,
+      drawsCount: +statistic.drawsCount,
+    };
   }
 }
 

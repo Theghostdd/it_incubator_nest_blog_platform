@@ -17,10 +17,17 @@ import {
   SelectQueryBuilder,
   WhereExpressionBuilder,
 } from 'typeorm';
-import { QuizGamePropertyEnum, QuizGameStatusEnum } from '../domain/types';
+import {
+  QuizGamePropertyEnum,
+  QuizGameStatusEnum,
+  UserStatisticType,
+} from '../domain/types';
 import { Player } from '../../player/domain/quiz-game-player.entity';
 import { PlayerPropertyEnum } from '../../player/domain/types';
-import { GamePlayerPropertyEnum } from '../../game-player/domain/types';
+import {
+  GamePlayerPropertyEnum,
+  WinStatusEnum,
+} from '../../game-player/domain/types';
 import { GameSpecifyQuestionsPropertyEnum } from '../../game-questions/domain/types';
 import { GamePlayerAnswerPropertyEnum } from '../../game-answer/domain/types';
 import { GamePlayers } from '../../game-player/domain/game-players.entity';
@@ -204,15 +211,27 @@ export class QuizGameQueryRepository {
       where: { userId: userId },
     });
     const playerId = player.id;
-    // TODO
-    return {
-      gamesCount: 0,
-      avgScores: 0,
-      drawsCount: 0,
-      lossesCount: 0,
-      sumScore: 0,
-      winsCount: 0,
-    };
+
+    const result: UserStatisticType = await this.quizGameRepository
+      .createQueryBuilder('g')
+      .leftJoin(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
+      .select([
+        `CAST(COUNT(g.${QuizGamePropertyEnum.id}) as INT) as "${QuizGamePropertyEnum.gamesCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :winsStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.winsCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :lossesStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.lossesCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :drawStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.drawsCount}"`,
+        `CAST(SUM(gp.${GamePlayerPropertyEnum.score}) as INT) as "${QuizGamePropertyEnum.sumScore}"`,
+        `ROUND(AVG(gp.${GamePlayerPropertyEnum.score}), 2) as "${QuizGamePropertyEnum.avgScores}"`,
+      ])
+      .where(`gp.${GamePlayerPropertyEnum.playerId} = :playerId`, { playerId })
+      .setParameters({
+        winsStatus: WinStatusEnum.win,
+        lossesStatus: WinStatusEnum.lose,
+        drawStatus: WinStatusEnum.draw,
+      })
+      .getRawOne();
+
+    return this.quizGameMapperOutputModel.mapQuizGamePlayerStatistic(result);
   }
 
   private applySortingForUsersGames(

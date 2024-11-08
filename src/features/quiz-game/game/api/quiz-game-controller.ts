@@ -111,7 +111,7 @@ export class QuizGameController {
   async getStatisticCurrentUser(
     @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<QuizGameStatisticModel | []> {
-    return [];
+    return this.quizGameQueryRepository.getCurrentUserStatistic(user.userId);
   }
 
   @ApiOkResponse({
