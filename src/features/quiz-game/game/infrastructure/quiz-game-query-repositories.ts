@@ -9,6 +9,7 @@ import {
   QuizGameMapperOutputModel,
   QuizGameOutputModel,
   QuizGameStatisticModel,
+  QuizGameStatisticWithPlayerInfoModel,
 } from '../api/models/output/quiz-game-output.models';
 import { InjectRepository } from '@nestjs/typeorm';
 import {
@@ -21,6 +22,7 @@ import {
   QuizGamePropertyEnum,
   QuizGameStatusEnum,
   UserStatisticType,
+  UserStatisticWithUserInfoType,
 } from '../domain/types';
 import { Player } from '../../player/domain/quiz-game-player.entity';
 import { PlayerPropertyEnum } from '../../player/domain/types';
@@ -32,7 +34,11 @@ import { GameSpecifyQuestionsPropertyEnum } from '../../game-questions/domain/ty
 import { GamePlayerAnswerPropertyEnum } from '../../game-answer/domain/types';
 import { GamePlayers } from '../../game-player/domain/game-players.entity';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
-import { QuizGameQuery } from '../api/models/input/quiz-game-input.model';
+import {
+  QuizGameQuery,
+  QuizTopGamePlayersQuery,
+} from '../api/models/input/quiz-game-input.model';
+import { UserPropertyEnum } from '../../../users/user/domain/types';
 
 @Injectable()
 export class QuizGameQueryRepository {
@@ -45,6 +51,7 @@ export class QuizGameQueryRepository {
     private readonly gamePlayerRepository: Repository<GamePlayers>,
     private readonly quizGameMapperOutputModel: QuizGameMapperOutputModel,
     private readonly quizGameQuery: QuizGameQuery,
+    private readonly quizTopGamePlayersQuery: QuizTopGamePlayersQuery,
   ) {}
 
   async getGameById(
@@ -232,6 +239,69 @@ export class QuizGameQueryRepository {
       .getRawOne();
 
     return this.quizGameMapperOutputModel.mapQuizGamePlayerStatistic(result);
+  }
+
+  async getTopGamePlayersStatistic(
+    query: QuizTopGamePlayersQuery,
+  ): Promise<BasePagination<QuizGameStatisticWithPlayerInfoModel[] | []>> {
+    const { sort, sortDirection, pageSize, pageNumber } =
+      this.quizTopGamePlayersQuery.createQuery(query);
+
+    const skip: number = (pageNumber - 1) * pageSize;
+
+    const queryGame = this.quizGameRepository
+      .createQueryBuilder('g')
+      .leftJoin(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
+      .leftJoin(`gp.${GamePlayerPropertyEnum.player}`, 'p')
+      .leftJoin(`p.${PlayerPropertyEnum.user}`, 'u')
+      .select([
+        `u.${UserPropertyEnum.id} as "${UserPropertyEnum.userId}"`,
+        `u.${UserPropertyEnum.login} as "${UserPropertyEnum.login}"`,
+        `CAST(COUNT(g.${QuizGamePropertyEnum.id}) as INT) as "${QuizGamePropertyEnum.gamesCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :winsStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.winsCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :lossesStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.lossesCount}"`,
+        `CAST(SUM(CASE WHEN gp.${GamePlayerPropertyEnum.winStatus} = :drawStatus THEN 1 ELSE 0 END) as INT) as "${GamePlayerPropertyEnum.drawsCount}"`,
+        `CAST(SUM(gp.${GamePlayerPropertyEnum.score}) as INT) as "${QuizGamePropertyEnum.sumScore}"`,
+        `ROUND(AVG(gp.${GamePlayerPropertyEnum.score}), 2) as "${QuizGamePropertyEnum.avgScores}"`,
+      ])
+      .setParameters({
+        winsStatus: WinStatusEnum.win,
+        lossesStatus: WinStatusEnum.lose,
+        drawStatus: WinStatusEnum.draw,
+      })
+      .groupBy(`u.${UserPropertyEnum.id}`)
+      .offset(skip)
+      .limit(pageSize);
+
+    sort.forEach((sortParams: string, i: number) => {
+      queryGame.addOrderBy(
+        `"${sortParams}"`,
+        sortDirection[i] as 'ASC' | 'DESC',
+      );
+    });
+
+    const result: [UserStatisticWithUserInfoType[], number] = await Promise.all(
+      [
+        queryGame.getRawMany(),
+        this.quizGamePlayerRepository.createQueryBuilder('p').getCount(),
+      ],
+    );
+
+    const totalCount: number = result[1];
+    const pagesCount: number = Math.ceil(totalCount / pageSize);
+
+    return {
+      pagesCount: +pagesCount,
+      page: +pageNumber,
+      pageSize: +pageSize,
+      totalCount: +totalCount,
+      items:
+        result[0].length > 0
+          ? this.quizGameMapperOutputModel.mapQuizTopGamePlayersStatistic(
+              result[0],
+            )
+          : [],
+    };
   }
 
   private applySortingForUsersGames(

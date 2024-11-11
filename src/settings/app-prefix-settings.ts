@@ -51,6 +51,7 @@ export const apiPrefixSettings = {
       my: 'my',
       users: 'users',
       my_statistic: 'my-statistic',
+      top: 'top',
     },
   },
 };

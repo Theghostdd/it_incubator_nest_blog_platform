@@ -24,6 +24,7 @@ export class QuizGameTestManager {
   private readonly pairGameQuizPairsMy: string;
   private readonly pairGameQuizPairsUsers: string;
   private readonly pairGameQuizPairsMyStatistic: string;
+  private readonly pairGameQuizPairsTop: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
@@ -37,6 +38,7 @@ export class QuizGameTestManager {
     this.pairGameQuizPairsMy = `${this.pairGameQuizPairs}/${apiPrefixSettings.QUIZ_GAME.public.my}`;
     this.pairGameQuizPairsUsers = `${this.pairGameQuiz}/${apiPrefixSettings.QUIZ_GAME.public.users}`;
     this.pairGameQuizPairsMyStatistic = `${this.pairGameQuizPairsUsers}/${apiPrefixSettings.QUIZ_GAME.public.my_statistic}`;
+    this.pairGameQuizPairsTop = `${this.pairGameQuizPairsUsers}/${apiPrefixSettings.QUIZ_GAME.public.top}`;
   }
   async createQuestion(
     authorizationToken: string,
@@ -167,6 +169,14 @@ export class QuizGameTestManager {
     const result = await request(this.app.getHttpServer())
       .get(`${this.pairGameQuizPairsMyStatistic}`)
       .set({ authorization: authorizationToken })
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async getTopQuizPlayers(query: any, statusCode: number) {
+    const result = await request(this.app.getHttpServer())
+      .get(`${this.pairGameQuizPairsTop}`)
+      .query(query)
       .expect(statusCode);
     return result.body;
   }

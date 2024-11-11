@@ -26,7 +26,10 @@ import { GameUserAnswer } from './game-answer/domain/game-user-answer.entity';
 import { AnswerForQuestionHandler } from './game/application/command/answer-for-question.command';
 import { GamePlayerAnswerQueryRepository } from './game-answer/infrastructure/game-player-answer-query-repositories';
 import { GamPlayerAnswerOutputModelMapper } from './game-answer/api/model/output/gam-player-answer-output.model';
-import { QuizGameQuery } from './game/api/models/input/quiz-game-input.model';
+import {
+  QuizGameQuery,
+  QuizTopGamePlayersQuery,
+} from './game/api/models/input/quiz-game-input.model';
 
 const QuizQuestionProvider = {
   provide: 'QuizQuestions',
@@ -84,6 +87,7 @@ const QuizGameUserAnswerProvider = {
     GamePlayerAnswerQueryRepository,
     GamPlayerAnswerOutputModelMapper,
     QuizGameQuery,
+    QuizTopGamePlayersQuery,
   ],
 })
 export class QuizGameModule {}

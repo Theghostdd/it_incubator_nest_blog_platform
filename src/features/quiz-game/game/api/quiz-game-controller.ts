@@ -26,10 +26,13 @@ import {
   QuizGameOutputModel,
   QuizGameOutputModelForSwagger,
   QuizGameStatisticModel,
+  QuizGameStatisticWithPlayerInfoModel,
+  QuizGameTopUsersOutputModelForSwagger,
 } from './models/output/quiz-game-output.models';
 import {
   QuizGameAnswerQuestionInputModel,
   QuizGameQuery,
+  QuizTopGamePlayersQuery,
 } from './models/input/quiz-game-input.model';
 import { AnswerForQuestionCommand } from '../application/command/answer-for-question.command';
 import { GamPlayerAnswerOutputModel } from '../../game-answer/api/model/output/gam-player-answer-output.model';
@@ -46,6 +49,7 @@ import {
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
 import { BasePagination } from '../../../../base/pagination/base-pagination';
+import { PublicEndpoint } from '../../../../core/decorators/public-endpoint';
 
 @ApiTags('Quiz game')
 @ApiBearerAuth()
@@ -96,6 +100,26 @@ export class QuizGameController {
       user.userId,
       query,
     );
+  }
+
+  @ApiOkResponse({
+    description: 'Return top users',
+    type: QuizGameTopUsersOutputModelForSwagger,
+  })
+  @ApiOperation({
+    summary: 'Get users top | Public - No authorization',
+  })
+  @Get(
+    `${apiPrefixSettings.QUIZ_GAME.public.users}/${apiPrefixSettings.QUIZ_GAME.public.top}`,
+  )
+  @ApiUnauthorizedResponse({
+    description: 'No authorization required for this endpoint',
+  })
+  @PublicEndpoint()
+  async getTopGameUsersStatistic(
+    @Query() query: QuizTopGamePlayersQuery,
+  ): Promise<BasePagination<QuizGameStatisticWithPlayerInfoModel[] | []>> {
+    return this.quizGameQueryRepository.getTopGamePlayersStatistic(query);
   }
 
   @ApiOkResponse({

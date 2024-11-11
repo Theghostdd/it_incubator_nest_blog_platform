@@ -10,6 +10,7 @@ export enum UserPropertyEnum {
   'userAuthSessions' = 'userAuthSessions',
   'userLikes' = 'userLikes',
   'userComments' = 'userComments',
+  'userId' = 'userId',
 }
 
 export const selectUserProperty = [

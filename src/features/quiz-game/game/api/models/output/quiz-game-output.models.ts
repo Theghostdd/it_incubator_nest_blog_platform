@@ -1,4 +1,8 @@
-import { QuizGameStatusEnum, UserStatisticType } from '../../../domain/types';
+import {
+  QuizGameStatusEnum,
+  UserStatisticType,
+  UserStatisticWithUserInfoType,
+} from '../../../domain/types';
 import { QuizCurrentGameAnswerStatusEnum } from '../../../../game-answer/domain/types';
 import { Injectable } from '@nestjs/common';
 import { QuizGame } from '../../../domain/quiz-game.entity';
@@ -8,45 +12,6 @@ import { GamPlayerAnswerOutputModel } from '../../../../game-answer/api/model/ou
 import { GameUserAnswer } from '../../../../game-answer/domain/game-user-answer.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { BasePagination } from '../../../../../../base/pagination/base-pagination';
-
-export class QuizGameStatisticModel {
-  @ApiProperty({
-    description: 'Sum scores of all games',
-    example: '1',
-    type: Number,
-  })
-  sumScore: number;
-  @ApiProperty({
-    description: 'Average score of all games rounded to 2 decimal places',
-    example: '1',
-    type: Number,
-  })
-  avgScores: number;
-  @ApiProperty({
-    description: 'All played games count',
-    example: '1',
-    type: Number,
-  })
-  gamesCount: number;
-  @ApiProperty({
-    description: 'All won games count',
-    example: '1',
-    type: Number,
-  })
-  winsCount: number;
-  @ApiProperty({
-    description: 'All lose games count',
-    example: '1',
-    type: Number,
-  })
-  lossesCount: number;
-  @ApiProperty({
-    description: 'All draw games count',
-    example: '1',
-    type: Number,
-  })
-  drawsCount: number;
-}
 
 export class QuizGameCurrentQuestionsModel {
   @ApiProperty({
@@ -170,6 +135,53 @@ export class QuizGameAnswerResult {
   addedAt: string;
 }
 
+export class QuizGameStatisticModel {
+  @ApiProperty({
+    description: 'Sum scores of all games',
+    example: '1',
+    type: Number,
+  })
+  sumScore: number;
+  @ApiProperty({
+    description: 'Average score of all games rounded to 2 decimal places',
+    example: '1',
+    type: Number,
+  })
+  avgScores: number;
+  @ApiProperty({
+    description: 'All played games count',
+    example: '1',
+    type: Number,
+  })
+  gamesCount: number;
+  @ApiProperty({
+    description: 'All won games count',
+    example: '1',
+    type: Number,
+  })
+  winsCount: number;
+  @ApiProperty({
+    description: 'All lose games count',
+    example: '1',
+    type: Number,
+  })
+  lossesCount: number;
+  @ApiProperty({
+    description: 'All draw games count',
+    example: '1',
+    type: Number,
+  })
+  drawsCount: number;
+}
+
+export class QuizGameStatisticWithPlayerInfoModel extends QuizGameStatisticModel {
+  @ApiProperty({
+    description: 'Player`s info',
+    type: QuizGamePlayerInfoModel,
+  })
+  player: QuizGamePlayerInfoModel;
+}
+
 @Injectable()
 export class QuizGameMapperOutputModel {
   mapQuizGame(game: QuizGame): QuizGameOutputModel {
@@ -267,6 +279,20 @@ export class QuizGameMapperOutputModel {
       drawsCount: +statistic.drawsCount,
     };
   }
+
+  mapQuizTopGamePlayersStatistic(
+    statistics: UserStatisticWithUserInfoType[],
+  ): QuizGameStatisticWithPlayerInfoModel[] {
+    return statistics.map((statistic: UserStatisticWithUserInfoType) => {
+      return {
+        ...this.mapQuizGamePlayerStatistic(statistic),
+        player: {
+          id: statistic.userId.toString(),
+          login: statistic.login,
+        },
+      };
+    });
+  }
 }
 
 export class QuizGameOutputModelForSwagger extends BasePagination<QuizGameOutputModel> {
@@ -276,4 +302,13 @@ export class QuizGameOutputModelForSwagger extends BasePagination<QuizGameOutput
     type: QuizGameOutputModel,
   })
   items: QuizGameOutputModel;
+}
+
+export class QuizGameTopUsersOutputModelForSwagger extends BasePagination<QuizGameStatisticWithPlayerInfoModel> {
+  @ApiProperty({
+    description: 'The top game players',
+    isArray: true,
+    type: QuizGameStatisticWithPlayerInfoModel,
+  })
+  items: QuizGameStatisticWithPlayerInfoModel;
 }
