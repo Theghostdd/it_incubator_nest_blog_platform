@@ -66,10 +66,6 @@ export class AnswerForQuestionHandler
       if (currentPlayerAnswers.length === 5)
         return this.applicationObjectResult.forbidden();
 
-      const secondPlayerAnswers: GameUserAnswer[] = game.gamePlayers.find(
-        (p: GamePlayers): boolean => p.playerId !== playerId,
-      ).player.playerAnswers;
-
       const answer: GameUserAnswer = this.gameUserAnswer.createAnswer(
         playerAnswer,
         currentPlayerAnswers,
@@ -77,15 +73,7 @@ export class AnswerForQuestionHandler
         player,
       );
 
-      await this.handleGameProgress(
-        game,
-        currentPlayerAnswers,
-        answer,
-        secondPlayerAnswers,
-        queryRunner,
-        playerId,
-      );
-
+      await this.handleGameProgress(game, answer, queryRunner, playerId);
       await this.upScore(answer, queryRunner, game);
 
       const result: GameUserAnswer = await queryRunner.manager.save(answer);
@@ -106,24 +94,22 @@ export class AnswerForQuestionHandler
 
   private async handleGameProgress(
     game: QuizGame,
-    currentPlayerAnswers: GameUserAnswer[],
     newAnswerCurrentPlayer: GameUserAnswer,
-    secondPlayerAnswers: GameUserAnswer[],
     queryRunner: QueryRunner,
     playerId: number,
   ): Promise<void> {
-    const currentPlayerAnswersCount = currentPlayerAnswers.length;
-    const secondPlayerAnswersCount = secondPlayerAnswers.length;
     const currentPlayer: GamePlayers = game.gamePlayers.find(
       (p: GamePlayers): boolean => p.playerId === playerId,
     );
     const secondPlayer: GamePlayers = game.gamePlayers.find(
       (p: GamePlayers): boolean => p.playerId !== playerId,
     );
+    const currentPlayerAnswersCount = currentPlayer.player.playerAnswers.length;
+    const secondPlayerAnswersCount = secondPlayer.player.playerAnswers.length;
     if (currentPlayerAnswersCount + 1 === 5 && secondPlayerAnswersCount === 5) {
       game.finishGame();
 
-      currentPlayerAnswers.push(newAnswerCurrentPlayer);
+      currentPlayer.player.playerAnswers.push(newAnswerCurrentPlayer);
       currentPlayer.setWinStatus(secondPlayer);
       currentPlayer.setFinallyScore(secondPlayer);
       await queryRunner.manager.save(game);
