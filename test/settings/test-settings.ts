@@ -24,6 +24,8 @@ import { ThrottlerGuard } from '@nestjs/throttler';
 import { SecurityDevicesTestManager } from '../utils/request-test-manager/security-devices-test-manager';
 import { DataSource } from 'typeorm';
 import { QuizGameTestManager } from '../utils/request-test-manager/quiz-test-manager';
+import { QuizGameService } from '../../src/features/quiz-game/game/application/quiz-game-service';
+import { QuizGameServiceMock } from '../mock/quiz-game-service-mock';
 
 export const initSettings = async (): Promise<ITestSettings> => {
   const testingModuleBuilder: TestingModuleBuilder = Test.createTestingModule({
@@ -39,7 +41,6 @@ export const initSettings = async (): Promise<ITestSettings> => {
   const dataBase: DataBase = new DataBase(dataSource);
 
   const testManager: ITestManger = getTestManagers(app);
-
   const testModels: ITestModels = getTestModel();
 
   const configService = app.get(ConfigService<ConfigurationType, true>);
@@ -103,5 +104,7 @@ const setGlobalMock = (testingModule: TestingModuleBuilder) => {
     .overrideProvider(NodeMailerService)
     .useClass(NodeMailerMockService)
     .overrideGuard(ThrottlerGuard)
-    .useClass(ThrottlerMock);
+    .useClass(ThrottlerMock)
+    .overrideProvider(QuizGameService)
+    .useClass(QuizGameServiceMock);
 };

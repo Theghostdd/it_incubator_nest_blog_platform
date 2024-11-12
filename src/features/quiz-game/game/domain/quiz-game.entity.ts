@@ -12,7 +12,6 @@ import { GamePlayers } from '../../game-player/domain/game-players.entity';
 import { QuizQuestions } from '../../questions/domain/questions.entity';
 import { addSeconds } from 'date-fns';
 
-// TODO Переделать логику работы с игрой. В тестах появляются дедлоки время от времени
 @Entity()
 export class QuizGame {
   @PrimaryGeneratedColumn()
