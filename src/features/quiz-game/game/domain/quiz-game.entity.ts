@@ -10,7 +10,9 @@ import { GameQuestions } from '../../game-questions/domain/game-questions.entity
 import { Player } from '../../player/domain/quiz-game-player.entity';
 import { GamePlayers } from '../../game-player/domain/game-players.entity';
 import { QuizQuestions } from '../../questions/domain/questions.entity';
+import { addSeconds } from 'date-fns';
 
+// TODO Переделать логику работы с игрой. В тестах появляются дедлоки время от времени
 @Entity()
 export class QuizGame {
   @PrimaryGeneratedColumn()
@@ -101,5 +103,9 @@ export class QuizGame {
   finishGame(): void {
     this.finishGameDate = new Date();
     this.status = QuizGameStatusEnum.Finished;
+  }
+
+  setFinishDate(): void {
+    this.finishGameDate = addSeconds(new Date(), 10);
   }
 }

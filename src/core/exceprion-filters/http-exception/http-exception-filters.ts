@@ -40,6 +40,7 @@ export class HttpExceptionFilter implements ExceptionFilter {
     if (status === 429) {
       return response.sendStatus(429);
     }
+
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),

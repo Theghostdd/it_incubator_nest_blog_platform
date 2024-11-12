@@ -30,6 +30,8 @@ import {
   QuizGameQuery,
   QuizTopGamePlayersQuery,
 } from './game/api/models/input/quiz-game-input.model';
+import { EndActiveGameHandler } from './game/application/command/end-active-game.command';
+import { QuizGameService } from './game/application/quiz-game-service';
 
 const QuizQuestionProvider = {
   provide: 'QuizQuestions',
@@ -88,6 +90,8 @@ const QuizGameUserAnswerProvider = {
     GamPlayerAnswerOutputModelMapper,
     QuizGameQuery,
     QuizTopGamePlayersQuery,
+    EndActiveGameHandler,
+    QuizGameService,
   ],
 })
 export class QuizGameModule {}

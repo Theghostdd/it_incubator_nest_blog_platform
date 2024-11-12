@@ -42,7 +42,7 @@ import { QuizGameModule } from './features/quiz-game/quiz-game.module';
             envSettings.ENV !== EnvState.PRODUCTION &&
             envSettings.ENV !== EnvState.DEVELOPMENT,
           logger: 'advanced-console',
-          logging: envSettings.ENV === EnvState.DEVELOPMENT,
+          //logging: envSettings.ENV === EnvState.DEVELOPMENT,
         };
       },
       inject: [ConfigService],

@@ -118,7 +118,8 @@ export class AnswerForQuestionHandler
       secondPlayerAnswersCount < 5
     ) {
       currentPlayer.setFirst();
-      await queryRunner.manager.save(currentPlayer);
+      game.setFinishDate();
+      await queryRunner.manager.save(game);
     }
   }
 

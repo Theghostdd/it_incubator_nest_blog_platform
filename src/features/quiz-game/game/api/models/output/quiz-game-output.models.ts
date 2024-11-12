@@ -259,7 +259,10 @@ export class QuizGameMapperOutputModel {
       status: game.status,
       pairCreatedDate: game.pairCreatedDate.toISOString(),
       startGameDate: game.startGameDate?.toISOString() ?? null,
-      finishGameDate: game.finishGameDate?.toISOString() ?? null,
+      finishGameDate:
+        game.status === QuizGameStatusEnum.Finished
+          ? game.finishGameDate.toISOString()
+          : null,
     };
   }
 

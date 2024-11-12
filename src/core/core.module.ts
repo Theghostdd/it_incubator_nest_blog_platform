@@ -6,11 +6,12 @@ import { JwtStrategy } from './guards/jwt/jwt-strategy';
 import { VerifyUserGuard } from './guards/jwt/jwt-verify-user';
 import { AuthJWTAccessGuard } from './guards/jwt/jwt.guard';
 import { CqrsModule } from '@nestjs/cqrs';
-import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { RefreshJWTAccessGuard } from './guards/jwt/jwt-refresh-toke.guard';
 import { JwtRefreshTokenStrategyStrategy } from './guards/jwt/jwt-refresh-token-strategy';
 import { AccessControlModule } from '../features/access-control/access-control.module';
 import { UsersModule } from '../features/users/users.module';
+import { ScheduleModule } from '@nestjs/schedule';
 
 @Global()
 @Module({
@@ -24,6 +25,7 @@ import { UsersModule } from '../features/users/users.module';
         limit: 9999,
       },
     ]),
+    ScheduleModule.forRoot(),
   ],
   providers: [
     JwtService,

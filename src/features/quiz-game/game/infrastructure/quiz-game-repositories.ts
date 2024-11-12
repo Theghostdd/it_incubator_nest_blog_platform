@@ -69,6 +69,42 @@ export class QuizGameRepositories {
     });
   }
 
+  async getAllFinishedActiveGame(
+    queryRunner: QueryRunner,
+  ): Promise<QuizGame[] | []> {
+    const games: QuizGame[] | [] = await queryRunner.manager
+      .createQueryBuilder(this.quizGameRepository.target, 'g')
+      .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gamePlayers}`, 'gp')
+      .leftJoinAndSelect(`gp.${GamePlayerPropertyEnum.player}`, 'p')
+      .leftJoinAndSelect(`g.${QuizGamePropertyEnum.gameQuestions}`, 'gq')
+      .leftJoinAndSelect(
+        `p.${PlayerPropertyEnum.playerAnswers}`,
+        'pa',
+        `pa.${GamePlayerAnswerPropertyEnum.gameQuestionId} = gq.${GameSpecifyQuestionsPropertyEnum.id}`,
+      )
+      .leftJoinAndSelect(`gq.${GameSpecifyQuestionsPropertyEnum.question}`, 'q')
+      .leftJoinAndSelect(`q.${QuizQuestionsPropertyEnum.answers}`, 'qa')
+      .where(`g.${QuizGamePropertyEnum.status} = :status`, {
+        status: QuizGameStatusEnum.Active,
+      })
+      .andWhere(`g.${QuizGamePropertyEnum.finishGameDate} IS NOT NULL`)
+      // .andWhere(`g.${QuizGamePropertyEnum.finishGameDate} < :currentDate`, {
+      //   currentDate: new Date(),
+      // })
+      .getMany();
+
+    if (games.length === 0) {
+      return games;
+    }
+    await queryRunner.manager
+      .createQueryBuilder(this.quizGameRepository.target, 'g')
+      .whereInIds(games.map((game) => game.id))
+      .setLock('pessimistic_write')
+      .execute();
+
+    return games;
+  }
+
   async getCurrentPlayerGameByIdWithAnswers(
     gameId: number,
     queryRunner?: QueryRunner,

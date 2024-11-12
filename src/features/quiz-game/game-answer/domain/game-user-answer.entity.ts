@@ -9,6 +9,7 @@ import {
 import { GameQuestions } from '../../game-questions/domain/game-questions.entity';
 import { Player } from '../../player/domain/quiz-game-player.entity';
 import { QuizQuestionAnswer } from '../../question-answer/domain/question-answer.entity';
+import { GamePlayers } from '../../game-player/domain/game-players.entity';
 
 @Entity()
 export class GameUserAnswer {
@@ -96,6 +97,27 @@ export class GameUserAnswer {
     answer.isTrue = currentQuestion.question.answers.some(
       (answer: QuizQuestionAnswer): boolean => answer.body === playerAnswer,
     );
+    return answer;
+  }
+
+  static createUnansweredQuestions(
+    player: GamePlayers,
+    position: number,
+    questions: GameQuestions[],
+  ): GameUserAnswer {
+    const answer: GameUserAnswer = new this();
+    const question: GameQuestions = questions.find(
+      (q: GameQuestions): boolean => q.position === position,
+    );
+    const date: Date = new Date();
+    answer.body = 'undefined';
+    answer.createdAt = date;
+    answer.player = player.player;
+    answer.playerId = player.playerId;
+    answer.gameQuestion = question;
+    answer.gameQuestionId = question.id;
+    answer.position = position;
+    answer.isTrue = false;
     return answer;
   }
 }
