@@ -11,6 +11,7 @@ export const apiPrefixSettings = {
     sa_blogs: 'sa/blogs',
     blogs: 'blogs',
     posts: 'posts',
+    blogger: 'blogger',
   },
   POST: {
     posts: 'posts',

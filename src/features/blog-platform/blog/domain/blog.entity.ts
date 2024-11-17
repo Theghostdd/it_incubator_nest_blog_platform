@@ -6,10 +6,13 @@ import {
   Column,
   Entity,
   Index,
+  JoinColumn,
+  ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
 } from 'typeorm';
 import { Post } from '../../post/domain/post.entity';
+import { User } from '../../../users/user/domain/user.entity';
 
 @Entity()
 export class Blog {
@@ -33,10 +36,16 @@ export class Blog {
   @Column({ default: true })
   isActive: boolean;
 
+  @ManyToOne(() => User, (user: User) => user.blog)
+  @JoinColumn()
+  owner: User;
+  @Column({ nullable: true, default: null })
+  ownerId: number;
+
   @OneToMany(() => Post, (post: Post) => post.blog)
   posts: Post[];
 
-  static createBlog(blogInputModel: BlogInputModel): Blog {
+  static createBlog(blogInputModel: BlogInputModel, userId?: number): Blog {
     const blog = new this();
     const { name, description, websiteUrl } = blogInputModel;
     blog.name = name;
@@ -45,6 +54,7 @@ export class Blog {
     blog.createdAt = new Date();
     blog.isMembership = false;
     blog.isActive = true;
+    if (userId) blog.ownerId = userId;
     return blog;
   }
 

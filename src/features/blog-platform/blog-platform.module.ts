@@ -40,6 +40,7 @@ import { PostLikeRepositories } from './like/infrastructure/post-like-repositori
 import { PostLikeService } from './like/application/post-like-service';
 import { CommentLike } from './like/domain/comment-like.entity';
 import { PostLike } from './like/domain/post-like.entity';
+import { BloggerController } from './blog/api/blogger-controller';
 
 export const BlogProvider = {
   provide: 'Blog',
@@ -81,6 +82,7 @@ export const PostLikeProvider = {
     PostController,
     CommentController,
     BlogAdminController,
+    BloggerController,
   ],
   providers: [
     BlogProvider,

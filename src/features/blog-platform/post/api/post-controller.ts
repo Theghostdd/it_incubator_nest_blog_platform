@@ -159,7 +159,7 @@ export class PostController {
     @Body() inputModel: PostInputModel,
   ): Promise<PostOutputModel> {
     const result: AppResultType<number> = await this.commandBus.execute(
-      new CreatePostCommand(inputModel),
+      new CreatePostCommand(inputModel, true),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -189,7 +189,7 @@ export class PostController {
   @HttpCode(204)
   async deletePostById(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
-      new DeletePostByIdCommand(id),
+      new DeletePostByIdCommand(id, true),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -226,7 +226,7 @@ export class PostController {
     @Body() updateModel: PostUpdateModel,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
-      new UpdatePostByIdCommand(id, updateModel),
+      new UpdatePostByIdCommand(id, updateModel, true),
     );
     switch (result.appResult) {
       case AppResult.Success:

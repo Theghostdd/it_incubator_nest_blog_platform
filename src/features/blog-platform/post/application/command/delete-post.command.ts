@@ -11,7 +11,9 @@ import { Blog } from '../../../blog/domain/blog.entity';
 export class DeletePostByIdCommand {
   constructor(
     public postId: number,
+    public isAdmin: boolean,
     public blogId?: number,
+    public userId?: number,
   ) {}
 }
 
@@ -26,16 +28,22 @@ export class DeletePostByIdHandler
     private readonly postRepository: PostRepository,
   ) {}
   async execute(command: DeletePostByIdCommand): Promise<AppResultType> {
-    if (command.blogId) {
+    const { isAdmin, postId, userId, blogId } = command;
+    if (blogId) {
       const blog: AppResultType<Blog | null> =
-        await this.blogService.getBlogById(command.blogId);
+        await this.blogService.getBlogById(blogId);
       if (blog.appResult !== AppResult.Success)
         return this.applicationObjectResult.notFound();
+
+      if (!isAdmin) {
+        if (blog.data.ownerId !== userId)
+          return this.applicationObjectResult.forbidden();
+      }
     }
 
-    const post: AppResultType<Post | null> = await this.postService.getPostById(
-      command.postId,
-    );
+    const post: AppResultType<Post | null> =
+      await this.postService.getPostById(postId);
+
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 

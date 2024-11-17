@@ -7,7 +7,10 @@ import { Blog } from '../../domain/blog.entity';
 import { Inject } from '@nestjs/common';
 
 export class CreateBlogCommand {
-  constructor(public blogInputModel: BlogInputModel) {}
+  constructor(
+    public blogInputModel: BlogInputModel,
+    public userId?: number,
+  ) {}
 }
 
 @CommandHandler(CreateBlogCommand)
@@ -20,7 +23,10 @@ export class CreateBlogHandler
     @Inject(Blog.name) private readonly blogEntity: typeof Blog,
   ) {}
   async execute(command: CreateBlogCommand): Promise<AppResultType<number>> {
-    const blog: Blog = this.blogEntity.createBlog(command.blogInputModel);
+    const blog: Blog = this.blogEntity.createBlog(
+      command.blogInputModel,
+      command.userId,
+    );
 
     const result: number = await this.blogRepository.save(blog);
     return this.applicationObjectResult.success(result);

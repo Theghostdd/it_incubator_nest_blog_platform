@@ -14,6 +14,7 @@ import { Comment } from '../../../blog-platform/comment/domain/comment.entity';
 import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 import { Player } from '../../../quiz-game/player/domain/quiz-game-player.entity';
+import { Blog } from '../../../blog-platform/blog/domain/blog.entity';
 
 @Entity()
 @Index(['login', 'email'])
@@ -64,6 +65,9 @@ export class User {
 
   @OneToOne(() => Player, (player: Player) => player.user, { cascade: true })
   player: Player;
+
+  @OneToMany(() => Blog, (blog: Blog) => blog.owner)
+  blog: Blog[];
 
   static createUser(
     userInputModel: UserInputModel,

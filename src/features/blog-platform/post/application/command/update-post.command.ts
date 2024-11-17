@@ -12,6 +12,8 @@ export class UpdatePostByIdCommand {
   constructor(
     public id: number,
     public postUpdateModel: PostUpdateModel,
+    public isAdmin: boolean,
+    public userId?: number,
   ) {}
 }
 
@@ -26,15 +28,20 @@ export class UpdateByIdHandler
     private readonly postRepository: PostRepository,
   ) {}
   async execute(command: UpdatePostByIdCommand): Promise<AppResultType> {
+    const { isAdmin, id, userId } = command;
     const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
       command.postUpdateModel.blogId,
     );
     if (blog.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 
-    const post: AppResultType<Post | null> = await this.postService.getPostById(
-      command.id,
-    );
+    if (!isAdmin) {
+      if (blog.data.ownerId !== userId)
+        return this.applicationObjectResult.forbidden();
+    }
+
+    const post: AppResultType<Post | null> =
+      await this.postService.getPostById(id);
     if (post.appResult !== AppResult.Success)
       return this.applicationObjectResult.notFound();
 

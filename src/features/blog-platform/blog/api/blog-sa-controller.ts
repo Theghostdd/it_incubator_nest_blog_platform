@@ -145,7 +145,7 @@ export class BlogAdminController {
   ): Promise<PostOutputModel> {
     const postInputModel: PostInputModel = { ...inputModel, blogId: id };
     const result: AppResultType<number> = await this.commandBus.execute(
-      new CreatePostCommand(postInputModel),
+      new CreatePostCommand(postInputModel, true),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -207,7 +207,7 @@ export class BlogAdminController {
     @EntityId('postId') postId: number,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
-      new DeletePostByIdCommand(postId, id),
+      new DeletePostByIdCommand(postId, true, id),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -235,7 +235,7 @@ export class BlogAdminController {
   @HttpCode(204)
   async deleteBlogById(@EntityId() id: number): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
-      new DeleteBlogByIdCommand(id),
+      new DeleteBlogByIdCommand(id, true),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -273,7 +273,7 @@ export class BlogAdminController {
   ): Promise<void> {
     const updatePostModel: PostUpdateModel = { ...updateModel, blogId: id };
     const result: AppResultType = await this.commandBus.execute(
-      new UpdatePostByIdCommand(postId, updatePostModel),
+      new UpdatePostByIdCommand(postId, updatePostModel, true),
     );
     switch (result.appResult) {
       case AppResult.Success:
@@ -308,7 +308,7 @@ export class BlogAdminController {
     @Body() updateModel: BlogUpdateModel,
   ): Promise<void> {
     const result: AppResultType = await this.commandBus.execute(
-      new UpdateBlogByIdCommand(id, updateModel),
+      new UpdateBlogByIdCommand(id, updateModel, true),
     );
     switch (result.appResult) {
       case AppResult.Success:

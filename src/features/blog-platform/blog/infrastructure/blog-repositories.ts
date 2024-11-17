@@ -28,6 +28,7 @@ export class BlogRepository {
         BlogPropertyEnum.websiteUrl,
         BlogPropertyEnum.createdAt,
         BlogPropertyEnum.isMembership,
+        BlogPropertyEnum.ownerId,
       ],
     });
   }

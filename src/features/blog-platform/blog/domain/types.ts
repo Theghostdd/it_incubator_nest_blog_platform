@@ -7,6 +7,8 @@ export enum BlogPropertyEnum {
   'isMembership' = 'isMembership',
   'isActive' = 'isActive',
   'posts' = 'posts',
+  'owner' = 'owner',
+  'ownerId' = 'ownerId',
 }
 
 export const selectBlogProperty = [
@@ -16,4 +18,5 @@ export const selectBlogProperty = [
   `b.${BlogPropertyEnum.websiteUrl}`,
   `b.${BlogPropertyEnum.createdAt}`,
   `b.${BlogPropertyEnum.isMembership}`,
+  `b.${BlogPropertyEnum.ownerId}`,
 ];

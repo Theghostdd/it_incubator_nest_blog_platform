@@ -10,7 +10,11 @@ import { Blog } from '../../../blog/domain/blog.entity';
 import { Inject } from '@nestjs/common';
 
 export class CreatePostCommand {
-  constructor(public postInputModel: PostInputModel) {}
+  constructor(
+    public postInputModel: PostInputModel,
+    public isAdmin: boolean,
+    public userId?: number,
+  ) {}
 }
 
 @CommandHandler(CreatePostCommand)
@@ -24,11 +28,17 @@ export class CreatePostHandler
     @Inject(Post.name) private readonly postEntity: typeof Post,
   ) {}
   async execute(command: CreatePostCommand): Promise<AppResultType<number>> {
+    const { isAdmin, userId } = command;
     const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
       command.postInputModel.blogId,
     );
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
+
+    if (!isAdmin) {
+      if (blog.data.ownerId !== userId)
+        return this.applicationObjectResult.forbidden();
+    }
 
     const date = new Date();
     const post: Post = this.postEntity.createPost(

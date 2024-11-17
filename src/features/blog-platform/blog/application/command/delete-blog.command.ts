@@ -7,7 +7,11 @@ import { AppResult } from '../../../../../base/enum/app-result.enum';
 import { Blog } from '../../domain/blog.entity';
 
 export class DeleteBlogByIdCommand {
-  constructor(public id: number) {}
+  constructor(
+    public id: number,
+    public isAdmin: boolean,
+    public userId?: number,
+  ) {}
 }
 
 @CommandHandler(DeleteBlogByIdCommand)
@@ -20,11 +24,17 @@ export class DeleteBlogByIdHandler
     private readonly applicationObjectResult: ApplicationObjectResult,
   ) {}
   async execute(command: DeleteBlogByIdCommand): Promise<AppResultType> {
-    const blog: AppResultType<Blog | null> = await this.blogService.getBlogById(
-      command.id,
-    );
+    const { id, userId, isAdmin } = command;
+    const blog: AppResultType<Blog | null> =
+      await this.blogService.getBlogById(id);
+
     if (blog.appResult === AppResult.NotFound)
       return this.applicationObjectResult.notFound();
+
+    if (!isAdmin) {
+      if (blog.data.ownerId !== userId)
+        return this.applicationObjectResult.forbidden();
+    }
 
     blog.data.deleteBlog();
     await this.blogRepository.save(blog.data);

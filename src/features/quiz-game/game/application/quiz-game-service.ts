@@ -10,7 +10,7 @@ export class QuizGameService {
     private readonly commandBus: CommandBus,
   ) {}
 
-  @Cron('*/5 * * * * *')
+  @Cron('*/8 * * * * *')
   async endActiveFinishedGames() {
     await this.commandBus.execute(new EndActiveGameCommand());
   }
