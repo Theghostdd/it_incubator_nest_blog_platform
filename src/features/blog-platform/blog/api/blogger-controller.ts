@@ -112,8 +112,9 @@ export class BloggerController {
   @Get()
   async getBlogs(
     @Query() query: BlogSortingQuery,
+    @CurrentUser() user: JWTAccessTokenPayloadType,
   ): Promise<BasePagination<BlogOutputModel[] | []>> {
-    return await this.blogQueryRepository.getBlogs(query);
+    return await this.blogQueryRepository.getBloggerBlogs(query, user.userId);
   }
 
   // Create blog

@@ -74,6 +74,40 @@ export class BlogQueryRepository {
     };
   }
 
+  async getBloggerBlogs(
+    query: BlogSortingQuery,
+    userId: number,
+  ): Promise<BasePagination<BlogOutputModel[] | []>> {
+    const { sortBy, sortDirection, searchNameTerm, pageSize, pageNumber } =
+      this.blogSortingQuery.createBlogQuery(query);
+
+    const skip: number = (+pageNumber - 1) * pageSize;
+    const [blogs, count]: [Blog[], number] = await this.blogRepository
+      .createQueryBuilder('b')
+      .select(selectBlogProperty)
+      .where(`b.${BlogPropertyEnum.name} ILIKE :name`, {
+        name: `%${searchNameTerm || ''}%`,
+      })
+      .andWhere({ [BlogPropertyEnum.isActive]: true })
+      .andWhere(`b.${BlogPropertyEnum.ownerId} = :userId `, { userId })
+      .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
+      .limit(pageSize)
+      .offset(skip)
+      .getManyAndCount();
+
+    const totalCount: number = count;
+    const pagesCount: number = Math.ceil(totalCount / pageSize);
+
+    return {
+      pagesCount: pagesCount,
+      page: pageNumber,
+      pageSize: pageSize,
+      totalCount: totalCount,
+      items:
+        blogs.length > 0 ? this.blogMapperOutputModel.blogsModel(blogs) : [],
+    };
+  }
+
   async getBlogsWithOwnerInfo(
     query: BlogSortingQuery,
   ): Promise<BasePagination<BlogWithOwnerInfoOutputModel[] | []>> {
