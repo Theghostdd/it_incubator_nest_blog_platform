@@ -68,4 +68,8 @@ export class Blog {
     this.description = description;
     this.websiteUrl = websiteUrl;
   }
+
+  bindBlog(userId: number): void {
+    this.ownerId = userId;
+  }
 }

@@ -6,15 +6,27 @@ import {
   IBlogPostCreateModel,
   IBlogUpdateModel,
 } from '../../models/blog/interfaces';
-import { APIErrorsMessageType } from '../../../src/base/types/types';
+import {
+  APIErrorsMessageType,
+  AuthorizationUserResponseModel,
+} from '../../../src/base/types/types';
 import { BasePagination } from '../../../src/base/pagination/base-pagination';
 import { BaseSorting } from '../../../src/base/sorting/base-sorting';
 import { APISettings } from '../../../src/settings/api-settings';
-import { BlogOutputModel } from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
+import {
+  BlogOutputModel,
+  BlogWithOwnerInfoOutputModel,
+} from '../../../src/features/blog-platform/blog/api/models/output/blog-output.model';
 import { BlogSortingQuery } from '../../../src/features/blog-platform/blog/api/models/input/blog-input.model';
 import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { PostTestManager } from '../../utils/request-test-manager/post-test-manager';
 import { IPostUpdateModel } from '../../models/post/interfaces';
+import { UserTestManager } from '../../utils/request-test-manager/user-test-manager';
+import {
+  IUserCreateTestModel,
+  IUserLoginTestModel,
+} from '../../models/user/interfaces';
+import { AuthTestManager } from '../../utils/request-test-manager/auth-test-manager';
 
 describe('Blog e2e', () => {
   let blogTestManager: BlogTestManager;
@@ -28,6 +40,16 @@ describe('Blog e2e', () => {
   let adminAuthToken: string;
   let postTestManager: PostTestManager;
   let postUpdateModel: IPostUpdateModel;
+  let userTestManager: UserTestManager;
+  let userCreateModel: IUserCreateTestModel;
+  let userTwoCreateModel: IUserCreateTestModel;
+  let authTestManager: AuthTestManager;
+  let userLoginModel: IUserLoginTestModel;
+  let userTwoLoginModel: IUserLoginTestModel;
+  let userId1: string;
+  let userId2: string;
+  let accessTokenUser1: string;
+  let accessTokenUser2: string;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -56,7 +78,46 @@ describe('Blog e2e', () => {
     postTestManager = testSettings.testManager.postTestManager;
     postUpdateModel =
       testSettings.testModels.postTestModel.getPostUpdateModel();
+    userTestManager = testSettings.testManager.userTestManager;
+    authTestManager = testSettings.testManager.authTestManager;
+    userCreateModel =
+      testSettings.testModels.userTestModel.getUserCreateModel();
+    userTwoCreateModel = {
+      login: 'user22',
+      email: 'user22@gmail.com',
+      password: 'user22',
+    };
+    userLoginModel = testSettings.testModels.userTestModel.getUserLoginModel();
+    userTwoLoginModel = {
+      loginOrEmail: userTwoCreateModel.login,
+      password: userTwoCreateModel.password,
+    };
   });
+
+  const createAndAuth2User = async () => {
+    const result1 = await userTestManager.createUser(
+      userCreateModel,
+      adminAuthToken,
+      201,
+    );
+    userId1 = result1.id;
+    const result2 = await userTestManager.createUser(
+      userTwoCreateModel,
+      adminAuthToken,
+      201,
+    );
+    userId2 = result2.id;
+
+    const authUser1: AuthorizationUserResponseModel =
+      await authTestManager.loginAndCheckCookie(userLoginModel, 200);
+    const accessTokenUser1Auth = authUser1.accessToken;
+    const authUser2: AuthorizationUserResponseModel =
+      await authTestManager.loginAndCheckCookie(userTwoLoginModel, 200);
+    const accessTokenUser2Auth = authUser2.accessToken;
+
+    accessTokenUser1 = accessTokenUser1Auth;
+    accessTokenUser2 = accessTokenUser2Auth;
+  };
 
   describe('Get blogs', () => {
     it('should get blogs id without query', async () => {
@@ -229,34 +290,6 @@ describe('Blog e2e', () => {
         .sort((a, b) => a.name.localeCompare(b.name));
 
       expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
-    });
-  });
-
-  describe('Get blog-sa', () => {
-    it('should get blog-sa by id', async () => {
-      const { id: blogId } = await blogTestManager.createBlog(
-        blogCreateModel,
-        adminAuthToken,
-        201,
-      );
-
-      const result: BlogOutputModel = await blogTestManager.getBlog(
-        blogId,
-        200,
-      );
-
-      expect(result).toEqual({
-        id: expect.any(String),
-        name: blogCreateModel.name,
-        description: blogCreateModel.description,
-        websiteUrl: blogCreateModel.websiteUrl,
-        createdAt: expect.any(String),
-        isMembership: false,
-      });
-    });
-
-    it('should not get blog-sa by id, blog-sa not found', async () => {
-      await blogTestManager.getBlog('66bf39c8f855a5438d02adbf', 404);
     });
   });
 
@@ -1042,6 +1075,365 @@ describe('Blog e2e', () => {
         adminAuthToken,
         404,
       );
+    });
+  });
+
+  describe('Bind blog for user', () => {
+    it('should create blog and bind for user', async () => {
+      await createAndAuth2User();
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const result1: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result1.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: null,
+          userLogin: null,
+        },
+      });
+
+      await blogTestManager.bindBlogForUser(
+        blogId,
+        +userId1,
+        adminAuthToken,
+        204,
+      );
+
+      const result2: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result2.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: userId1,
+          userLogin: userCreateModel.login,
+        },
+      });
+    });
+
+    it('should not bind blog, blog already binding, bad request', async () => {
+      await createAndAuth2User();
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+      const result1: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result1.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: null,
+          userLogin: null,
+        },
+      });
+
+      await blogTestManager.bindBlogForUser(
+        blogId,
+        +userId1,
+        adminAuthToken,
+        204,
+      );
+      const result2: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result2.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: userId1,
+          userLogin: userCreateModel.login,
+        },
+      });
+
+      const bindResult = await blogTestManager.bindBlogForUser(
+        blogId,
+        +userId1,
+        adminAuthToken,
+        400,
+      );
+
+      expect(bindResult).toEqual({
+        errorsMessages: [
+          {
+            field: 'user',
+            message: expect.any(String),
+          },
+        ],
+      });
+
+      const result3: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result3.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: userId1,
+          userLogin: userCreateModel.login,
+        },
+      });
+    });
+
+    it('should not bind blog for user, unauthorized', async () => {
+      await createAndAuth2User();
+      const { id: blogId } = await blogTestManager.createBlog(
+        blogCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await blogTestManager.bindBlogForUser(
+        blogId,
+        +userId1,
+        `adminAuthToken`,
+        401,
+      );
+
+      const result: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: null,
+          userLogin: null,
+        },
+      });
+    });
+
+    it('should not bind blog for user, blog not found', async () => {
+      await createAndAuth2User();
+      await blogTestManager.bindBlogForUser(22, +userId1, adminAuthToken, 404);
+    });
+  });
+
+  describe('Get blogs with owner info', () => {
+    it('should get blogs with owner info, without query', async () => {
+      await createAndAuth2User();
+
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlogByBlogger(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          accessTokenUser1,
+          201,
+        );
+      }
+
+      const result: BasePagination<BlogWithOwnerInfoOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+
+      expect(result).toEqual({
+        pagesCount: 2,
+        page: 1,
+        pageSize: 10,
+        totalCount: 11,
+        items: expect.any(Array),
+      });
+      expect(result.items[0]).toEqual({
+        id: expect.any(String),
+        name: expect.any(String),
+        description: expect.any(String),
+        websiteUrl: expect.any(String),
+        createdAt: expect.any(String),
+        isMembership: expect.any(Boolean),
+        blogOwnerInfo: {
+          userId: userId1,
+          userLogin: userCreateModel.login,
+        },
+      });
+    });
+
+    it('should get blogs with pagination, page size: 11', async () => {
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
+      const result: BasePagination<BlogOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin(
+          {
+            pageSize: 11,
+          } as BlogSortingQuery,
+          adminAuthToken,
+          200,
+        );
+
+      expect(result).toEqual({
+        pagesCount: 1,
+        page: 1,
+        pageSize: 11,
+        totalCount: 11,
+        items: expect.any(Array),
+      });
+    });
+
+    it('should get blog with pagination, page number: 2', async () => {
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          adminAuthToken,
+          201,
+        );
+      }
+      const result: BasePagination<BlogOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin(
+          {
+            pageNumber: 2,
+          } as BlogSortingQuery,
+          adminAuthToken,
+          200,
+        );
+
+      expect(result).toEqual({
+        pagesCount: 2,
+        page: 2,
+        pageSize: 10,
+        totalCount: 11,
+        items: expect.any(Array),
+      });
+    });
+
+    it('should get blog with pagination, search name term', async () => {
+      await createAndAuth2User();
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlogByBlogger(
+          { ...blogCreateModel, name: 'nameBlog' + i },
+          accessTokenUser1,
+          201,
+        );
+      }
+
+      const result: BasePagination<BlogOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin(
+          {
+            searchNameTerm: 'nameBlog1',
+          } as BlogSortingQuery,
+          adminAuthToken,
+          200,
+        );
+
+      expect(result).toEqual({
+        pagesCount: 1,
+        page: 1,
+        pageSize: 10,
+        totalCount: 2,
+        items: [
+          {
+            id: expect.any(String),
+            name: 'nameBlog10',
+            description: blogCreateModel.description,
+            websiteUrl: blogCreateModel.websiteUrl,
+            createdAt: expect.any(String),
+            isMembership: false,
+            blogOwnerInfo: {
+              userId: userId1,
+              userLogin: userCreateModel.login,
+            },
+          },
+          {
+            id: expect.any(String),
+            name: 'nameBlog1',
+            description: blogCreateModel.description,
+            websiteUrl: blogCreateModel.websiteUrl,
+            createdAt: expect.any(String),
+            isMembership: false,
+            blogOwnerInfo: {
+              userId: userId1,
+              userLogin: userCreateModel.login,
+            },
+          },
+        ],
+      });
+    });
+
+    it('should get empty blogs array', async () => {
+      const result: BasePagination<BlogOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin({}, adminAuthToken, 200);
+      expect(result.items).toHaveLength(0);
+      expect(result).toEqual({
+        pagesCount: 0,
+        page: 1,
+        pageSize: 10,
+        totalCount: 0,
+        items: [],
+      });
+    });
+
+    it('should get blogs with sorting by name, asc', async () => {
+      const createdBlogArray = [];
+      for (let i = 0; i < 11; i++) {
+        await blogTestManager.createBlog(
+          { ...blogCreateModel, name: 'nameBlog' + (i - 1) },
+          adminAuthToken,
+          201,
+        );
+        createdBlogArray.push({
+          ...blogCreateModel,
+          name: 'nameBlog' + (i - 1),
+        });
+      }
+
+      const result: BasePagination<BlogOutputModel[] | []> =
+        await blogTestManager.getBlogsBySuperAdmin(
+          {
+            sortBy: 'name',
+            sortDirection: 'asc',
+            pageSize: 20,
+          } as BlogSortingQuery,
+          adminAuthToken,
+          200,
+        );
+
+      const mapResult = result.items.map((item) => {
+        return {
+          name: item.name,
+          description: item.description,
+          websiteUrl: item.websiteUrl,
+        };
+      });
+
+      const mapInsertModelAndSortByAsc = createdBlogArray
+        .map((item) => {
+          return {
+            name: item.name,
+            description: item.description,
+            websiteUrl: item.websiteUrl,
+          };
+        })
+        .sort((a, b) => a.name.localeCompare(b.name));
+
+      expect(mapResult).toEqual(mapInsertModelAndSortByAsc);
     });
   });
 });

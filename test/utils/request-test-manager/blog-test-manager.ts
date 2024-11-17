@@ -15,6 +15,7 @@ export class BlogTestManager {
   private readonly postEndpoint: string;
   private readonly blogAdminEndpoint: string;
   private readonly bloggerEndpoint: string;
+  private readonly bindBlogEndpoint: string;
   constructor(private readonly app: INestApplication) {
     this.app = app;
     this.apiPrefix = apiPrefixSettings.API_PREFIX;
@@ -22,6 +23,7 @@ export class BlogTestManager {
     this.postEndpoint = `${apiPrefixSettings.BLOG.posts}`;
     this.blogAdminEndpoint = `${this.apiPrefix}/${apiPrefixSettings.BLOG.sa_blogs}`;
     this.bloggerEndpoint = `${this.apiPrefix}/${apiPrefixSettings.BLOG.blogger}/${apiPrefixSettings.BLOG.blogs}`;
+    this.bindBlogEndpoint = `${apiPrefixSettings.BLOG.bind_with_user}`;
   }
   async createBlog(
     blogModel: IBlogCreateModel,
@@ -227,6 +229,32 @@ export class BlogTestManager {
       .get(`${this.bloggerEndpoint}/${blogId}/${this.postEndpoint}`)
       .set({ authorization: `Bearer ${authorizationToken}` })
       .query(query)
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async bindBlogForUser(
+    id: number,
+    userId: number,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .put(`${this.blogAdminEndpoint}/${id}/${this.bindBlogEndpoint}/${userId}`)
+      .set({ authorization: authorizationToken })
+      .expect(statusCode);
+    return result.body;
+  }
+
+  async getBlogsBySuperAdmin(
+    query: AnyObject,
+    authorizationToken: string,
+    statusCode: number,
+  ) {
+    const result = await request(this.app.getHttpServer())
+      .get(`${this.blogAdminEndpoint}`)
+      .query(query)
+      .set({ authorization: authorizationToken })
       .expect(statusCode);
     return result.body;
   }

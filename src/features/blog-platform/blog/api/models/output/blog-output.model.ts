@@ -46,6 +46,26 @@ export class BlogOutputModel {
   public isMembership: boolean;
 }
 
+export class BlogOwnerInfoModel {
+  @ApiProperty({
+    description: 'User`s id',
+    example: '1',
+    type: String,
+  })
+  public userId: string;
+
+  @ApiProperty({
+    description: 'User`s login',
+    example: 'login',
+    type: String,
+  })
+  public userLogin: string;
+}
+
+export class BlogWithOwnerInfoOutputModel extends BlogOutputModel {
+  blogOwnerInfo: BlogOwnerInfoModel;
+}
+
 export class BlogMapperOutputModel {
   constructor() {}
   blogModel(blog: Blog): BlogOutputModel {
@@ -71,6 +91,23 @@ export class BlogMapperOutputModel {
       };
     });
   }
+
+  blogsAdminModel(blogs: Blog[]): BlogWithOwnerInfoOutputModel[] {
+    return blogs.map((blog: Blog) => {
+      return {
+        id: blog.id.toString(),
+        name: blog.name,
+        description: blog.description,
+        websiteUrl: blog.websiteUrl,
+        createdAt: blog.createdAt.toISOString(),
+        isMembership: blog.isMembership,
+        blogOwnerInfo: {
+          userId: blog.ownerId?.toString() || null,
+          userLogin: blog.owner?.login || null,
+        },
+      };
+    });
+  }
 }
 
 export class BlogOutputModelForSwagger extends BasePagination<BlogOutputModel> {
@@ -80,4 +117,13 @@ export class BlogOutputModelForSwagger extends BasePagination<BlogOutputModel> {
     type: BlogOutputModel,
   })
   items: BlogOutputModel;
+}
+
+export class BlogWithOwnerInfoOutputModelForSwagger extends BasePagination<BlogWithOwnerInfoOutputModel> {
+  @ApiProperty({
+    description: 'Array of items for the current page',
+    isArray: true,
+    type: BlogWithOwnerInfoOutputModel,
+  })
+  items: BlogWithOwnerInfoOutputModel;
 }

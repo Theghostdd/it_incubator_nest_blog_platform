@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -32,6 +33,7 @@ import { BaseSorting } from '../../../../base/sorting/base-sorting';
 import { EntityId } from '../../../../core/decorators/entityId';
 import { CurrentUser } from '../../../../core/decorators/current-user';
 import {
+  ApiErrorMessageModel,
   ApiErrorsMessageModel,
   AppResultType,
   JWTAccessTokenPayloadType,
@@ -46,7 +48,8 @@ import {
 } from './models/input/blog-input.model';
 import {
   BlogOutputModel,
-  BlogOutputModelForSwagger,
+  BlogWithOwnerInfoOutputModel,
+  BlogWithOwnerInfoOutputModelForSwagger,
 } from './models/output/blog-output.model';
 import { AppResult } from '../../../../base/enum/app-result.enum';
 import { UpdateBlogByIdCommand } from '../application/command/update-blog.command';
@@ -64,6 +67,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { BindBlogForUserCommand } from '../application/command/bind-blog-for-user.command';
 
 @ApiTags('Blog super admin api')
 @ApiBasicAuth()
@@ -106,7 +110,7 @@ export class BlogAdminController {
 
   @ApiOkResponse({
     description: 'Return all blogs or empty array',
-    type: BlogOutputModelForSwagger,
+    type: BlogWithOwnerInfoOutputModelForSwagger,
   })
   @ApiNotFoundResponse({ description: 'If the blog not found' })
   @ApiUnauthorizedResponse({
@@ -118,8 +122,8 @@ export class BlogAdminController {
   @Get()
   async getBlogs(
     @Query() query: BlogSortingQuery,
-  ): Promise<BasePagination<BlogOutputModel[] | []>> {
-    return await this.blogQueryRepository.getBlogs(query);
+  ): Promise<BasePagination<BlogWithOwnerInfoOutputModel[] | []>> {
+    return await this.blogQueryRepository.getBlogsWithOwnerInfo(query);
   }
 
   @ApiParam({ name: 'blogId' })
@@ -315,6 +319,45 @@ export class BlogAdminController {
         return;
       case AppResult.NotFound:
         throw new NotFoundException('Blog not found');
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  // Bind user for blog
+  @ApiParam({ name: 'blogId' })
+  @ApiParam({ name: 'userId' })
+  @ApiResponse({
+    status: 204,
+    description: 'No content',
+  })
+  @ApiUnauthorizedResponse({
+    description: 'Unauthorized',
+  })
+  @ApiBadRequestResponse({
+    description:
+      'If the inputModel has incorrect values or blog already bound to any user',
+    type: ApiErrorsMessageModel,
+  })
+  @ApiNotFoundResponse({ description: 'If the blog not found' })
+  @ApiOperation({
+    summary: 'Bind blog for user',
+  })
+  @Put(`:id/${apiPrefixSettings.BLOG.bind_with_user}/:userId`)
+  @HttpCode(204)
+  async bindBlogByIdForUser(
+    @EntityId('id') id: number,
+    @EntityId('userId') userId: number,
+  ): Promise<void> {
+    const result: AppResultType<null, ApiErrorMessageModel> =
+      await this.commandBus.execute(new BindBlogForUserCommand(id, userId));
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.NotFound:
+        throw new NotFoundException('Blog not found');
+      case AppResult.BadRequest:
+        throw new BadRequestException(result.errorField);
       default:
         throw new InternalServerErrorException();
     }

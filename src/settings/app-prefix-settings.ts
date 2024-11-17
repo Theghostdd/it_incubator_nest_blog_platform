@@ -9,6 +9,7 @@ export const apiPrefixSettings = {
   },
   BLOG: {
     sa_blogs: 'sa/blogs',
+    bind_with_user: 'bind-with-user',
     blogs: 'blogs',
     posts: 'posts',
     blogger: 'blogger',
