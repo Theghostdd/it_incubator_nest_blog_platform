@@ -63,6 +63,10 @@ export class BlogOwnerInfoModel {
 }
 
 export class BlogWithOwnerInfoOutputModel extends BlogOutputModel {
+  @ApiProperty({
+    description: 'The blog owner info',
+    type: BlogOwnerInfoModel,
+  })
   blogOwnerInfo: BlogOwnerInfoModel;
 }
 
