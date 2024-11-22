@@ -17,6 +17,7 @@ import { User } from '../../../src/features/users/user/domain/user.entity';
 import { AuthSession } from '../../../src/features/access-control/auth/domain/auth-session.entity';
 import { RecoveryPasswordSession } from '../../../src/features/access-control/auth/domain/recovery-session.entity';
 import { UserConfirmation } from '../../../src/features/users/user/domain/user-confirm.entity';
+import { UserBanInputModel } from '../../../src/features/users/user/api/models/input/user-input.model';
 
 describe('Auth e2e', () => {
   let testSettings: ITestSettings;
@@ -33,6 +34,7 @@ describe('Auth e2e', () => {
   let login: string;
   let password: string;
   let adminAuthToken: string;
+  let banUserModel: UserBanInputModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -68,6 +70,7 @@ describe('Auth e2e', () => {
     userTestManager = testSettings.testManager.userTestManager;
     userCreateModel =
       testSettings.testModels.userTestModel.getUserCreateModel();
+    banUserModel = testSettings.testModels.userTestModel.getUserBanModel();
   });
 
   describe('Get user', () => {
@@ -196,6 +199,25 @@ describe('Auth e2e', () => {
         accessToken: expect.any(String),
       });
     });
+
+    it('should not login user after ban', async () => {
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      await authTestManager.login(uesrLoginModel, 200);
+
+      await userTestManager.banUnBanUser(
+        userId,
+        banUserModel,
+        adminAuthToken,
+        204,
+      );
+
+      await authTestManager.login(uesrLoginModel, 401);
+    });
   });
 
   describe('Logout', () => {
@@ -295,6 +317,31 @@ describe('Auth e2e', () => {
         401,
       );
     });
+
+    it('should not logout after ban', async () => {
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await userTestManager.banUnBanUser(
+        userId,
+        banUserModel,
+        adminAuthToken,
+        204,
+      );
+      await testSettings.testManager.authTestManager.logOut(
+        login.refreshToken,
+        401,
+      );
+    });
   });
 
   describe('Refresh token', () => {
@@ -371,6 +418,43 @@ describe('Auth e2e', () => {
 
       await testSettings.testManager.authTestManager.updateNewPairTokens(
         login.refreshToken,
+        401,
+      );
+    });
+
+    it('should not get new pair tokens after ban', async () => {
+      const { id: userId } = await userTestManager.createUser(
+        userCreateModel,
+        adminAuthToken,
+        201,
+      );
+
+      const login =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      const login2 =
+        await testSettings.testManager.authTestManager.loginAndReturnRefreshToken(
+          uesrLoginModel,
+          200,
+        );
+
+      await userTestManager.banUnBanUser(
+        userId,
+        banUserModel,
+        adminAuthToken,
+        204,
+      );
+
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login.refreshToken,
+        401,
+      );
+
+      await testSettings.testManager.authTestManager.updateNewPairTokens(
+        login2.refreshToken,
         401,
       );
     });

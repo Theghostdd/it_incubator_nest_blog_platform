@@ -60,6 +60,8 @@ export class LoginHandler
     if (user.appResult !== AppResult.Success)
       return this.applicationObjectResult.unauthorized();
 
+    if (user.data.isBan) return this.applicationObjectResult.unauthorized();
+
     if (
       !(await this.bcryptService.comparePasswordHashAndSalt(
         password,

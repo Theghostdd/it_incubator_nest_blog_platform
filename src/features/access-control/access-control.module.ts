@@ -22,6 +22,7 @@ import { RecoveryPasswordSession } from './auth/domain/recovery-session.entity';
 import { UsersModule } from '../users/users.module';
 import { BcryptModule } from '../bcrypt/bcrypt.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { DeleteAllUserSessionsHandler } from './security-devices/application/command/delete-all-user-sessions.command';
 
 export const UUIDProvider = {
   provide: 'UUID',
@@ -42,7 +43,7 @@ export const AuthSessionProvider = {
   imports: [
     UsersModule,
     BcryptModule,
-    TypeOrmModule.forFeature([RecoveryPasswordSession, AuthSession]),
+    TypeOrmModule.forFeature([AuthSession, RecoveryPasswordSession]),
   ],
   controllers: [AuthController, SecurityDevicesController],
   providers: [
@@ -64,6 +65,7 @@ export const AuthSessionProvider = {
     SecurityDeviceOutputModelMapper,
     DeleteAllDevicesExcludeCurrentHandler,
     DeleteDeviceByDeviceIdHandler,
+    DeleteAllUserSessionsHandler,
   ],
   exports: [AuthService, AuthSessionRepositories],
 })

@@ -17,6 +17,7 @@ import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { UserRecoveryPasswordEventHandler } from './user/application/event/user-recovery-password.event';
 import { UserBan } from './user/domain/user-ban.entity';
 import { BanOrUnBanUserCommandHandler } from './user/application/command/ban-or-unban-user.command';
+import { UserBanRepositories } from './user/infrastructure/user-ban-repository';
 
 export const UserProvider = {
   provide: 'User',
@@ -43,6 +44,7 @@ export const UserProvider = {
     UserRegistrationEventHandler,
     UserRecoveryPasswordEventHandler,
     BanOrUnBanUserCommandHandler,
+    UserBanRepositories,
   ],
   exports: [UserRepositories, UserQueryRepositories, UserService, UserProvider],
 })

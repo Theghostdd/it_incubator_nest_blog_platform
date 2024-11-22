@@ -22,7 +22,7 @@ export class UserBan {
   isActive: boolean;
 
   @ManyToOne(() => User, (user: User) => user.userBans)
-  @JoinColumn({ name: 'userId' })
+  @JoinColumn()
   user: User;
   @Column({ nullable: false })
   userId: number;

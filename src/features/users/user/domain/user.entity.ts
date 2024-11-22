@@ -40,9 +40,7 @@ export class User {
   @Column({ default: false })
   isBan: boolean;
 
-  @OneToMany(() => UserBan, (userBan: UserBan) => userBan.user, {
-    cascade: true,
-  })
+  @OneToMany(() => UserBan, (userBan: UserBan) => userBan.user)
   userBans: UserBan[];
 
   @OneToOne(

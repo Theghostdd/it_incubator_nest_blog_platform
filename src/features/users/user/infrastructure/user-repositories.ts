@@ -34,8 +34,51 @@ export class UserRepositories {
       const userEntity: User = await queryRunner.manager.save(user);
       return userEntity.id;
     }
-    const userEntity: User = await this.userRepository.save(user);
-    return userEntity.id;
+    const newQueryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await newQueryRunner.connect();
+    try {
+      await newQueryRunner.startTransaction();
+      const userEntity: User = await newQueryRunner.manager.save(user);
+      await newQueryRunner.commitTransaction();
+      return userEntity.id;
+    } catch (e) {
+      await newQueryRunner.rollbackTransaction();
+      return null;
+    } finally {
+      await newQueryRunner.release();
+    }
+  }
+
+  async updateBanState(
+    userId: number,
+    state: boolean,
+    queryRunner?: QueryRunner,
+  ): Promise<boolean> {
+    if (queryRunner) {
+      await queryRunner.manager.update(
+        this.userRepository.target,
+        { id: userId },
+        { isBan: state },
+      );
+      return true;
+    }
+    const newQueryRunner: QueryRunner = this.dataSource.createQueryRunner();
+    await newQueryRunner.connect();
+    try {
+      await newQueryRunner.startTransaction();
+      await newQueryRunner.manager.update(
+        this.userRepository.target,
+        { id: userId },
+        { isBan: state },
+      );
+      await newQueryRunner.commitTransaction();
+      return true;
+    } catch (e) {
+      await newQueryRunner.rollbackTransaction();
+      return false;
+    } finally {
+      await newQueryRunner.release();
+    }
   }
 
   async getUserById(
@@ -43,8 +86,8 @@ export class UserRepositories {
     queryRunner?: QueryRunner,
   ): Promise<User | null> {
     if (queryRunner) {
-      const user: User | null = await this.userRepository
-        .createQueryBuilder('u')
+      const user: User | null = await queryRunner.manager
+        .createQueryBuilder(this.userRepository.target, 'u')
         .select(selectUserProperty)
         .addSelect(selectUserConfirmationProperty)
         .addSelect(selectUserBanProperty)
@@ -66,6 +109,7 @@ export class UserRepositories {
       await queryRunner.manager
         .createQueryBuilder(this.userRepository.target, 'u')
         .setLock('pessimistic_write')
+        .where(`u.${UserPropertyEnum.id} = :userId`, { userId: user.id })
         .execute();
 
       return user;
