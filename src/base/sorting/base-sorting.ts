@@ -33,6 +33,7 @@ export class BaseSorting {
     'startGameDate',
     'finishGameDate',
     'status',
+    'banStatus',
   ];
   private defaultSortParams: BaseSortingType = {
     sortBy: 'createdAt',

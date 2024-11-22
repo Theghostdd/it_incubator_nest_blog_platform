@@ -15,6 +15,7 @@ import { PostLike } from '../../../blog-platform/like/domain/post-like.entity';
 import { CommentLike } from '../../../blog-platform/like/domain/comment-like.entity';
 import { Player } from '../../../quiz-game/player/domain/quiz-game-player.entity';
 import { Blog } from '../../../blog-platform/blog/domain/blog.entity';
+import { UserBan } from './user-ban.entity';
 
 @Entity()
 @Index(['login', 'email'])
@@ -36,6 +37,14 @@ export class User {
     default: () => 'CURRENT_TIMESTAMP',
   })
   createdAt: Date;
+  @Column({ default: false })
+  isBan: boolean;
+
+  @OneToMany(() => UserBan, (userBan: UserBan) => userBan.user, {
+    cascade: true,
+  })
+  userBans: UserBan[];
+
   @OneToOne(
     () => UserConfirmation,
     (userConfirmation: UserConfirmation) => userConfirmation.user,
@@ -136,5 +145,22 @@ export class User {
 
   deleteUser(): void {
     this.isActive = false;
+  }
+
+  deleteLastUserBan(): void {
+    this.userBans[0].isActive = false;
+  }
+
+  banOrUnban(state: boolean, reason: string): void {
+    this.isBan = state;
+
+    const userBan: UserBan = new UserBan();
+    userBan.user = this;
+    userBan.userId = this.id;
+    userBan.reason = reason;
+    userBan.isActive = true;
+    userBan.dateAt = new Date();
+
+    this.userBans.push(userBan);
   }
 }

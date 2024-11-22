@@ -4,6 +4,7 @@ import { InjectDataSource, InjectRepository } from '@nestjs/typeorm';
 import {
   Brackets,
   DataSource,
+  QueryRunner,
   Repository,
   WhereExpressionBuilder,
 } from 'typeorm';
@@ -12,8 +13,10 @@ import {
   UserRecoveryPasswordSessionPropertyEnum,
 } from '../../../access-control/auth/domain/types';
 import {
+  selectUserBanProperty,
   selectUserConfirmationProperty,
   selectUserProperty,
+  UserBanPropertyEnum,
   UserConfirmationPropertyEnum,
   UserPropertyEnum,
 } from '../domain/types';
@@ -26,17 +29,59 @@ export class UserRepositories {
     private readonly dataSource: DataSource,
   ) {}
 
-  async save(user: User): Promise<number> {
+  async save(user: User, queryRunner?: QueryRunner): Promise<number> {
+    if (queryRunner) {
+      const userEntity: User = await queryRunner.manager.save(user);
+      return userEntity.id;
+    }
     const userEntity: User = await this.userRepository.save(user);
     return userEntity.id;
   }
 
-  async getUserById(id: number): Promise<User | null> {
+  async getUserById(
+    id: number,
+    queryRunner?: QueryRunner,
+  ): Promise<User | null> {
+    if (queryRunner) {
+      const user: User | null = await this.userRepository
+        .createQueryBuilder('u')
+        .select(selectUserProperty)
+        .addSelect(selectUserConfirmationProperty)
+        .addSelect(selectUserBanProperty)
+        .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+        .leftJoin(
+          `u.${UserPropertyEnum.userBans}`,
+          'ub',
+          `ub.${UserBanPropertyEnum.isActive} = :banStatus`,
+          { banStatus: true },
+        )
+        .where(`u.${UserPropertyEnum.id}= :id`, { id: id })
+        .andWhere(`u.${UserPropertyEnum.isActive} = :isActive`, {
+          isActive: true,
+        })
+        .getOne();
+
+      if (!user) return null;
+
+      await queryRunner.manager
+        .createQueryBuilder(this.userRepository.target, 'u')
+        .setLock('pessimistic_write')
+        .execute();
+
+      return user;
+    }
     return await this.userRepository
       .createQueryBuilder('u')
       .select(selectUserProperty)
       .addSelect(selectUserConfirmationProperty)
+      .addSelect(selectUserBanProperty)
       .leftJoin(`u.${UserPropertyEnum.userConfirm}`, 'uc')
+      .leftJoin(
+        `u.${UserPropertyEnum.userBans}`,
+        'ub',
+        `ub.${UserBanPropertyEnum.isActive} = :banStatus`,
+        { banStatus: true },
+      )
       .where(`u.${UserPropertyEnum.id}= :id`, { id: id })
       .andWhere(`u.${UserPropertyEnum.isActive} = :isActive`, {
         isActive: true,

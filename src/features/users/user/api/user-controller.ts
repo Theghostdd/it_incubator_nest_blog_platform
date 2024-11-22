@@ -8,10 +8,12 @@ import {
   InternalServerErrorException,
   NotFoundException,
   Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
 import {
+  UserBanInputModel,
   UserInputModel,
   UserSortingQuery,
 } from './models/input/user-input.model';
@@ -36,6 +38,7 @@ import { EntityId } from '../../../../core/decorators/entityId';
 import {
   ApiBadRequestResponse,
   ApiBasicAuth,
+  ApiNoContentResponse,
   ApiNotFoundResponse,
   ApiOkResponse,
   ApiOperation,
@@ -44,6 +47,7 @@ import {
   ApiTags,
   ApiUnauthorizedResponse,
 } from '@nestjs/swagger';
+import { BanOrUnBanUserCommand } from '../application/command/ban-or-unban-user.command';
 
 @ApiBasicAuth()
 @ApiTags('Super admin - User')
@@ -111,6 +115,33 @@ export class UserController {
         return;
       case AppResult.NotFound:
         throw new NotFoundException('User not found');
+      default:
+        throw new InternalServerErrorException();
+    }
+  }
+
+  @ApiNoContentResponse({ description: 'No content' })
+  @ApiBadRequestResponse({ type: ApiErrorsMessageModel })
+  @ApiNotFoundResponse({ description: 'User not found' })
+  @ApiOperation({
+    summary: 'Ban/unban user',
+  })
+  @ApiParam({ name: 'id' })
+  @Put(`:id/${apiPrefixSettings.USER_PREFIX.ban}`)
+  @HttpCode(204)
+  async banOrUnbanUser(
+    @EntityId() id: number,
+    @Body() userBanInputModel: UserBanInputModel,
+  ): Promise<void> {
+    const result: AppResultType<number, APIErrorsMessageType> =
+      await this.commandBus.execute(
+        new BanOrUnBanUserCommand(userBanInputModel, id),
+      );
+    switch (result.appResult) {
+      case AppResult.Success:
+        return;
+      case AppResult.NotFound:
+        throw new NotFoundException();
       default:
         throw new InternalServerErrorException();
     }

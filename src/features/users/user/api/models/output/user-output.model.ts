@@ -2,6 +2,29 @@ import { User } from '../../../domain/user.entity';
 import { ApiProperty } from '@nestjs/swagger';
 import { BasePagination } from '../../../../../../base/pagination/base-pagination';
 
+export class UserBanInfoOutputModel {
+  @ApiProperty({
+    description: 'User`s banned state',
+    example: true,
+    type: Boolean,
+  })
+  public isBanned: boolean;
+  @ApiProperty({
+    description: 'Date of banned user',
+    example: '2023-01-01T00:00:00Z',
+    nullable: true,
+    type: String,
+  })
+  public banDate: string;
+  @ApiProperty({
+    description: 'Reason of banned user',
+    example: 'Non-compliance with the rules',
+    nullable: true,
+    type: String,
+  })
+  public banReason: string;
+}
+
 export class UserOutputModel {
   @ApiProperty({
     description: 'User id',
@@ -27,6 +50,11 @@ export class UserOutputModel {
     type: String,
   })
   public createdAt: Date;
+
+  @ApiProperty({
+    type: UserBanInfoOutputModel,
+  })
+  public banInfo: UserBanInfoOutputModel;
 }
 
 export class UserMeOutputModel {
@@ -58,6 +86,15 @@ export class UserMapperOutputModel {
       login: user.login,
       email: user.email,
       createdAt: user.createdAt,
+      banInfo: {
+        isBanned: user.isBan,
+        banDate:
+          user.userBans.length > 0
+            ? user.userBans[0]?.dateAt.toISOString() || null
+            : null,
+        banReason:
+          user.userBans.length > 0 ? user.userBans[0]?.reason || null : null,
+      },
     };
   }
 
@@ -68,6 +105,15 @@ export class UserMapperOutputModel {
         login: user.login,
         email: user.email,
         createdAt: user.createdAt,
+        banInfo: {
+          isBanned: user.isBan,
+          banDate:
+            user.userBans.length > 0
+              ? user.userBans[0]?.dateAt.toISOString() || null
+              : null,
+          banReason:
+            user.userBans.length > 0 ? user.userBans[0]?.reason || null : null,
+        },
       };
     });
   }

@@ -2,7 +2,14 @@ import { BaseSorting } from '../../../../../../base/sorting/base-sorting';
 import { validationRules } from '../../../../../../core/utils/validation-rules/validation-rules';
 import { ApiProperty } from '@nestjs/swagger';
 import { Trim } from '../../../../../../core/decorators/transform/trim';
-import { IsNotEmpty, IsString, Length, Matches } from 'class-validator';
+import {
+  IsBoolean,
+  IsNotEmpty,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
+import { UserBanStatusEnum } from '../../../domain/types';
 
 export class UserInputModel {
   @Trim()
@@ -47,6 +54,33 @@ export class UserInputModel {
   public email: string;
 }
 
+export class UserBanInputModel {
+  @Trim()
+  @IsNotEmpty()
+  @IsBoolean()
+  @ApiProperty({
+    description: 'true - for ban user, false - for unban user',
+    example: true,
+    type: Boolean,
+  })
+  public isBanned: boolean;
+  @Trim()
+  @IsNotEmpty()
+  @IsString()
+  @Length(
+    validationRules.banReason.MIN_LENGTH,
+    validationRules.banReason.MAX_LENGTH,
+  )
+  @ApiProperty({
+    description: 'The reason why user was banned or unbunned',
+    example: 'Non-compliance with the rules',
+    type: String,
+    minLength: validationRules.banReason.MIN_LENGTH,
+    maxLength: validationRules.banReason.MAX_LENGTH,
+  })
+  public banReason: string;
+}
+
 export class UserSortingQuery extends BaseSorting {
   @ApiProperty({
     description: 'The login term to search for users',
@@ -64,6 +98,14 @@ export class UserSortingQuery extends BaseSorting {
   })
   public readonly searchEmailTerm: string;
 
+  @ApiProperty({
+    description: 'Users ban status',
+    example: UserBanStatusEnum.all,
+    enum: UserBanStatusEnum,
+    required: false,
+  })
+  public readonly banStatus: UserBanStatusEnum;
+
   constructor() {
     super();
   }
@@ -74,6 +116,19 @@ export class UserSortingQuery extends BaseSorting {
       ...baseQuery,
       searchLoginTerm: query?.searchLoginTerm ?? '',
       searchEmailTerm: query?.searchEmailTerm ?? '',
+      banStatus: this.handleBanStatus(query?.banStatus),
     };
+  }
+
+  private handleBanStatus(banStatus: string) {
+    if (!banStatus) {
+      return UserBanStatusEnum.all;
+    }
+    if (
+      !Object.values(UserBanStatusEnum).includes(banStatus as UserBanStatusEnum)
+    ) {
+      return UserBanStatusEnum.all;
+    }
+    return banStatus;
   }
 }

@@ -61,4 +61,11 @@ export class UserTestModel {
       email: this.email,
     };
   }
+
+  getUserBanModel() {
+    return {
+      isBanned: true,
+      banReason: 'Non-compliance with the rules',
+    };
+  }
 }

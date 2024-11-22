@@ -11,6 +11,8 @@ export enum UserPropertyEnum {
   'userLikes' = 'userLikes',
   'userComments' = 'userComments',
   'userId' = 'userId',
+  'isBan' = 'isBan',
+  'userBans' = 'userBans',
 }
 
 export const selectUserProperty = [
@@ -19,6 +21,7 @@ export const selectUserProperty = [
   `u.${UserPropertyEnum.login}`,
   `u.${UserPropertyEnum.createdAt}`,
   `u.${UserPropertyEnum.password}`,
+  `u.${UserPropertyEnum.isBan}`,
 ];
 
 export enum UserConfirmationPropertyEnum {
@@ -37,3 +40,26 @@ export const selectUserConfirmationProperty = [
   `uc.${UserConfirmationPropertyEnum.confirmationCode}`,
   `uc.${UserConfirmationPropertyEnum.dataExpire}`,
 ];
+
+export enum UserBanPropertyEnum {
+  'id' = 'id',
+  'reason' = 'reason',
+  'dateAt' = 'dateAt',
+  'isActive' = 'isActive',
+  'user' = 'user',
+  'userId' = 'userId',
+}
+
+export const selectUserBanProperty = [
+  `ub.${UserBanPropertyEnum.id}`,
+  `ub.${UserBanPropertyEnum.reason}`,
+  `ub.${UserBanPropertyEnum.dateAt}`,
+  `ub.${UserBanPropertyEnum.isActive}`,
+  `ub.${UserBanPropertyEnum.userId}`,
+];
+
+export enum UserBanStatusEnum {
+  'all' = 'all',
+  'banned' = 'banned',
+  'notBanned' = 'notBanned',
+}

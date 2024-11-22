@@ -32,6 +32,7 @@ export const validationRules: ValidationRulesType = {
     PATTERN: '^https://([a-zA-Z0-9_-]+.)+[a-zA-Z0-9_-]+(/[a-zA-Z0-9_-]+)*/?$',
   },
   quizGameQuestionBody: { MIN_LENGTH: 10, MAX_LENGTH: 500, PATTERN: null },
+  banReason: { MIN_LENGTH: 20, MAX_LENGTH: 500, PATTERN: null },
 };
 
 // export class UserInputModelValidationRules {

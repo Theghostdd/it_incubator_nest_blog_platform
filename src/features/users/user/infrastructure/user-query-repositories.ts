@@ -9,7 +9,11 @@ import { UserSortingQuery } from '../api/models/input/user-input.model';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Brackets, Repository, WhereExpressionBuilder } from 'typeorm';
 import { User } from '../domain/user.entity';
-import { UserPropertyEnum } from '../domain/types';
+import {
+  UserBanPropertyEnum,
+  UserBanStatusEnum,
+  UserPropertyEnum,
+} from '../domain/types';
 
 @Injectable()
 export class UserQueryRepositories {
@@ -27,7 +31,9 @@ export class UserQueryRepositories {
         UserPropertyEnum.login,
         UserPropertyEnum.email,
         UserPropertyEnum.createdAt,
+        UserPropertyEnum.isBan,
       ],
+      relations: [UserPropertyEnum.userBans],
     });
     if (user) {
       return this.userMapperOutputModel.userModel(user);
@@ -45,6 +51,7 @@ export class UserQueryRepositories {
       searchEmailTerm,
       pageSize,
       pageNumber,
+      banStatus,
     } = this.userSortingQuery.createUserQuery(query);
 
     const skip: number = (pageNumber - 1) * pageSize;
@@ -56,7 +63,14 @@ export class UserQueryRepositories {
         `u.${UserPropertyEnum.email}`,
         `u.${UserPropertyEnum.login}`,
         `u.${UserPropertyEnum.createdAt}`,
+        `u.${UserPropertyEnum.isBan}`,
       ])
+      .leftJoinAndSelect(
+        `u.${UserPropertyEnum.userBans}`,
+        'ub',
+        `ub.${UserBanPropertyEnum.isActive} = :banState`,
+        { banState: true },
+      )
       .where(
         new Brackets((qb: WhereExpressionBuilder) => {
           if (searchLoginTerm && searchEmailTerm) {
@@ -75,6 +89,19 @@ export class UserQueryRepositories {
         }),
       )
       .andWhere({ [UserPropertyEnum.isActive]: true })
+      .andWhere(
+        new Brackets((qb: WhereExpressionBuilder) => {
+          if (banStatus === UserBanStatusEnum.notBanned) {
+            qb.where(`u.${UserPropertyEnum.isBan} = :notBannedStatus`, {
+              notBannedStatus: false,
+            });
+          } else if (banStatus === UserBanStatusEnum.banned) {
+            qb.where(`u.${UserPropertyEnum.isBan} = :bannedStatus`, {
+              bannedStatus: true,
+            });
+          }
+        }),
+      )
       .orderBy(`"${sortBy}"`, sortDirection as 'ASC' | 'DESC')
       .limit(pageSize)
       .offset(skip)

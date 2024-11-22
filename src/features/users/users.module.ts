@@ -15,6 +15,8 @@ import { UserRegistrationEventHandler } from './user/application/event/user-regi
 import { NodeMailerModule } from '../nodemailer/nodemailer.module';
 import { MailTemplateModule } from '../mail-template/mail-template.module';
 import { UserRecoveryPasswordEventHandler } from './user/application/event/user-recovery-password.event';
+import { UserBan } from './user/domain/user-ban.entity';
+import { BanOrUnBanUserCommandHandler } from './user/application/command/ban-or-unban-user.command';
 
 export const UserProvider = {
   provide: 'User',
@@ -26,7 +28,7 @@ export const UserProvider = {
     NodeMailerModule,
     MailTemplateModule,
     BcryptModule,
-    TypeOrmModule.forFeature([User, UserConfirmation]),
+    TypeOrmModule.forFeature([User, UserBan, UserConfirmation]),
   ],
   controllers: [UserController],
   providers: [
@@ -40,6 +42,7 @@ export const UserProvider = {
     CreateUserCommandHandler,
     UserRegistrationEventHandler,
     UserRecoveryPasswordEventHandler,
+    BanOrUnBanUserCommandHandler,
   ],
   exports: [UserRepositories, UserQueryRepositories, UserService, UserProvider],
 })

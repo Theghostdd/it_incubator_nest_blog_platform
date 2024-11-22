@@ -2,6 +2,7 @@ export const apiPrefixSettings = {
   API_PREFIX: '/api',
   USER_PREFIX: {
     user: 'sa/users',
+    ban: 'ban',
   },
   TESTING: {
     testing: 'testing',
