@@ -108,11 +108,13 @@ export class UserMapperOutputModel {
         banInfo: {
           isBanned: user.isBan,
           banDate:
-            user.userBans.length > 0
+            user.isBan && user.userBans.length > 0
               ? user.userBans[0]?.dateAt.toISOString() || null
               : null,
           banReason:
-            user.userBans.length > 0 ? user.userBans[0]?.reason || null : null,
+            user.isBan && user.userBans.length > 0
+              ? user.userBans[0]?.reason || null
+              : null,
         },
       };
     });

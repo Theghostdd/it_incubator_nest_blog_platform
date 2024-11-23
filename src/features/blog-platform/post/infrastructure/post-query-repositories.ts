@@ -62,8 +62,12 @@ export class PostQueryRepository {
             `${PostPropertyEnum.likesCount}`,
           )
           .from(this.postLikeRepository.target, 'l')
+          .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
           .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
             likeStatus: LikeStatusEnum.Like,
+          })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedLikeState`, {
+            notBannedLikeState: false,
           })
           .andWhere(
             `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -76,8 +80,12 @@ export class PostQueryRepository {
             `${PostPropertyEnum.dislikesCount}`,
           )
           .from(this.postLikeRepository.target, 'l')
+          .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
           .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
             dislikeStatus: LikeStatusEnum.Dislike,
+          })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedDislikeState`, {
+            notBannedDislikeState: false,
           })
           .andWhere(
             `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -105,6 +113,12 @@ export class PostQueryRepository {
               .andWhere(`l.${LikePropertyEnum.status} = :status`, {
                 status: LikeStatusEnum.Like,
               })
+              .andWhere(
+                `u.${UserPropertyEnum.isBan} = :notBannedLastLikeState`,
+                {
+                  notBannedLastLikeState: false,
+                },
+              )
               .orderBy(`l.${LikePropertyEnum.lastUpdateAt}`, 'DESC')
               .limit(3);
           }, 'l');
@@ -133,8 +147,10 @@ export class PostQueryRepository {
           [BlogPropertyEnum.isActive]: true,
         },
         select: [BlogPropertyEnum.id],
+        relations: [BlogPropertyEnum.owner],
       });
       if (!blog) throw new NotFoundException('Blog not found');
+      if (blog.owner.isBan) throw new NotFoundException('Blog not found');
     }
 
     const { sortBy, sortDirection, pageSize, pageNumber } =
@@ -165,8 +181,12 @@ export class PostQueryRepository {
               `${PostPropertyEnum.likesCount}`,
             )
             .from(this.postLikeRepository.target, 'l')
+            .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
             .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
               likeStatus: LikeStatusEnum.Like,
+            })
+            .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedLikeState`, {
+              notBannedLikeState: false,
             })
             .andWhere(
               `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -179,8 +199,12 @@ export class PostQueryRepository {
               `${PostPropertyEnum.dislikesCount}`,
             )
             .from(this.postLikeRepository.target, 'l')
+            .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
             .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
               dislikeStatus: LikeStatusEnum.Dislike,
+            })
+            .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedDislikeState`, {
+              notBannedDislikeState: false,
             })
             .andWhere(
               `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -204,6 +228,12 @@ export class PostQueryRepository {
                 .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
                 .where(
                   `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
+                )
+                .andWhere(
+                  `u.${UserPropertyEnum.isBan} = :notBannedLastLikeState`,
+                  {
+                    notBannedLastLikeState: false,
+                  },
                 )
                 .andWhere(`l.${LikePropertyEnum.status} = :status`, {
                   status: LikeStatusEnum.Like,
@@ -273,9 +303,11 @@ export class PostQueryRepository {
         [BlogPropertyEnum.isActive]: true,
       },
       select: [BlogPropertyEnum.id, BlogPropertyEnum.ownerId],
+      relations: [BlogPropertyEnum.owner],
     });
     if (!blog) throw new NotFoundException('Blog not found');
     if (blog.ownerId !== userId) throw new ForbiddenException();
+    if (blog.owner.isBan) throw new NotFoundException('Blog not found');
 
     const { sortBy, sortDirection, pageSize, pageNumber } =
       this.baseSorting.createBaseQuery(query);
@@ -305,8 +337,12 @@ export class PostQueryRepository {
               `${PostPropertyEnum.likesCount}`,
             )
             .from(this.postLikeRepository.target, 'l')
+            .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
             .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
               likeStatus: LikeStatusEnum.Like,
+            })
+            .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedLikeState`, {
+              notBannedLikeState: false,
             })
             .andWhere(
               `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -319,8 +355,12 @@ export class PostQueryRepository {
               `${PostPropertyEnum.dislikesCount}`,
             )
             .from(this.postLikeRepository.target, 'l')
+            .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
             .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
               dislikeStatus: LikeStatusEnum.Dislike,
+            })
+            .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedDislikeState`, {
+              notBannedDislikeState: false,
             })
             .andWhere(
               `l.${LikePropertyEnum.parentId} = p.${PostPropertyEnum.id}`,
@@ -348,6 +388,12 @@ export class PostQueryRepository {
                 .andWhere(`l.${LikePropertyEnum.status} = :status`, {
                   status: LikeStatusEnum.Like,
                 })
+                .andWhere(
+                  `u.${UserPropertyEnum.isBan} = :notBannedLastLikeState`,
+                  {
+                    notBannedLastLikeState: false,
+                  },
+                )
                 .orderBy(`l.${LikePropertyEnum.lastUpdateAt}`, 'DESC')
                 .limit(3);
             }, 'l');

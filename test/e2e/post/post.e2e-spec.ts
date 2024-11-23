@@ -21,6 +21,7 @@ import { IBlogCreateModel } from '../../models/blog/interfaces';
 import { PostOutputModel } from '../../../src/features/blog-platform/post/api/models/output/post-output.model';
 import { LikeStatusEnum } from '../../../src/features/blog-platform/like/domain/type';
 import { CommentOutputModel } from '../../../src/features/blog-platform/comment/api/model/output/comment-output.model';
+import { UserBanInputModel } from '../../../src/features/users/user/api/models/input/user-input.model';
 
 describe('Post e2e', () => {
   let postTestManager: PostTestManager;
@@ -38,6 +39,7 @@ describe('Post e2e', () => {
   let userTestManager: UserTestManager;
   let blogTestManager: BlogTestManager;
   let blogCreateModel: IBlogCreateModel;
+  let banUserModel: UserBanInputModel;
 
   beforeAll(async () => {
     testSettings = await initSettings();
@@ -72,6 +74,7 @@ describe('Post e2e', () => {
     blogTestManager = testSettings.testManager.blogTestManager;
     blogCreateModel =
       testSettings.testModels.blogTestModel.getBlogCreateModel();
+    banUserModel = testSettings.testModels.userTestModel.getUserBanModel();
   });
 
   describe('Get posts', () => {

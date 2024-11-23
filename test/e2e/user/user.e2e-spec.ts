@@ -586,8 +586,8 @@ describe('User e2e', () => {
         createdAt: expect.any(String),
         banInfo: {
           isBanned: false,
-          banDate: expect.any(String),
-          banReason: banUserModel.banReason,
+          banDate: null,
+          banReason: null,
         },
       });
     });

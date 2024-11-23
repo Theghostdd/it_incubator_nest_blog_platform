@@ -46,6 +46,9 @@ export class CommentQueryRepositories {
       .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
         isActive: true,
       })
+      .andWhere(`u.${UserPropertyEnum.isBan} = :banState`, {
+        banState: false,
+      })
       .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
         return subQuery
           .select(
@@ -53,8 +56,12 @@ export class CommentQueryRepositories {
             `${CommentPropertyEnum.likesCount}`,
           )
           .from(this.commentLikeRepository.target, 'l')
+          .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
           .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
             likeStatus: LikeStatusEnum.Like,
+          })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedLikeState`, {
+            notBannedLikeState: false,
           })
           .andWhere(
             `l.${LikePropertyEnum.parentId} = c.${CommentPropertyEnum.id}`,
@@ -67,8 +74,12 @@ export class CommentQueryRepositories {
             `${CommentPropertyEnum.dislikesCount}`,
           )
           .from(this.commentLikeRepository.target, 'l')
+          .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
           .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
             dislikeStatus: LikeStatusEnum.Dislike,
+          })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedDislikeState`, {
+            notBannedDislikeState: false,
           })
           .andWhere(`l.${LikePropertyEnum.parentId} = c.id`);
       }, `${CommentPropertyEnum.dislikesCount}`)
@@ -122,6 +133,9 @@ export class CommentQueryRepositories {
           .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
             isActive: true,
           })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :banState`, {
+            banState: false,
+          })
           .addSelect((subQuery: SelectQueryBuilder<CommentLike>) => {
             return subQuery
               .select(
@@ -129,8 +143,12 @@ export class CommentQueryRepositories {
                 `${CommentPropertyEnum.likesCount}`,
               )
               .from(this.commentLikeRepository.target, 'l')
+              .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
               .where(`l.${LikePropertyEnum.status} = :likeStatus`, {
                 likeStatus: LikeStatusEnum.Like,
+              })
+              .andWhere(`u.${UserPropertyEnum.isBan} = :notBannedLikeState`, {
+                notBannedLikeState: false,
               })
               .andWhere(
                 `l.${LikePropertyEnum.parentId} = c.${CommentPropertyEnum.id}`,
@@ -143,9 +161,16 @@ export class CommentQueryRepositories {
                 `${CommentPropertyEnum.dislikesCount}`,
               )
               .from(this.commentLikeRepository.target, 'l')
+              .leftJoin(`l.${LikePropertyEnum.user}`, 'u')
               .where(`l.${LikePropertyEnum.status} = :dislikeStatus`, {
                 dislikeStatus: LikeStatusEnum.Dislike,
               })
+              .andWhere(
+                `u.${UserPropertyEnum.isBan} = :notBannedDislikeState`,
+                {
+                  notBannedDislikeState: false,
+                },
+              )
               .andWhere(`l.${LikePropertyEnum.parentId} = c.id`);
           }, `${CommentPropertyEnum.dislikesCount}`)
           .leftJoin(
@@ -166,8 +191,12 @@ export class CommentQueryRepositories {
           .getRawMany(),
         this.commentRepository
           .createQueryBuilder('c')
+          .leftJoin(`c.${CommentPropertyEnum.user}`, 'u')
           .where(`c.${CommentPropertyEnum.postId} = :postId`, {
             postId: postId,
+          })
+          .andWhere(`u.${UserPropertyEnum.isBan} = :banState`, {
+            banState: false,
           })
           .andWhere(`c.${CommentPropertyEnum.isActive} = :isActive`, {
             isActive: true,

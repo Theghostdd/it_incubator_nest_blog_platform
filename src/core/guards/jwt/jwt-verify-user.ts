@@ -4,8 +4,13 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { ConfigurationType } from '../../../settings/configuration/configuration';
 import { APISettings } from '../../../settings/api-settings';
-import { Observable } from 'rxjs';
-import { JWTAccessTokenPayloadType } from '../../../base/types/types';
+import {
+  AppResultType,
+  JWTAccessTokenPayloadType,
+} from '../../../base/types/types';
+import { UserService } from '../../../features/users/user/application/user-service';
+import { User } from '../../../features/users/user/domain/user.entity';
+import { AppResult } from '../../../base/enum/app-result.enum';
 
 @Injectable()
 export class VerifyUserGuard implements CanActivate {
@@ -13,10 +18,11 @@ export class VerifyUserGuard implements CanActivate {
   constructor(
     private readonly configService: ConfigService<ConfigurationType, true>,
     private readonly jwtService: JwtService,
+    private readonly userService: UserService,
   ) {
     this.apiSettings = this.configService.get('apiSettings', { infer: true });
   }
-  canActivate(context: ExecutionContext): boolean | Observable<boolean> {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest<Request>();
     if (
       !request.headers.authorization ||
@@ -32,6 +38,11 @@ export class VerifyUserGuard implements CanActivate {
       jwtAccessPayload = this.jwtService.verify(token, {
         secret: this.apiSettings.JWT_TOKENS.ACCESS_TOKEN.SECRET,
       });
+
+      const user: AppResultType<User | null> =
+        await this.userService.getUserById(jwtAccessPayload.userId);
+      if (user.appResult !== AppResult.Success) return true;
+      if (user.data.isBan) return true;
     } catch (e) {
       request.user = { userId: null };
       return true;
