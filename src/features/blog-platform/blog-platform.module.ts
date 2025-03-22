@@ -40,8 +40,15 @@ import { PostLikeRepositories } from './like/infrastructure/post-like-repositori
 import { PostLikeService } from './like/application/post-like-service';
 import { CommentLike } from './like/domain/comment-like.entity';
 import { PostLike } from './like/domain/post-like.entity';
-import { BloggerController } from './blog/api/blogger-controller';
 import { BindBlogForUserHandler } from './blog/application/command/bind-blog-for-user.command';
+import { BloggerController } from './blog/api/blogger-controller';
+import { BloggerUserController } from './blog/api/blogger-user-controller';
+import { BlogBannedUserEntity } from './blog/domain/blog-banned-user.entity';
+import { BlogBannedUserRepositories } from './blog/infrastructure/blog-banned-user-repositories';
+import { BlogBloggerBannedUserOutputMapper } from './blog/api/models/output/blog-blogger-banned-user-output.model';
+import { BlogBannedUserQueryRepositories } from './blog/infrastructure/blog-banned-user-query-repositories';
+import { BloggerBanUserHandler } from './blog/application/command/blogger-ban-user.command';
+import { BlogBannedUserSortingQuery } from './blog/api/models/input/blog-user-ban-input.model';
 
 export const BlogProvider = {
   provide: 'Blog',
@@ -73,10 +80,22 @@ export const PostLikeProvider = {
   useValue: PostLike,
 };
 
+export const BannedUserProvider = {
+  provide: 'BlogBannedUserEntity',
+  useValue: BlogBannedUserEntity,
+};
+
 @Module({
   imports: [
     UsersModule,
-    TypeOrmModule.forFeature([Blog, Post, Comment, PostLike, CommentLike]),
+    TypeOrmModule.forFeature([
+      Blog,
+      Post,
+      Comment,
+      PostLike,
+      CommentLike,
+      BlogBannedUserEntity,
+    ]),
   ],
   controllers: [
     BlogController,
@@ -84,6 +103,7 @@ export const PostLikeProvider = {
     CommentController,
     BlogAdminController,
     BloggerController,
+    BloggerUserController,
   ],
   providers: [
     BlogProvider,
@@ -92,6 +112,7 @@ export const PostLikeProvider = {
     CommentProvider,
     CommentLikeProvider,
     PostLikeProvider,
+    BannedUserProvider,
     BlogQueryRepository,
     BlogMapperOutputModel,
     BlogSortingQuery,
@@ -122,6 +143,11 @@ export const PostLikeProvider = {
     PostLikeRepositories,
     PostLikeService,
     BindBlogForUserHandler,
+    BlogBannedUserRepositories,
+    BlogBannedUserQueryRepositories,
+    BlogBloggerBannedUserOutputMapper,
+    BloggerBanUserHandler,
+    BlogBannedUserSortingQuery,
   ],
   exports: [],
 })

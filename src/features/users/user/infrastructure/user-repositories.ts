@@ -20,6 +20,10 @@ import {
   UserConfirmationPropertyEnum,
   UserPropertyEnum,
 } from '../domain/types';
+import {
+  BlogBannedUserPropertyEnum,
+  selectBlogBannedUserProperty,
+} from '../../../blog-platform/blog/domain/types';
 
 @Injectable()
 export class UserRepositories {
@@ -183,6 +187,27 @@ export class UserRepositories {
         }),
       )
       .andWhere(`u.${UserPropertyEnum.isActive}= :isActive`, { isActive: true })
+      .getOne();
+  }
+
+  async getUserByIdWithBanInfoForSpecialBlog(
+    id: number,
+    blogId: number,
+  ): Promise<User | null> {
+    return await this.userRepository
+      .createQueryBuilder('u')
+      .select(selectUserProperty)
+      .addSelect(selectBlogBannedUserProperty)
+      .leftJoin(
+        `u.${UserPropertyEnum.blogBanned}`,
+        'bbu',
+        `bbu.${BlogBannedUserPropertyEnum.blogId} = :blogId`,
+        { blogId },
+      )
+      .where(`u.${UserPropertyEnum.id}= :id`, { id: id })
+      .andWhere(`u.${UserPropertyEnum.isActive} = :isActive`, {
+        isActive: true,
+      })
       .getOne();
   }
 }

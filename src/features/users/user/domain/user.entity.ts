@@ -16,6 +16,7 @@ import { CommentLike } from '../../../blog-platform/like/domain/comment-like.ent
 import { Player } from '../../../quiz-game/player/domain/quiz-game-player.entity';
 import { Blog } from '../../../blog-platform/blog/domain/blog.entity';
 import { UserBan } from './user-ban.entity';
+import { BlogBannedUserEntity } from '../../../blog-platform/blog/domain/blog-banned-user.entity';
 
 @Entity()
 @Index(['login', 'email'])
@@ -75,6 +76,13 @@ export class User {
 
   @OneToMany(() => Blog, (blog: Blog) => blog.owner)
   blog: Blog[];
+
+  //Banned user for blog
+  @OneToMany(
+    () => BlogBannedUserEntity,
+    (bannedUser: BlogBannedUserEntity) => bannedUser.user,
+  )
+  blogBanned: BlogBannedUserEntity[];
 
   static createUser(
     userInputModel: UserInputModel,

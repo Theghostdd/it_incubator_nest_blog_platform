@@ -14,6 +14,9 @@ export const apiPrefixSettings = {
     blogs: 'blogs',
     posts: 'posts',
     blogger: 'blogger',
+    user: 'users',
+    ban: 'ban',
+    blog: 'blog',
   },
   POST: {
     posts: 'posts',

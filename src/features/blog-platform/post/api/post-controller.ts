@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  ForbiddenException,
   Get,
   HttpCode,
   InternalServerErrorException,
@@ -273,6 +274,8 @@ export class PostController {
         return await this.commentQueryRepository.getCommentById(result.data);
       case AppResult.NotFound:
         throw new NotFoundException('Post or user not found');
+      case AppResult.Forbidden:
+        throw new ForbiddenException();
       default:
         throw new InternalServerErrorException();
     }

@@ -13,6 +13,7 @@ export enum UserPropertyEnum {
   'userId' = 'userId',
   'isBan' = 'isBan',
   'userBans' = 'userBans',
+  'blogBanned' = 'blogBanned',
 }
 
 export const selectUserProperty = [
